@@ -1,22 +1,86 @@
-// CareerPilot AI - Supabase JS Client Initialization
-// Imported via CDN as an ES Module.
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { auth } from './firebaseClient.js';
+import { onAuthStateChanged, signOut as firebaseSignOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
-// IMPORTANT SECURITY WARNING:
-// 1. Use ONLY the public 'anon' key on the client side.
-// 2. NEVER expose the 'service_role' key in any frontend code.
-//
-// Replace these placeholders with your actual Supabase Project credentials:
-const SUPABASE_URL = 'https://aekuesezmlpjquttztwu.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_xy-jZMcTkwD8V6GniJCpzw_wCkJgSv9';
+// Automatically redirect 127.0.0.1 to localhost for default Firebase Auth domain authorization
+if (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1') {
+    const normalizedUrl = new URL(window.location.href);
+    normalizedUrl.hostname = 'localhost';
+    window.location.replace(normalizedUrl.toString());
+}
 
-// Initialize the Supabase Client with session persistence and auto-refresh configuration
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+function getCurrentFirebaseUser() {
+    return new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            unsubscribe();
+            resolve(user);
+        });
+    });
+}
+
+// Export a compatible 'supabase' client interface mapping auth calls directly to Firebase Auth
+export const supabase = {
     auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storage: window.localStorage
-    }
-});
+        async getSession() {
+            try {
+                const user = await getCurrentFirebaseUser();
+                if (!user) return { data: { session: null }, error: null };
 
+                const token = await user.getIdToken();
+                return {
+                    data: {
+                        session: {
+                            access_token: token,
+                            user: {
+                                id: user.uid,
+                                email: user.email,
+                                user_metadata: { full_name: user.displayName || (user.email ? user.email.split('@')[0] : 'User') }
+                            }
+                        }
+                    },
+                    error: null
+                };
+            } catch (err) {
+                return { data: { session: null }, error: err };
+            }
+        },
+        async getUser() {
+            try {
+                const user = await getCurrentFirebaseUser();
+                if (!user) return { data: { user: null }, error: null };
+                return {
+                    data: {
+                        user: {
+                            id: user.uid,
+                            email: user.email,
+                            user_metadata: { full_name: user.displayName || (user.email ? user.email.split('@')[0] : 'User') }
+                        }
+                    },
+                    error: null
+                };
+            } catch (err) {
+                return { data: { user: null }, error: err };
+            }
+        },
+        onAuthStateChange(callback) {
+            return onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    const token = await user.getIdToken();
+                    const session = {
+                        access_token: token,
+                        user: {
+                            id: user.uid,
+                            email: user.email,
+                            user_metadata: { full_name: user.displayName || (user.email ? user.email.split('@')[0] : 'User') }
+                        }
+                    };
+                    callback('SIGNED_IN', session);
+                } else {
+                    callback('SIGNED_OUT', null);
+                }
+            });
+        },
+        async signOut() {
+            return firebaseSignOut(auth);
+        }
+    }
+};
