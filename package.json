@@ -1,0 +1,13 @@
+{
+  "name": "careercopilot",
+  "version": "1.0.0",
+  "description": "CareerPilot AI - AI-powered Resume and Career Assistant",
+  "scripts": {
+    "dev": "npx -y http-server frontend -p 3000",
+    "backend": "python backend/app.py",
+    "start": "npx -y http-server frontend -p 3000"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

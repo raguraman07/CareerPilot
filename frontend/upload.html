@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Resume - CareerPilot AI</title>
+    
+    <!-- Meta Descriptions for SEO -->
+    <meta name="description" content="CareerPilot AI Resume Upload - Securely upload and parse your resume for professional ATS score auditing and job match recommendations.">
+    <meta name="keywords" content="CareerPilot, Resume Upload, Resume Parser, ATS, PDF parser, Docx parser">
+    <meta name="author" content="CareerPilot AI Team">
+
+    <!-- Fonts Preconnect and Links for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/upload.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+    <!-- Skip link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to content</a>
+
+    <!-- Page guard and session initialization -->
+    <script type="module">
+        import { requireAuth, logoutUser } from './js/auth.js';
+        
+        requireAuth().then(session => {
+            if (session) {
+                // Personalize dashboard dropdown user names
+                const dropdownName = document.querySelector('.dropdown-profile-name');
+                const dropdownEmail = document.querySelector('.dropdown-profile-email');
+                const avatarInitials = document.querySelectorAll('.avatar-initials');
+                
+                if (dropdownName && session.user) {
+                    dropdownName.textContent = session.user.full_name;
+                }
+                if (dropdownEmail && session.user) {
+                    dropdownEmail.textContent = session.user.email;
+                }
+                if (avatarInitials.length > 0 && session.user) {
+                    const initials = session.user.full_name ? session.user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : session.user.email.substring(0, 2).toUpperCase();
+                    avatarInitials.forEach(el => el.textContent = initials);
+                }
+
+                // Handle sign out triggers
+                const logoutLinks = document.querySelectorAll('.logout-trigger');
+                logoutLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        logoutUser();
+                    });
+                });
+            }
+        });
+    </script>
+
+    <!-- Toast container for notifications -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <div class="dashboard-shell">
+        
+        <!-- ==========================================
+             Left Sidebar (Collapsible Drawer)
+             ========================================== -->
+        <aside class="sidebar-wrapper" id="sidebar-wrapper" aria-label="Dashboard Sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="logo" aria-label="CareerPilot AI Home">
+                    <div class="logo-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </div>
+                    <span>CareerPilot <span class="text-gradient">AI</span></span>
+                </a>
+                <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close sidebar">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Main Navigation">
+                <div class="nav-section">
+                    <span class="nav-section-label">General</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="dashboard.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-label">AI Modules</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="upload.html" class="nav-item active" aria-current="page">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                <span>Resume Upload</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="analysis.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                                <span>AI Resume Analysis</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="jobmatch.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72"></path><path d="M2 12h20"></path></svg>
+                                <span>Job Match</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="interview.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                <span>Interview Preparation</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="careercoach.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+                                <span>AI Career Coach</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="roadmap.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                                <span>Career Roadmap</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-item disabled" aria-disabled="true">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                <span>Application Tracker</span>
+                                <span class="sidebar-badge">Soon</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section nav-section--bottom">
+                    <span class="nav-section-label">Account</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="settings.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-item logout-trigger">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                                <span>Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Sidebar Overlay for mobile views -->
+        <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+        <!-- ==========================================
+             Main Workspace Area
+             ========================================== -->
+        <div class="workspace-wrapper">
+            
+            <!-- Top Navigation Bar -->
+            <header class="top-navbar" aria-label="Top Navigation Header">
+                <div class="navbar-left">
+                    <button class="hamburger-menu-btn" id="hamburger-menu-btn" aria-label="Toggle Navigation Sidebar" aria-expanded="false" aria-controls="sidebar-wrapper">
+                        <svg class="hamburger-icon" viewBox="0 0 24 24">
+                            <line class="line-1" x1="3" y1="6" x2="21" y2="6"></line>
+                            <line class="line-2" x1="3" y1="12" x2="21" y2="12"></line>
+                            <line class="line-3" x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    
+                    <!-- Logo in mobile topbar -->
+                    <a href="index.html" class="logo mobile-logo" aria-label="CareerPilot AI Home">
+                        <div class="logo-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                        </div>
+                    </a>
+                    
+                    <h1 class="navbar-title">Resume Upload</h1>
+                </div>
+
+                <div class="navbar-center" role="search">
+                    <div class="search-box">
+                        <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="navbar-search" placeholder="Search analytics, features, roadmaps..." aria-label="Search dashboard contents">
+                        <span class="search-shortcut" aria-hidden="true">/</span>
+                    </div>
+                </div>
+
+                <div class="navbar-right">
+                    <!-- Notifications -->
+                    <div class="navbar-action-wrapper dropdown-container">
+                        <button class="nav-action-btn" id="notification-btn" aria-label="View notifications" aria-expanded="false" aria-haspopup="true">
+                            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                            <span class="notif-badge" id="notif-badge" style="display: none;">0</span>
+                        </button>
+                        
+                        <div class="dropdown-menu notif-dropdown" id="notif-dropdown" role="menu">
+                            <div class="dropdown-header">
+                                <h3>Notifications</h3>
+                                <button class="btn-text" id="mark-all-read">Mark all as read</button>
+                            </div>
+                            <ul class="notif-list" id="notif-list">
+                                <li style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.82rem;">
+                                    All caught up! No notifications.
+                                </li>
+                            </ul>
+                            <div class="dropdown-footer">
+                                <a href="#">See all notifications</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dark Mode Toggle -->
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Switch theme">
+                        <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    </button>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="navbar-action-wrapper dropdown-container">
+                        <button class="profile-avatar-btn" id="profile-dropdown-btn" aria-label="Open profile menu" aria-expanded="false" aria-haspopup="true">
+                            <span class="avatar-circle">
+                                <span class="avatar-initials">U</span>
+                            </span>
+                        </button>
+                        
+                        <div class="dropdown-menu profile-dropdown" id="profile-dropdown" role="menu">
+                            <div class="profile-info-block">
+                                <span class="avatar-circle avatar-large">
+                                    <span class="avatar-initials">U</span>
+                                </span>
+                                <div class="profile-meta">
+                                    <h4 class="dropdown-profile-name">User Name</h4>
+                                    <p class="dropdown-profile-email">user@careercopilot.ai</p>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <ul class="dropdown-list">
+                                <li role="none">
+                                    <a href="settings.html" class="dropdown-item" role="menuitem">
+                                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                        <span>My Profile</span>
+                                    </a>
+                                </li>
+                                <li role="none">
+                                    <a href="settings.html" class="dropdown-item" role="menuitem">
+                                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                        <span>Account Settings</span>
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item logout-trigger logout-item" role="menuitem">
+                                <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                                <span>Sign Out</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Work Content Flow -->
+            <main id="main-content" class="main-content-flow">
+                
+                <!-- Welcome/Title Banner -->
+                <section class="welcome-banner-card welcome-banner-card--small" aria-labelledby="upload-page-title">
+                    <div class="welcome-card-content">
+                        <span class="eyebrow-accent">RESUME MANAGEMENT</span>
+                        <h2 id="upload-page-title" class="welcome-header">Resume Upload</h2>
+                        <p class="welcome-text">Upload your resume in PDF or DOCX format to analyze it for ATS compliance, keywords gaps, and practice custom interview preparation questions.</p>
+                    </div>
+                    <div class="welcome-banner-graphics" aria-hidden="true">
+                        <div class="g-circle circle-1"></div>
+                        <div class="g-circle circle-2"></div>
+                    </div>
+                </section>
+
+                <!-- Dual Layout split: Upload Dropzone + Instructions -->
+                <div class="dashboard-split-grid">
+                    
+                    <!-- Upload Dropzone Card -->
+                    <section class="panel-container upload-dropzone-panel" aria-labelledby="dropzone-section-title">
+                        <h2 id="dropzone-section-title" class="panel-title" style="margin-bottom: 1.5rem;">File Upload</h2>
+                        
+                        <!-- Drag & Drop container -->
+                        <div class="upload-dropzone" id="upload-dropzone" role="button" tabindex="0" aria-label="Drag and drop your resume file here or click to browse. Supported formats: PDF, DOCX. Max size 5 Megabytes.">
+                            <div class="dropzone-content-wrapper">
+                                <div class="dropzone-icon-container" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" class="dropzone-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                </div>
+                                <h3 class="dropzone-title">Drag & drop your resume here</h3>
+                                <p class="dropzone-text">or <span class="browse-link-btn">browse your local files</span></p>
+                                <span class="dropzone-info-badge">PDF or DOCX (max 5 MB)</span>
+                            </div>
+                            
+                            <!-- Hidden input element -->
+                            <input type="file" id="file-input" class="file-input-hidden" accept=".pdf,.docx" aria-hidden="true" tabindex="-1">
+                        </div>
+
+                        <!-- Selected File Preview Container (hidden by default) -->
+                        <div class="selected-file-card" id="selected-file-card" style="display: none;">
+                            <div class="file-info-col">
+                                <div class="file-icon-wrapper" id="file-icon-wrapper">
+                                    <svg viewBox="0 0 24 24" class="file-type-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                </div>
+                                <div class="file-metadata">
+                                    <h4 class="selected-filename" id="selected-filename">resume_final.pdf</h4>
+                                    <span class="selected-filesize" id="selected-filesize">2.4 MB</span>
+                                </div>
+                            </div>
+                            <button class="remove-file-btn" id="remove-file-btn" aria-label="Remove selected file">
+                                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+
+                        <!-- Progress Bar & Actions -->
+                        <div class="upload-progress-wrapper" id="upload-progress-wrapper" style="display: none;">
+                            <div class="progress-meta-row">
+                                <span class="progress-status-label" id="progress-status-label">Uploading file...</span>
+                                <span class="progress-percent-val" id="progress-percent-val">0%</span>
+                            </div>
+                            <div class="progress-bar-track">
+                                <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="upload-action-row" id="upload-action-row" style="display: none; margin-top: 1.5rem;">
+                            <button class="btn btn-primary" id="btn-submit-upload" style="width: 100%;">
+                                <svg viewBox="0 0 24 24" class="btn-svg-icon" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                <span>Upload and Parse Content</span>
+                            </button>
+                        </div>
+
+                        <!-- Parsing Success Animation Wrapper -->
+                        <div class="success-parse-banner" id="success-parse-banner" style="display: none;">
+                            <div class="success-animation-circle">
+                                <svg class="checkmark-svg" viewBox="0 0 52 52">
+                                    <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                                    <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                                </svg>
+                            </div>
+                            <h4>Parse Successful!</h4>
+                            <p>Extracted <span id="success-parse-pages">1</span> page(s) and logged content.</p>
+                        </div>
+                    </section>
+
+                    <!-- Instructions Panel -->
+                    <section class="panel-container instructions-panel" aria-labelledby="instructions-title">
+                        <h2 id="instructions-title" class="panel-title" style="margin-bottom: 1.25rem;">Format Instructions</h2>
+                        <ul class="instructions-list">
+                            <li>
+                                <div class="instr-icon-circle">✓</div>
+                                <div class="instr-content">
+                                    <h4>PDF Document Format</h4>
+                                    <p>Recommended format. Make sure the text is selectable and not scanned as a flat raster image.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="instr-icon-circle">✓</div>
+                                <div class="instr-content">
+                                    <h4>DOCX Document Format</h4>
+                                    <p>Word document file parser will extract content, paragraph layout, and basic tabular text components.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="instr-icon-circle instr-icon-circle--info">i</div>
+                                <div class="instr-content">
+                                    <h4>Max File Size (5MB)</h4>
+                                    <p>Please compress your document files if they contain large embedded graphical assets or high-res headshots.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </section>
+                </div>
+
+                <!-- Previously Uploaded Resumes Table -->
+                <section class="panel-container uploads-log-section" aria-labelledby="uploads-log-title">
+                    <div class="panel-header">
+                        <h2 id="uploads-log-title" class="panel-title">Uploaded Resumes</h2>
+                        <button class="btn btn-secondary btn-sm" id="btn-refresh-resumes" aria-label="Refresh Resume List">
+                            <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                            <span>Refresh</span>
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="activity-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Filename</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Pages</th>
+                                    <th scope="col">Uploaded At</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col" style="text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resumes-tbody">
+                                <!-- Populated dynamically by JS -->
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                                        <span class="spinner" style="display: inline-block; margin-bottom: 0.5rem;"></span>
+                                        <p>Loading your resumes...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Script imports -->
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script> <!-- Reuses sidebar and dropdown click hooks -->
+    <script type="module" src="js/upload.js"></script>
+</body>
+</html>

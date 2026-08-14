@@ -1,0 +1,146 @@
+/* ==========================================================================
+   CareerPilot AI - Responsive Adjustments & Mobile Drawer
+   ========================================================================== */
+
+/* Breakpoint for Tablets and Large Mobiles (992px and below) */
+@media (max-width: 992px) {
+    /* Header Mobile Layout */
+    .menu-toggle {
+        display: block;
+        z-index: 1100;
+        margin-left: 0.5rem;
+    }
+
+    .nav-links {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 300px;
+        height: 100vh;
+        background-color: var(--surface-color);
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+        border-left: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        padding: 100px 2rem 2rem;
+        gap: 1.5rem;
+        transition: right var(--transition-normal);
+        z-index: 1050;
+    }
+
+    body.dark-mode .nav-links {
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .nav-links.active {
+        right: 0;
+    }
+
+    .nav-link {
+        font-size: 1.15rem;
+        width: 100%;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .nav-links .mobile-only {
+        display: block !important;
+    }
+
+    .nav-actions {
+        gap: 0.75rem;
+    }
+}
+
+/* Breakpoint for Mobiles (768px and below) */
+@media (max-width: 768px) {
+    /* Scale Typography */
+    html {
+        font-size: 15px;
+    }
+    
+    .hero {
+        padding: 140px 0 80px;
+    }
+    
+    .hero h1 {
+        font-size: 2.25rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.05rem;
+        margin-bottom: 2rem;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0 1.5rem;
+    }
+    
+    .btn {
+        width: 100%;
+        padding: 0.85rem 1.5rem;
+    }
+
+    .nav-actions .btn {
+        display: none; /* Hide header buttons on small screens, users will use dashboard/cta buttons */
+    }
+
+    /* Grids scaling */
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .benefits-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Section Spacings */
+    .features-section, .benefits-section, .cta-section {
+        padding: 60px 0;
+    }
+
+    .section-header {
+        margin-bottom: 2.5rem;
+    }
+
+    .cta-banner {
+        padding: 3rem 1.5rem;
+    }
+
+    .cta-banner h2 {
+        font-size: 1.85rem;
+    }
+}
+
+/* Breakpoint for Small Mobiles (480px and below) */
+@media (max-width: 480px) {
+    .logo span {
+        display: none; /* Hide brand name text on tiny screens to fit toggle and burger */
+    }
+}
+
+/* ==========================================================================
+   Hamburger Button Animation Transitions
+   ========================================================================== */
+.hamburger line {
+    transition: transform var(--transition-fast), opacity var(--transition-fast);
+    transform-origin: center;
+}
+
+.menu-toggle.menu-open .hamburger line:nth-child(1) {
+    transform: rotate(45deg) translate(4px, 4px);
+}
+
+.menu-toggle.menu-open .hamburger line:nth-child(2) {
+    opacity: 0;
+}
+
+.menu-toggle.menu-open .hamburger line:nth-child(3) {
+    transform: rotate(-45deg) translate(4px, -4px);
+}

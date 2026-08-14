@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Matching - CareerPilot AI</title>
+    
+    <!-- Meta Descriptions for SEO -->
+    <meta name="description" content="CareerPilot AI Job Matcher - Instantly align your resume against any tech job description.">
+    <meta name="keywords" content="CareerPilot, Job Matching, Resume Alignment, Skill Gaps, Recruiter Grader">
+    <meta name="author" content="CareerPilot AI Team">
+
+    <!-- Fonts Preconnect and Links for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .match-panel {
+            background: var(--bg-surface, #1e1e24);
+            border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 1.5rem;
+        }
+        .match-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+        @media (max-width: 992px) {
+            .match-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        .form-textarea {
+            width: 100%;
+            height: 180px;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            resize: none;
+            transition: all 0.2s ease;
+        }
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--color-primary, #6366f1);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .skills-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .skills-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+        .badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .skill-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .skill-badge.match {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .skill-badge.missing {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .percentage-ring-container {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .pct-ring {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+        .pct-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .pct-ring circle {
+            fill: none;
+            stroke-width: 8;
+        }
+        .pct-ring .bg-ring {
+            stroke: rgba(255, 255, 255, 0.05);
+        }
+        .pct-ring .fill-ring {
+            stroke: #10b981;
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease-in-out;
+        }
+        .pct-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Skip link -->
+    <a href="#main-content" class="skip-link">Skip to content</a>
+
+    <!-- Page guard and login session checking -->
+    <script type="module">
+        import { requireAuth, logoutUser } from './js/auth.js';
+        
+        requireAuth().then(session => {
+            if (session) {
+                const dropdownName = document.querySelector('.dropdown-profile-name');
+                const dropdownEmail = document.querySelector('.dropdown-profile-email');
+                const avatarInitials = document.querySelectorAll('.avatar-initials');
+                
+                if (dropdownName && session.user) {
+                    dropdownName.textContent = session.user.full_name;
+                }
+                if (dropdownEmail && session.user) {
+                    dropdownEmail.textContent = session.user.email;
+                }
+                if (avatarInitials.length > 0 && session.user) {
+                    const initials = session.user.full_name ? session.user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : session.user.email.substring(0, 2).toUpperCase();
+                    avatarInitials.forEach(el => el.textContent = initials);
+                }
+
+                const logoutLinks = document.querySelectorAll('.logout-trigger');
+                logoutLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        logoutUser();
+                    });
+                });
+            }
+        });
+    </script>
+
+    <div class="dashboard-shell">
+        
+        <!-- Left Sidebar -->
+        <aside class="sidebar-wrapper" id="sidebar-wrapper" aria-label="Dashboard Sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="logo" aria-label="CareerPilot AI Home">
+                    <div class="logo-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </div>
+                    <span>CareerPilot <span class="text-gradient">AI</span></span>
+                </a>
+                <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close sidebar">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Main Navigation">
+                <div class="nav-section">
+                    <span class="nav-section-label">General</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="dashboard.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-label">AI Modules</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="upload.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                <span>Resume Upload</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="analysis.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                                <span>AI Resume Analysis</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="ats.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <span>ATS Score</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="jobmatch.html" class="nav-item active" aria-current="page">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72"></path><path d="M2 12h20"></path></svg>
+                                <span>Job Match</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="interview.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                <span>Interview Preparation</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="careercoach.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+                                <span>AI Career Coach</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="roadmap.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                                <span>Career Roadmap</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section nav-section--bottom">
+                    <span class="nav-section-label">Account</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="settings.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-item logout-trigger">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                                <span>Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+        <!-- Main Workspace Area -->
+        <div class="workspace-wrapper">
+            <!-- Top Navigation Bar -->
+            <header class="top-navbar" aria-label="Top Navigation Header">
+                <div class="navbar-left">
+                    <button class="hamburger-menu-btn" id="hamburger-menu-btn" aria-label="Toggle Navigation Sidebar" aria-expanded="false" aria-controls="sidebar-wrapper">
+                        <svg class="hamburger-icon" viewBox="0 0 24 24">
+                            <line class="line-1" x1="3" y1="6" x2="21" y2="6"></line>
+                            <line class="line-2" x1="3" y1="12" x2="21" y2="12"></line>
+                            <line class="line-3" x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1 class="navbar-title">Job Matching</h1>
+                </div>
+
+                <div class="navbar-right">
+                    <!-- Dark Mode Toggle -->
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Switch theme">
+                        <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    </button>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="navbar-action-wrapper dropdown-container">
+                        <button class="profile-avatar-btn" id="profile-dropdown-btn" aria-label="Open profile menu" aria-expanded="false" aria-haspopup="true">
+                            <span class="avatar-circle">
+                                <span class="avatar-initials">U</span>
+                            </span>
+                        </button>
+                        
+                        <div class="dropdown-menu profile-dropdown" id="profile-dropdown" role="menu">
+                            <div class="profile-info-block">
+                                <span class="avatar-circle avatar-large">
+                                    <span class="avatar-initials">U</span>
+                                </span>
+                                <div class="profile-meta">
+                                    <h4 class="dropdown-profile-name">User Name</h4>
+                                    <p class="dropdown-profile-email">user@careercopilot.ai</p>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <ul class="dropdown-list">
+                                <li role="none">
+                                    <a href="settings.html" class="dropdown-item" role="menuitem">
+                                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                        <span>My Profile</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="workspace-content" id="main-content">
+                <header class="content-header">
+                    <h2>AI Job Description Matcher</h2>
+                    <p class="content-subtitle">Match your resume to target descriptions, view skill alignment and recommendations.</p>
+                </header>
+
+                <div class="match-panel">
+                    <form id="job-match-form" style="display:flex; flex-direction:column; gap:1.25rem;">
+                        <div class="form-group" style="max-width: 350px;">
+                            <label for="resume-select" class="form-label">Select Your Resume</label>
+                            <select id="resume-select" class="form-input" required>
+                                <option value="" disabled selected>-- Loading resumes... --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="job-desc" class="form-label">Paste Job Description</label>
+                            <textarea id="job-desc" class="form-textarea" placeholder="Paste the job listing requirements here..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btn-run-match" style="align-self: flex-start;" disabled>
+                            <span>Run Job Match Analysis</span>
+                        </button>
+                    </form>
+
+                    <div id="match-results-wrapper" class="match-layout" style="display: none;">
+                        <!-- Match details -->
+                        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                            <h3>Alignment Score</h3>
+                            <div class="percentage-ring-container">
+                                <div class="pct-ring">
+                                    <svg>
+                                        <circle class="bg-ring" cx="50" cy="50" r="45"></circle>
+                                        <circle class="fill-ring" id="match-ring" cx="50" cy="50" r="45"></circle>
+                                    </svg>
+                                    <div class="pct-text" id="match-pct-val">0%</div>
+                                </div>
+                                <div>
+                                    <h4 style="color:#ffffff;">Match Quality</h4>
+                                    <p style="color:var(--text-muted); font-size:0.87rem; margin-top:0.25rem;" id="match-quality-desc">Analyzing...</p>
+                                </div>
+                            </div>
+
+                            <div class="stats-section-card" style="width: 100%;">
+                                <h3 style="margin-bottom: 1rem;">Recruiter Recommendations</h3>
+                                <ul id="match-recs-list" style="display:flex; flex-direction:column; gap:0.75rem; padding-left:1.25rem; color:var(--text-muted);">
+                                    <!-- Populated dynamically -->
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Skill breakdown -->
+                        <div class="skills-grid">
+                            <div class="skills-card">
+                                <h4 style="color:#10b981;">Matching Skills</h4>
+                                <div class="badge-list" id="match-skills-badges">
+                                    <!-- Badges -->
+                                </div>
+                            </div>
+                            <div class="skills-card">
+                                <h4 style="color:#ef4444;">Missing / Gap Skills</h4>
+                                <div class="badge-list" id="missing-skills-badges">
+                                    <!-- Badges -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/jobmatch.js"></script>
+</body>
+</html>
