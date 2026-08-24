@@ -46,8 +46,8 @@
         }
 
         .chat-history-sidebar {
-            background-color: var(--surface);
-            border: 1px solid var(--border);
+            background-color: #FFFFFF;
+            border: 1px solid var(--border-light);
             border-radius: var(--radius-md);
             padding: 1.25rem;
             display: flex;
@@ -56,8 +56,8 @@
         }
 
         .chat-main-area {
-            background-color: var(--surface);
-            border: 1px solid var(--border);
+            background-color: #FFFFFF;
+            border: 1px solid var(--border-light);
             border-radius: var(--radius-md);
             display: flex;
             flex-direction: column;
@@ -67,6 +67,7 @@
         .chat-messages-thread {
             flex: 1;
             padding: 1.5rem;
+            background-color: var(--background); /* #FCF2E5 Cream Container */
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -81,18 +82,20 @@
             line-height: 1.55;
         }
 
+        /* User Message Bubble: #EC5B38 Coral */
         .chat-bubble.user {
             align-self: flex-end;
-            background-color: var(--primary);
-            color: #ffffff;
+            background-color: var(--primary); /* #EC5B38 */
+            color: #FFFFFF;
             border-bottom-right-radius: 2px;
         }
 
+        /* AI Message Bubble: #FFFFFF White with #524646 Dark Brown text */
         .chat-bubble.assistant {
             align-self: flex-start;
-            background-color: var(--surface-secondary);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
+            background-color: #FFFFFF;
+            color: var(--dark); /* #524646 */
+            border: 1px solid var(--secondary); /* #A8A492 */
             border-bottom-left-radius: 2px;
         }
 
@@ -102,11 +105,11 @@
             gap: 0.35rem;
             margin-top: 0.65rem;
             font-size: 0.75rem;
-            color: var(--text-muted);
+            color: var(--secondary);
             background-color: var(--background);
             padding: 3px 8px;
             border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-light);
         }
 
         .chat-input-bar {

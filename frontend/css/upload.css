@@ -1,11 +1,11 @@
 /* ==========================================================================
-   CareerPilot AI — Resume Upload & Management Styling
+   CareerPilot AI — Resume Upload & Management Styling (Warm Palette)
    ========================================================================== */
 
 /* Upload Dropzone Container styling */
 .upload-dropzone {
-    border: 2px dashed var(--border);
-    background-color: var(--surface);
+    border: 2px dashed var(--secondary); /* #A8A492 Taupe */
+    background-color: #FFFFFF;
     border-radius: var(--radius-md);
     padding: 3rem 2rem;
     text-align: center;
@@ -18,7 +18,7 @@
 }
 
 .upload-dropzone:hover, .upload-dropzone:focus-visible {
-    border-color: var(--primary);
+    border-color: var(--primary); /* #EC5B38 Coral */
     background-color: var(--primary-light);
 }
 
@@ -39,11 +39,11 @@
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background-color: var(--surface-secondary);
+    background-color: var(--primary-light);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--primary);
+    color: var(--primary); /* #EC5B38 Coral */
     transition: color var(--transition-fast), background-color var(--transition-fast);
 }
 
@@ -58,19 +58,19 @@
 .dropzone-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--dark); /* #524646 Dark Brown */
 }
 
 .dropzone-subtitle {
     font-size: 0.88rem;
-    color: var(--text-secondary);
+    color: var(--secondary); /* #A8A492 Taupe */
     margin-bottom: 0.5rem;
 }
 
 /* File Selected Preview Box */
 .selected-file-card {
-    background-color: var(--surface);
-    border: 1px solid var(--border);
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     padding: 1.25rem 1.5rem;
     display: flex;
@@ -102,18 +102,18 @@
 .file-name-text {
     font-size: 0.95rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--dark);
 }
 
 .file-size-text {
     font-size: 0.82rem;
-    color: var(--text-muted);
+    color: var(--secondary);
 }
 
 /* Uploaded Resumes Table / List */
 .resumes-table-wrapper {
-    background-color: var(--surface);
-    border: 1px solid var(--border);
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     overflow: hidden;
     margin-top: 1.5rem;
@@ -126,21 +126,21 @@
 }
 
 .resumes-table th {
-    background-color: var(--surface-secondary);
+    background-color: var(--background); /* #FCF2E5 Cream Header */
     padding: 0.85rem 1.25rem;
     font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--text-muted);
+    font-weight: 700;
+    color: var(--dark); /* #524646 Dark Brown */
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-light);
 }
 
 .resumes-table td {
     padding: 1rem 1.25rem;
     font-size: 0.9rem;
-    color: var(--text-primary);
-    border-bottom: 1px solid var(--border);
+    color: var(--dark);
+    border-bottom: 1px solid var(--border-light);
 }
 
 .resumes-table tr:last-child td {
@@ -169,9 +169,9 @@
 }
 
 .toast {
-    background-color: var(--surface);
-    color: var(--text-primary);
-    border: 1px solid var(--border);
+    background-color: #FFFFFF;
+    color: var(--dark);
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     padding: 1rem 1.25rem;
     box-shadow: var(--shadow-lg);

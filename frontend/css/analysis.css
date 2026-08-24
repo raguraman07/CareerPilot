@@ -1,10 +1,10 @@
 /* ==========================================================================
-   CareerPilot AI — Resume Analysis & ATS Styling
+   CareerPilot AI — Resume Analysis, ATS & AI Modules Styling (Warm Palette)
    ========================================================================== */
 
 .analysis-setup-panel {
-    background-color: var(--surface);
-    border: 1px solid var(--border);
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     padding: 2rem;
     margin-bottom: 2rem;
@@ -18,8 +18,8 @@
 }
 
 .analysis-card {
-    background-color: var(--surface);
-    border: 1px solid var(--border);
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     padding: 1.75rem;
     box-shadow: var(--shadow-sm);
@@ -28,7 +28,7 @@
 .analysis-card-title {
     font-size: 1.15rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--dark); /* #524646 Dark Brown */
     margin-bottom: 1rem;
 }
 
@@ -41,9 +41,9 @@
 
 .skill-badge {
     background-color: var(--surface-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border);
-    padding: 0.3rem 0.75rem;
+    color: var(--dark);
+    border: 1px solid var(--border-light);
+    padding: 0.35rem 0.75rem;
     border-radius: var(--radius-sm);
     font-size: 0.85rem;
     font-weight: 600;
@@ -52,13 +52,13 @@
 .skill-badge.match {
     background-color: var(--success-light);
     color: var(--success);
-    border-color: rgba(22, 163, 74, 0.2);
+    border-color: rgba(46, 125, 50, 0.2);
 }
 
 .skill-badge.missing {
     background-color: var(--danger-light);
     color: var(--danger);
-    border-color: rgba(220, 38, 38, 0.2);
+    border-color: rgba(198, 40, 40, 0.2);
 }
 
 /* Bullet Items List */
@@ -66,14 +66,14 @@
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.65rem;
 }
 
 .analysis-list-item {
     position: relative;
     padding-left: 1.5rem;
     font-size: 0.92rem;
-    color: var(--text-primary);
+    color: var(--dark);
     line-height: 1.5;
 }
 
@@ -81,7 +81,7 @@
     content: "•";
     position: absolute;
     left: 0.35rem;
-    color: var(--primary);
+    color: var(--primary); /* #EC5B38 Coral */
     font-weight: bold;
     font-size: 1.2rem;
 }

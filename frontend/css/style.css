@@ -1,43 +1,44 @@
 /* ==========================================================================
-   CareerPilot AI - Master Design System & Core Theme
+   CareerPilot AI - Warm Premium Color System & Master Stylesheet
    ========================================================================== */
 
 /* Design Tokens & CSS Variables */
 :root {
-    /* Brand & Accent Palette */
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --primary-light: #eff6ff;
+    /* Required Primary Palette */
+    --dark: #524646;            /* Dark Brown */
+    --secondary: #A8A492;       /* Taupe */
+    --background: #FCF2E5;      /* Cream */
+    --primary: #EC5B38;         /* Coral */
+    --primary-hover: #d94e30;
+    --primary-light: rgba(236, 91, 56, 0.12);
 
-    --secondary: #1e293b;
-    --secondary-hover: #0f172a;
-
-    --accent: #2563eb;
-    --accent-hover: #1d4ed8;
-    --accent-light: #eff6ff;
-
-    /* Surfaces & Backgrounds (Light Theme) */
-    --background: #ffffff;
-    --surface: #f8fafc;
-    --surface-secondary: #f1f5f9;
+    /* Surfaces */
+    --surface: #FFFFFF;         /* Card / Elevated Surface */
+    --surface-secondary: #fbf5ed;
 
     /* Typography Colors */
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #64748b;
+    --text-primary: #524646;    /* Dark Brown */
+    --text-secondary: #A8A492;  /* Taupe */
+    --text-muted: #A8A492;
 
     /* Borders & Dividers */
-    --border: #e2e8f0;
+    --border: #A8A492;
+    --border-light: rgba(168, 164, 146, 0.35);
 
-    /* Functional Feedback Colors */
-    --success: #16a34a;
-    --success-light: #f0fdf4;
-    --warning: #d97706;
-    --warning-light: #fffbeb;
-    --danger: #dc2626;
-    --danger-light: #fef2f2;
-    --info: #0284c7;
-    --info-light: #f0f9ff;
+    /* Sidebar Role Specific Tokens */
+    --sidebar-bg: #524646;
+    --sidebar-text: #FCF2E5;
+    --sidebar-muted: #A8A492;
+
+    /* Semantic States (Warm & Harmonious) */
+    --success: #2e7d32;
+    --success-light: #e8f5e9;
+    --warning: #e65100;
+    --warning-light: #fff3e0;
+    --danger: #c62828;
+    --danger-light: #ffebee;
+    --info: #0277bd;
+    --info-light: #e1f5fe;
 
     /* Spacing Scale (4px/8px Rules) */
     --space-xs: 4px;
@@ -54,9 +55,9 @@
     --radius-full: 9999px;
 
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 3px 0 rgba(82, 70, 70, 0.06);
+    --shadow-md: 0 4px 8px -1px rgba(82, 70, 70, 0.08);
+    --shadow-lg: 0 10px 20px -3px rgba(82, 70, 70, 0.12);
 
     /* Fonts */
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -87,27 +88,31 @@
     --success-color: var(--success);
 }
 
-/* Dark Mode Overrides */
+/* Dark Mode Theme Tokens */
 body.dark-mode, html.dark-mode {
-    --background: #0b0f17;
-    --surface: #151d2a;
-    --surface-secondary: #1e293b;
+    --dark: #FCF2E5;
+    --secondary: #c9c5b5;
+    --background: #252020;
+    --surface: #332c2c;
+    --surface-secondary: #403838;
 
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
+    --text-primary: #FCF2E5;
+    --text-secondary: #c9c5b5;
+    --text-muted: #A8A492;
 
-    --border: #2d3748;
+    --border: #524646;
 
-    --primary-light: rgba(37, 99, 235, 0.15);
-    --success-light: rgba(22, 163, 74, 0.15);
-    --warning-light: rgba(217, 119, 6, 0.15);
-    --danger-light: rgba(220, 38, 38, 0.15);
-    --info-light: rgba(2, 132, 199, 0.15);
+    --primary: #EC5B38;
+    --primary-hover: #f06c4b;
+    --primary-light: rgba(236, 91, 56, 0.2);
 
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.25);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.35);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.45);
+    --sidebar-bg: #1c1717;
+    --sidebar-text: #FCF2E5;
+    --sidebar-muted: #A8A492;
+
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 8px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 20px -3px rgba(0, 0, 0, 0.5);
 }
 
 /* Base Reset & Typography */
@@ -136,7 +141,7 @@ body {
 
 /* Typography Hierarchy */
 h1, h2, h3, h4, h5, h6 {
-    color: var(--text-primary);
+    color: var(--dark);
     font-weight: 700;
     line-height: 1.25;
     letter-spacing: -0.015em;
@@ -148,7 +153,7 @@ h3 { font-size: 1.25rem; }
 h4 { font-size: 1.05rem; }
 
 p {
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-size: 0.95rem;
     line-height: 1.55;
 }
@@ -163,12 +168,9 @@ a:hover {
     color: var(--primary-hover);
 }
 
-/* Text Gradient Utility */
+/* Text Highlight Utility */
 .text-gradient {
-    background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--primary);
 }
 
 /* Container Utility */
@@ -179,7 +181,9 @@ a:hover {
     width: 100%;
 }
 
-/* Button System */
+/* ==========================================================================
+   Button System (Strict Specification)
+   ========================================================================== */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -203,56 +207,48 @@ a:hover {
     box-shadow: 0 0 0 3px var(--primary-light);
 }
 
+/* Primary Button: Coral #EC5B38 background, White text */
 .btn-primary {
     background-color: var(--primary);
-    color: #ffffff;
+    color: #FFFFFF;
+    border-color: var(--primary);
 }
 
 .btn-primary:hover {
     background-color: var(--primary-hover);
-    color: #ffffff;
+    color: #FFFFFF;
+    border-color: var(--primary-hover);
 }
 
-.btn-secondary {
-    background-color: var(--surface-secondary);
-    color: var(--text-primary);
-    border-color: var(--border);
-}
-
-.btn-secondary:hover {
-    background-color: var(--border);
-    color: var(--text-primary);
-}
-
-.btn-outline {
+/* Secondary Button: Transparent background, #524646 border, #524646 text */
+.btn-secondary, .btn-outline {
     background-color: transparent;
-    border-color: var(--border);
-    color: var(--text-primary);
+    border: 1px solid var(--dark);
+    color: var(--dark);
 }
 
-.btn-outline:hover {
-    background-color: var(--surface-secondary);
-    border-color: var(--primary);
-    color: var(--primary);
+.btn-secondary:hover, .btn-outline:hover {
+    background-color: var(--dark);
+    color: #FFFFFF;
 }
 
 .btn-ghost {
     background-color: transparent;
-    color: var(--text-secondary);
+    color: var(--text-primary);
 }
 
 .btn-ghost:hover {
     background-color: var(--surface-secondary);
-    color: var(--text-primary);
+    color: var(--dark);
 }
 
 .btn-danger {
     background-color: var(--danger);
-    color: #ffffff;
+    color: #FFFFFF;
 }
 
 .btn-danger:hover {
-    background-color: #b91c1c;
+    background-color: #b71c1c;
 }
 
 .btn-sm {
@@ -272,7 +268,9 @@ a:hover {
     cursor: not-allowed !important;
 }
 
-/* Form Controls System */
+/* ==========================================================================
+   Form Controls System (Strict Specification)
+   ========================================================================== */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -283,7 +281,7 @@ a:hover {
 .form-label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--dark);
 }
 
 .form-input, .form-select, .form-textarea {
@@ -292,9 +290,9 @@ a:hover {
     padding: 0 14px;
     font-family: var(--font-family);
     font-size: 0.95rem;
-    color: var(--text-primary);
-    background-color: var(--background);
-    border: 1px solid var(--border);
+    color: var(--dark);
+    background-color: #FFFFFF;
+    border: 1px solid var(--secondary);
     border-radius: var(--radius-md);
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
@@ -313,10 +311,12 @@ a:hover {
     box-shadow: 0 0 0 3px var(--primary-light);
 }
 
-/* Card System */
+/* ==========================================================================
+   Card System
+   ========================================================================== */
 .card, .interview-panel, .roadmap-panel, .ats-panel {
-    background-color: var(--surface);
-    border: 1px solid var(--border);
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     padding: var(--space-lg);
     box-shadow: var(--shadow-sm);
@@ -339,32 +339,32 @@ a:hover {
     line-height: 1.3;
     white-space: nowrap;
     background-color: var(--surface-secondary);
-    color: var(--text-secondary);
-    border: 1px solid var(--border);
+    color: var(--dark);
+    border: 1px solid var(--border-light);
 }
 
 .badge-success, .skill-badge.match, .importance-badge.low {
     background-color: var(--success-light);
     color: var(--success);
-    border-color: rgba(22, 163, 74, 0.2);
+    border-color: rgba(46, 125, 50, 0.2);
 }
 
 .badge-warning, .importance-badge.medium {
     background-color: var(--warning-light);
     color: var(--warning);
-    border-color: rgba(217, 119, 6, 0.2);
+    border-color: rgba(230, 81, 0, 0.2);
 }
 
 .badge-danger, .skill-badge.missing, .importance-badge.high {
     background-color: var(--danger-light);
     color: var(--danger);
-    border-color: rgba(220, 38, 38, 0.2);
+    border-color: rgba(198, 40, 40, 0.2);
 }
 
 .badge-info, .badge-primary {
     background-color: var(--primary-light);
     color: var(--primary);
-    border-color: rgba(37, 99, 235, 0.2);
+    border-color: rgba(236, 91, 56, 0.2);
 }
 
 /* Alert Box */
@@ -375,7 +375,7 @@ a:hover {
     line-height: 1.5;
     background-color: var(--primary-light);
     color: var(--primary);
-    border: 1px solid rgba(37, 99, 235, 0.2);
+    border: 1px solid rgba(236, 91, 56, 0.25);
 }
 
 /* Accessibility & Utilities */
@@ -384,7 +384,7 @@ a:hover {
     top: -40px;
     left: 0;
     background: var(--primary);
-    color: white;
+    color: #FFFFFF;
     padding: 8px 16px;
     z-index: 10000;
     transition: top 0.2s ease;
@@ -399,8 +399,8 @@ a:hover {
    ========================================================================== */
 .header {
     height: 70px;
-    background-color: var(--surface);
-    border-bottom: 1px solid var(--border);
+    background-color: #FFFFFF;
+    border-bottom: 1px solid var(--border-light);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -420,7 +420,7 @@ a:hover {
     gap: 0.6rem;
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--dark);
     text-decoration: none;
 }
 
@@ -451,7 +451,7 @@ a:hover {
 .nav-link {
     font-size: 0.95rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: var(--dark);
     text-decoration: none;
     transition: color var(--transition-fast);
 }
@@ -470,7 +470,7 @@ a:hover {
     display: none;
     background: none;
     border: none;
-    color: var(--text-primary);
+    color: var(--dark);
     cursor: pointer;
     padding: 4px;
 }
@@ -505,7 +505,7 @@ a:hover {
 
 .hero-subtitle {
     font-size: 1.15rem;
-    color: var(--text-secondary);
+    color: var(--dark);
     line-height: 1.6;
     max-width: 520px;
 }
@@ -528,8 +528,8 @@ a:hover {
 .resume-card {
     width: 100%;
     max-width: 420px;
-    background-color: var(--surface);
-    border: 1px solid var(--border);
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-lg);
     padding: 2.25rem;
     box-shadow: var(--shadow-lg);
@@ -557,14 +557,14 @@ a:hover {
     height: 18px;
     width: 65%;
     background-color: var(--primary);
-    opacity: 0.85;
+    opacity: 0.9;
 }
 
 .resume-line--title {
     height: 12px;
     width: 42%;
-    background-color: var(--text-muted);
-    opacity: 0.5;
+    background-color: var(--secondary);
+    opacity: 0.6;
 }
 
 .resume-card-section {
@@ -578,7 +578,7 @@ a:hover {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--text-muted);
+    color: var(--secondary);
 }
 
 .resume-tags {
@@ -604,7 +604,7 @@ a:hover {
     right: -24px;
     width: 96px;
     height: 96px;
-    background-color: var(--surface);
+    background-color: #FFFFFF;
     border: 2px solid var(--primary);
     border-radius: 50%;
     display: flex;
@@ -634,7 +634,7 @@ a:hover {
     font-size: 0.62rem;
     font-weight: 700;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--secondary);
     margin-top: 2px;
 }
 
@@ -643,8 +643,8 @@ a:hover {
    ========================================================================== */
 .features-section {
     padding: 4.5rem 0 5.5rem;
-    background-color: var(--surface);
-    border-top: 1px solid var(--border);
+    background-color: #FFFFFF;
+    border-top: 1px solid var(--border-light);
 }
 
 .section-header {
@@ -658,17 +658,17 @@ a:hover {
 .section-header h2 {
     font-size: 2rem;
     font-weight: 800;
-    color: var(--text-primary);
+    color: var(--dark);
 }
 
 .section-header p {
     font-size: 1.05rem;
-    color: var(--text-muted);
+    color: var(--secondary);
 }
 
 .feature-card {
-    background-color: var(--background);
-    border: 1px solid var(--border);
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     padding: 2rem;
     display: flex;
@@ -706,12 +706,12 @@ a:hover {
 .feature-card h3 {
     font-size: 1.15rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--dark);
 }
 
 .feature-card p {
     font-size: 0.92rem;
-    color: var(--text-secondary);
+    color: var(--dark);
     line-height: 1.5;
 }
 
@@ -743,8 +743,8 @@ a:hover {
    Landing Page Footer Section
    ========================================================================== */
 .footer {
-    background-color: var(--surface);
-    border-top: 1px solid var(--border);
+    background-color: var(--background);
+    border-top: 1px solid var(--border-light);
     padding: 4rem 0 2rem;
 }
 
@@ -771,7 +771,7 @@ a:hover {
 .footer-col h4 {
     font-size: 0.92rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--dark);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -784,7 +784,7 @@ a:hover {
 }
 
 .footer-links a {
-    color: var(--text-secondary);
+    color: var(--dark);
     font-size: 0.9rem;
     text-decoration: none;
     transition: color var(--transition-fast);
@@ -795,11 +795,11 @@ a:hover {
 }
 
 .footer-bottom {
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-light);
     padding-top: 2rem;
     text-align: center;
     font-size: 0.85rem;
-    color: var(--text-muted);
+    color: var(--secondary);
 }
 
 /* Landing Page Responsive Breakpoints */
