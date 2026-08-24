@@ -257,7 +257,7 @@ a:hover {
     color: var(--dark);
 }
 
-.form-input, .form-select, .form-textarea {
+.form-input, .form-textarea {
     width: 100%;
     height: 42px;
     padding: 0 14px;
@@ -270,18 +270,44 @@ a:hover {
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.form-textarea {
-    height: auto;
-    min-height: 110px;
-    padding: 12px 14px;
-    resize: vertical;
-    line-height: 1.5;
+/* Professional Custom Dropdown Select System */
+select, .form-select {
+    width: 100%;
+    height: 44px;
+    padding: 0 40px 0 14px;
+    font-family: var(--font-family);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--dark);
+    background-color: #FFFFFF;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23524646' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px 16px;
+    border: 1px solid var(--secondary);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.form-input:focus, .form-select:focus, .form-textarea:focus {
+select:hover, .form-select:hover {
+    border-color: var(--dark);
+}
+
+.form-input:focus, select:focus, .form-select:focus, .form-textarea:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+select option, .form-select option {
+    background-color: #FFFFFF;
+    color: var(--dark);
+    padding: 10px;
+    font-size: 0.95rem;
 }
 
 /* ==========================================================================
