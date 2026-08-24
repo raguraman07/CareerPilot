@@ -1017,8 +1017,8 @@ body.dark-mode .welcome-banner-card {
 /* Upcoming Features Cards */
 .upcoming-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.15rem;
 }
 
 .upcoming-card {
@@ -1082,6 +1082,9 @@ body.dark-mode .welcome-banner-card {
         grid-template-columns: repeat(2, 1fr);
     }
     .actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .upcoming-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }

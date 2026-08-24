@@ -75,8 +75,13 @@ body.dark-mode {
 }
 
 html {
+    background-color: var(--background-color);
     scroll-behavior: smooth;
-    font-size: 16px;
+    font-size: 15px;
+}
+
+html.dark-mode {
+    background-color: #101019;
 }
 
 body {
@@ -85,7 +90,31 @@ body {
     color: var(--text-color);
     line-height: 1.6;
     overflow-x: hidden;
-    transition: background-color var(--transition-normal), color var(--transition-normal);
+    opacity: 0;
+    transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1), background-color var(--transition-normal), color var(--transition-normal);
+}
+
+body.dark-mode {
+    background-color: #101019;
+}
+
+/* ==========================================================================
+   Smooth Page Navigation Transitions & Anti-Flicker States
+   ========================================================================== */
+body.page-loaded {
+    opacity: 1;
+}
+
+body.page-exiting {
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body {
+        opacity: 1 !important;
+        transition: none !important;
+    }
 }
 
 a {

@@ -1,7 +1,92 @@
 /**
  * CareerPilot AI - Main Javascript Handler
- * Handles global interactions: Theme toggling, Mobile Navigation, Scroll animations, and active state tracking.
+ * Handles global interactions: Theme toggling, Mobile Navigation, Smooth Page Transitions, Scroll animations, and active state tracking.
  */
+
+// -------------------------------------------------------------
+// Early Anti-Flicker Page Transition & Theme Helper
+// -------------------------------------------------------------
+(function syncThemeEarly() {
+    try {
+        const storedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = storedTheme || (systemPrefersDark ? 'dark' : 'light');
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            if (document.body) document.body.classList.add('dark-mode');
+        } else {
+            document.documentElement.classList.remove('dark-mode');
+            if (document.body) document.body.classList.remove('dark-mode');
+        }
+    } catch (e) {
+        // Silently fail if localStorage is disabled
+    }
+})();
+
+// Page entrance & exit transition manager
+const setupPageTransitions = () => {
+    // Reveal body cleanly on load
+    const triggerEntrance = () => {
+        document.body.classList.remove('page-exiting');
+        document.body.classList.add('page-loaded');
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', triggerEntrance);
+    } else {
+        triggerEntrance();
+    }
+
+    // Handle bfcache (browser back / forward button navigation)
+    window.addEventListener('pageshow', (event) => {
+        triggerEntrance();
+    });
+
+    // Intercept internal page navigation clicks for smooth fade-out
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (!link) return;
+
+        const href = link.getAttribute('href');
+        const target = link.getAttribute('target');
+
+        // Skip non-navigational, external, mailto, anchor or new-tab links
+        if (
+            !href ||
+            href.startsWith('#') ||
+            href.startsWith('javascript:') ||
+            href.startsWith('mailto:') ||
+            href.startsWith('tel:') ||
+            target === '_blank' ||
+            link.hasAttribute('download')
+        ) {
+            return;
+        }
+
+        // Determine if target URL is an internal HTML page
+        const isInternal = href.endsWith('.html') || (!href.includes('://') && !href.startsWith('//'));
+        if (isInternal) {
+            // Check if navigating to current exact page
+            const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+            const targetPath = href.split('/').pop() || 'index.html';
+            
+            if (currentPath === targetPath && !href.includes('#')) {
+                e.preventDefault();
+                return;
+            }
+
+            e.preventDefault();
+            document.body.classList.remove('page-loaded');
+            document.body.classList.add('page-exiting');
+
+            setTimeout(() => {
+                window.location.href = href;
+            }, 200);
+        }
+    });
+};
+
+setupPageTransitions();
 
 document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------
@@ -22,8 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Apply theme helper
     const applyTheme = (theme) => {
         if (theme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
             document.body.classList.add('dark-mode');
         } else {
+            document.documentElement.classList.remove('dark-mode');
             document.body.classList.remove('dark-mode');
         }
         localStorage.setItem('theme', theme);

@@ -19,6 +19,13 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/responsive.css">
+    <!-- Anti-Flicker & Early Theme Sync -->
+    <script>
+        (function() {
+            var t = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            if (t === 'dark') document.documentElement.classList.add('dark-mode');
+        })();
+    </script>
 </head>
 <body>
 
@@ -406,78 +413,6 @@
                     </div>
                 </section>
 
-                <!-- Two-Column Layout: Recent Activity + Upcoming Modules -->
-                <div class="dashboard-split-grid">
-                    
-                    <!-- Recent Activity Section -->
-                    <section class="activity-section panel-container" aria-labelledby="recent-activity-title">
-                        <div class="panel-header">
-                            <h2 id="recent-activity-title" class="panel-title">Recent Activity</h2>
-                            <div class="panel-actions">
-                                <button class="btn btn-secondary btn-sm" id="btn-refresh-activity" aria-label="Refresh Activity Feed">
-                                    <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-                                    <span>Refresh</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="activity-table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Date</th>
-                                        <th scope="col">Activity</th>
-                                        <th scope="col">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="activity-tbody">
-                                    <!-- Populated dynamically by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <!-- Upcoming Modules Section -->
-                    <section class="upcoming-section panel-container" aria-labelledby="upcoming-title">
-                        <div class="panel-header">
-                            <h2 id="upcoming-title" class="panel-title">Upcoming Modules</h2>
-                        </div>
-                        <div class="upcoming-grid">
-                            
-                            <div class="upcoming-card disabled" aria-disabled="true">
-                                <div class="upcoming-header">
-                                    <span class="upcoming-badge">Coming Soon</span>
-                                </div>
-                                <h3>Mock Interview</h3>
-                                <p>Interactive video/audio feedback tool for practice prep sessions.</p>
-                            </div>
-
-                            <div class="upcoming-card disabled" aria-disabled="true">
-                                <div class="upcoming-header">
-                                    <span class="upcoming-badge">Coming Soon</span>
-                                </div>
-                                <h3>Portfolio Analyzer</h3>
-                                <p>Analyzes GitHub repos and portfolios for technical resume proof.</p>
-                            </div>
-
-                            <div class="upcoming-card disabled" aria-disabled="true">
-                                <div class="upcoming-header">
-                                    <span class="upcoming-badge">Coming Soon</span>
-                                </div>
-                                <h3>Skill Gap Analysis</h3>
-                                <p>Compare skills dynamically with target job ads and get learning links.</p>
-                            </div>
-
-                            <div class="upcoming-card disabled" aria-disabled="true">
-                                <div class="upcoming-header">
-                                    <span class="upcoming-badge">Coming Soon</span>
-                                </div>
-                                <h3>Cover Letter Generator</h3>
-                                <p>Instant matching cover letters tailored to target job specifications.</p>
-                            </div>
-
-                        </div>
-                    </section>
-                </div>
 
             </main>
         </div>
