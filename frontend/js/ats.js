@@ -40,7 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
         alertBox.textContent = '';
     };
 
-    const populateDropdown = async () => {
+    const loadResumes = async () => {
+        const selectContainer = document.getElementById('resume-select-container');
+        if (btnRunAts) btnRunAts.disabled = true;
+
         try {
             const token = await getAuthToken();
             const res = await fetch(`${API_BASE_URL}/api/resume/list`, {
@@ -49,13 +52,34 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error("Failed to load resume list.");
             const data = await res.json();
 
-            resumeSelect.innerHTML = '<option value="" disabled selected>-- Select an Uploaded Resume --</option>';
-            if (!data || data.length === 0) {
-                resumeSelect.innerHTML = '<option value="" disabled>No resumes found. Please upload a resume first.</option>';
-                btnRunAts.disabled = true;
+            if (!Array.isArray(data) || data.length === 0) {
+                if (selectContainer) {
+                    selectContainer.innerHTML = `
+                        <div class="resume-selector-card">
+                            <div class="resume-selector-left">
+                                <div class="resume-selector-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="resume-selector-text">
+                                    <div class="resume-selector-title">No resumes uploaded yet</div>
+                                    <div class="resume-selector-subtitle">Please upload a resume first to run ATS score audit.</div>
+                                </div>
+                            </div>
+                            <div class="resume-selector-right">
+                                <a href="upload.html" class="btn btn-primary btn-sm">Upload Resume</a>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (resumeSelect) resumeSelect.style.display = 'none';
+                if (btnRunAts) btnRunAts.disabled = true;
                 return;
             }
 
+            resumeSelect.innerHTML = '<option value="" disabled selected>-- Select an Uploaded Resume --</option>';
             data.forEach(item => {
                 const opt = document.createElement('option');
                 opt.value = item.id;
@@ -63,9 +87,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 opt.textContent = `${item.filename} ${uploadDate ? `(${uploadDate})` : ''}`;
                 resumeSelect.appendChild(opt);
             });
-            btnRunAts.disabled = false;
+
+            if (selectContainer) selectContainer.style.display = 'none';
+            if (resumeSelect) resumeSelect.style.display = 'block';
+
+            const checkSelection = () => {
+                if (btnRunAts) btnRunAts.disabled = !resumeSelect.value;
+            };
+            resumeSelect.addEventListener('change', checkSelection);
+            checkSelection();
+
         } catch (err) {
-            resumeSelect.innerHTML = '<option value="" disabled>Error loading resumes.</option>';
+            if (selectContainer) {
+                selectContainer.innerHTML = `
+                    <div class="resume-selector-card">
+                        <div class="resume-selector-left">
+                            <div class="resume-selector-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                            </div>
+                            <div class="resume-selector-text">
+                                <div class="resume-selector-title">Error loading resumes</div>
+                                <div class="resume-selector-subtitle">Please check connection and reload.</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            if (btnRunAts) btnRunAts.disabled = true;
             showAlert("Error loading your resumes. Please refresh or check connection.", 'danger');
         }
     };
