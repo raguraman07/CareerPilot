@@ -4,7 +4,6 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 
-# Ensure backend directory is in path
 sys.path.append(os.path.dirname(__file__))
 
 os.environ["GEMINI_API_KEY"] = "dummy-key-for-testing"
@@ -43,34 +42,27 @@ class TestAIBlueprint(unittest.TestCase):
         }
         self.assertTrue(validate_analysis_json(valid_sample))
 
-        # Test missing key
         invalid_sample = valid_sample.copy()
         del invalid_sample["technical_skills_found"]
         self.assertFalse(validate_analysis_json(invalid_sample))
 
-        # Test non-array key
         invalid_type_sample = valid_sample.copy()
         invalid_type_sample["technical_skills_found"] = "Python, Flask"
         self.assertFalse(validate_analysis_json(invalid_type_sample))
 
     @patch('app.blueprints.ai.routes.analyze_resume_text')
-    @patch('resume_routes.supabase_admin.auth.get_user')
-    @patch('app.blueprints.ai.routes.handle_supabase_op')
-    @patch('app.blueprints.ai.db_service.handle_supabase_op')
-    def test_analyze_resume_endpoint_success(self, mock_db_service_op, mock_routes_op, mock_get_user, mock_analyze_text):
-        # 1. Mock Authentication
-        mock_user = MagicMock()
-        mock_user.user.id = "mock-user-123"
-        mock_get_user.return_value = mock_user
+    @patch('app.blueprints.ai.routes.get_auth_uid')
+    @patch('app.blueprints.ai.routes.handle_db_op')
+    @patch('app.blueprints.ai.db_service.handle_db_op')
+    def test_analyze_resume_endpoint_success(self, mock_db_service_op, mock_routes_op, mock_get_uid, mock_analyze_text):
+        mock_get_uid.return_value = "mock-user-123"
 
-        # 2. Mock Resume retrieval (extracted_text)
         mock_routes_op.return_value = {
             "extracted_text": "Experienced Python Software Engineer with Flask, JavaScript, SQL. Developed web apps.",
             "filename": "test_resume.pdf",
             "user_id": "mock-user-123"
         }
 
-        # 3. Mock dynamic Gemini response
         mock_analyze_text.return_value = {
             "resume_summary": "Experienced Python engineer",
             "technical_skills_found": ["Python", "Flask", "SQL"],
@@ -86,10 +78,8 @@ class TestAIBlueprint(unittest.TestCase):
             "career_recommendations": ["Learn Docker"]
         }
 
-        # 4. Mock Database check for cached analysis & insert
         mock_db_service_op.side_effect = lambda callback, fallback: fallback()
 
-        # 5. Trigger analyze-resume POST
         response = self.client.post(
             '/api/ai/analyze-resume',
             headers={"Authorization": "Bearer mock-jwt-token"},
@@ -103,13 +93,11 @@ class TestAIBlueprint(unittest.TestCase):
         self.assertIn("analysis_results", res_json)
 
     @patch('app.blueprints.ai.gemini_service.is_gemini_configured', False)
-    @patch('resume_routes.supabase_admin.auth.get_user')
-    @patch('app.blueprints.ai.routes.handle_supabase_op')
-    def test_gemini_unavailable_returns_502(self, mock_routes_op, mock_get_user):
+    @patch('app.blueprints.ai.routes.get_auth_uid')
+    @patch('app.blueprints.ai.routes.handle_db_op')
+    def test_gemini_unavailable_returns_502(self, mock_routes_op, mock_get_uid):
         """Verifies that when Gemini is unavailable, 502 error is returned and no mock analysis is shown."""
-        mock_user = MagicMock()
-        mock_user.user.id = "mock-user-123"
-        mock_get_user.return_value = mock_user
+        mock_get_uid.return_value = "mock-user-123"
 
         mock_routes_op.return_value = {
             "extracted_text": "Candidate text",

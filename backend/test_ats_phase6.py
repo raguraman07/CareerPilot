@@ -4,7 +4,6 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 
-# Ensure backend directory is in path
 sys.path.append(os.path.dirname(__file__))
 
 os.environ["GEMINI_API_KEY"] = "dummy-key-for-testing"
@@ -93,7 +92,6 @@ class TestATSPhase6(unittest.TestCase):
         self.assertIn("achievements_score", scores)
         self.assertIn("score_level", scores)
 
-        # Bounded ranges verification
         self.assertTrue(0 <= scores["keyword_score"] <= 25)
         self.assertTrue(0 <= scores["skills_score"] <= 20)
         self.assertTrue(0 <= scores["experience_score"] <= 15)
@@ -103,7 +101,6 @@ class TestATSPhase6(unittest.TestCase):
         self.assertTrue(0 <= scores["achievements_score"] <= 5)
         self.assertTrue(0 <= scores["overall_score"] <= 100)
 
-        # Verify overall sum equals sum of component scores
         calculated_sum = (
             scores["keyword_score"] + scores["skills_score"] +
             scores["experience_score"] + scores["structure_score"] +
@@ -113,13 +110,11 @@ class TestATSPhase6(unittest.TestCase):
         self.assertEqual(scores["overall_score"], calculated_sum)
 
     @patch('ats_routes.run_gemini_ats_analysis')
-    @patch('resume_routes.supabase_admin.auth.get_user')
+    @patch('ats_routes.get_auth_uid')
     @patch('ats_routes.fetch_and_verify_resume')
-    def test_analyze_ats_endpoint_success(self, mock_fetch_resume, mock_get_user, mock_run_gemini):
+    def test_analyze_ats_endpoint_success(self, mock_fetch_resume, mock_get_uid, mock_run_gemini):
         """Tests POST /api/ats/analyze/<resume_id> with valid authenticated session."""
-        mock_user = MagicMock()
-        mock_user.user.id = "firebase-user-uid-789"
-        mock_get_user.return_value = mock_user
+        mock_get_uid.return_value = "firebase-user-uid-789"
 
         mock_fetch_resume.return_value = {
             "id": "resume-123",
@@ -142,13 +137,11 @@ class TestATSPhase6(unittest.TestCase):
         self.assertIn("overall_score", res_json)
         self.assertIn("score_level", res_json)
 
-    @patch('resume_routes.supabase_admin.auth.get_user')
+    @patch('ats_routes.get_auth_uid')
     @patch('ats_routes.fetch_and_verify_resume')
-    def test_analyze_ats_empty_resume_error(self, mock_fetch_resume, mock_get_user):
+    def test_analyze_ats_empty_resume_error(self, mock_fetch_resume, mock_get_uid):
         """Tests that empty extracted resume text returns a 400 error response."""
-        mock_user = MagicMock()
-        mock_user.user.id = "firebase-user-uid-789"
-        mock_get_user.return_value = mock_user
+        mock_get_uid.return_value = "firebase-user-uid-789"
 
         mock_fetch_resume.return_value = {
             "id": "resume-empty",

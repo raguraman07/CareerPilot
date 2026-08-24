@@ -1,8 +1,8 @@
 import logging
 import time
 from flask import Blueprint, request, jsonify
-from supabase_client import supabase_admin
-from resume_routes import get_auth_uid, handle_supabase_op
+from firebase_client import db
+from resume_routes import get_auth_uid, handle_db_op, handle_supabase_op
 from app.blueprints.ai.gemini_service import analyze_resume_text
 import app.blueprints.ai.db_service as db_service
 
@@ -32,10 +32,17 @@ def analyze_resume():
 
     logger.info(f"Analysis requested for resume_id {resume_id} by user {uid}")
 
-    # 1. Verify resume ownership & Retrieve extracted text
     def db_select_resume():
-        res = supabase_admin.table("resumes").select("extracted_text, filename, user_id").eq("id", resume_id).eq("user_id", uid).execute()
-        return res.data[0] if res.data else None
+        doc = db.collection("resumes").document(resume_id).get()
+        if doc.exists:
+            d = doc.to_dict()
+            if d.get("user_id") == uid:
+                return {
+                    "extracted_text": d.get("extracted_text") or "",
+                    "filename": d.get("filename") or "uploaded_resume.pdf",
+                    "user_id": uid
+                }
+        return None
 
     def mock_select_resume():
         try:
@@ -52,7 +59,7 @@ def analyze_resume():
         return None
 
     try:
-        resume_record = handle_supabase_op(db_select_resume, mock_select_resume)
+        resume_record = handle_db_op(db_select_resume, mock_select_resume)
     except Exception as db_err:
         logger.error(f"Database error while querying resume {resume_id}: {db_err}")
         return jsonify({"error": "Database error while fetching resume details."}), 500
@@ -61,7 +68,6 @@ def analyze_resume():
         logger.error(f"Resume {resume_id} not found or unauthorized for user {uid}")
         return jsonify({"error": "Resume not found or access denied."}), 404
 
-    # 2. Check cached analysis
     cached_record = db_service.get_cached_analysis(resume_id, uid)
     if cached_record:
         logger.info(f"Performance: Returning cached analysis results for resume {resume_id}")
@@ -88,7 +94,6 @@ def analyze_resume():
         logger.error(f"Resume {resume_id} contains no extracted text.")
         return jsonify({"error": "Resume has no extracted text content. Please parse or re-upload your resume."}), 400
 
-    # 3. Call Gemini to perform structured analysis
     try:
         logger.info(f"Gemini API request started for resume_id {resume_id}")
         analysis_results = analyze_resume_text(resume_text)
@@ -100,7 +105,6 @@ def analyze_resume():
             "error": "AI resume analysis is temporarily unavailable. Please try again."
         }), 502
 
-    # 4. Save results in database
     try:
         logger.info(f"Database save started for resume_id {resume_id}")
         saved_record = db_service.save_analysis(resume_id, uid, analysis_results)
@@ -130,10 +134,6 @@ def analyze_resume():
 
 @ai_bp.route('/api/ai/analysis/<resume_id>', methods=['GET'])
 def get_analysis_by_resume(resume_id):
-    """
-    GET /api/ai/analysis/<resume_id>
-    Returns existing analysis for the authenticated user for the specified resume_id.
-    """
     try:
         uid = get_auth_uid(request)
     except ValueError as val_err:
@@ -170,10 +170,6 @@ def get_analysis_by_resume(resume_id):
 
 @ai_bp.route('/api/ai/history', methods=['GET'])
 def get_analysis_history():
-    """
-    GET /api/ai/history
-    Returns: List of all previous resume analyses for the logged-in user.
-    """
     try:
         uid = get_auth_uid(request)
     except ValueError as val_err:

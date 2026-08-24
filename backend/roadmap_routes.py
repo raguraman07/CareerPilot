@@ -1,9 +1,10 @@
 import os
 import json
 import logging
+import uuid
 from flask import Blueprint, request, jsonify
-from supabase_client import supabase_admin
-from resume_routes import get_auth_uid, handle_supabase_op
+from firebase_client import db
+from resume_routes import get_auth_uid, handle_db_op
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +110,9 @@ def generate_roadmap():
         logger.error(f"Gemini Career Roadmap generation failed: {e}")
         return jsonify({"error": "AI analysis is temporarily unavailable. Please try again."}), 502
 
+    r_id = str(uuid.uuid4())
     record = {
+        "id": r_id,
         "user_id": uid,
         "goal": goal,
         "current_level": current_level,
@@ -117,17 +120,15 @@ def generate_roadmap():
     }
 
     def db_insert():
-        res = supabase_admin.table("career_roadmaps").insert(record).execute()
-        return res.data[0] if res.data else record
+        db.collection("career_roadmaps").document(r_id).set(record)
+        return record
 
     def mock_insert():
-        r_id = f"roadmap-{len(MOCK_ROADMAP_DB) + 1}"
-        record["id"] = r_id
         MOCK_ROADMAP_DB[r_id] = record
         return record
 
     try:
-        saved_record = handle_supabase_op(db_insert, mock_insert)
+        saved_record = handle_db_op(db_insert, mock_insert)
         return jsonify({
             "success": True,
             "roadmap_id": saved_record.get("id"),

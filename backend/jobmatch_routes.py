@@ -1,9 +1,10 @@
 import os
 import json
 import logging
+import uuid
 from flask import Blueprint, request, jsonify
-from supabase_client import supabase_admin
-from resume_routes import get_auth_uid, handle_supabase_op
+from firebase_client import db
+from resume_routes import get_auth_uid, handle_db_op
 
 logger = logging.getLogger(__name__)
 
@@ -66,20 +67,22 @@ def run_job_match():
         return jsonify({"error": "Missing resume_id or job_description in request."}), 400
 
     def db_select():
-        res = supabase_admin.table("resumes").select("extracted_text").eq("id", resume_id).eq("user_id", uid).execute()
-        if res.data:
-            return res.data[0].get("extracted_text") or ""
+        doc = db.collection("resumes").document(resume_id).get()
+        if doc.exists:
+            d = doc.to_dict()
+            if d.get("user_id") == uid:
+                return d.get("extracted_text") or ""
         return ""
 
     def mock_select():
         from resume_routes import MOCK_RESUMES_DB
         r = MOCK_RESUMES_DB.get(resume_id)
-        if r and r["user_id"] == uid:
+        if r and r.get("user_id") == uid:
             return r.get("extracted_text") or ""
         return "Developer Resume text sample."
 
     try:
-        resume_text = handle_supabase_op(db_select, mock_select)
+        resume_text = handle_db_op(db_select, mock_select)
     except Exception as db_err:
         logger.error(f"Failed to fetch resume details: {db_err}")
         return jsonify({"error": "Failed to fetch resume details."}), 500
@@ -132,7 +135,9 @@ def run_job_match():
         logger.error(f"Gemini Job Match failed: {e}")
         return jsonify({"error": "AI analysis is temporarily unavailable. Please try again."}), 502
 
+    match_id = str(uuid.uuid4())
     record = {
+        "id": match_id,
         "user_id": uid,
         "resume_id": resume_id,
         "job_description": job_description,
@@ -143,17 +148,15 @@ def run_job_match():
     }
 
     def db_insert():
-        res = supabase_admin.table("job_matches").insert(record).execute()
-        return res.data[0] if res.data else record
+        db.collection("job_matches").document(match_id).set(record)
+        return record
 
     def mock_insert():
-        match_id = f"match-{len(MOCK_JOBMATCH_DB) + 1}"
-        record["id"] = match_id
         MOCK_JOBMATCH_DB[match_id] = record
         return record
 
     try:
-        saved_record = handle_supabase_op(db_insert, mock_insert)
+        saved_record = handle_db_op(db_insert, mock_insert)
         return jsonify({
             "success": True,
             "match_id": saved_record.get("id"),

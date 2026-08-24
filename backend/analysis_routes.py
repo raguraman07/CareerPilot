@@ -5,8 +5,8 @@ import uuid
 import time
 import re
 from flask import Blueprint, request, jsonify
-from supabase_client import supabase_admin
-from resume_routes import get_auth_uid, handle_supabase_op
+from firebase_client import db
+from resume_routes import get_auth_uid, handle_db_op
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -198,29 +198,20 @@ Resume Text to Analyze:
     analysis_id = str(uuid.uuid4())
     
     def db_insert():
-        logger.info(f"Calling transactional save_resume_analysis RPC for resume_id {resume_id}")
-        try:
-            res = supabase_admin.rpc("save_resume_analysis", {
-                "p_resume_id": resume_id,
-                "p_user_id": uid,
-                "p_status": "completed",
-                "p_analysis_results": analysis_results
-            }).execute()
-            if res.data:
-                return res.data[0] if isinstance(res.data, list) else res.data
-        except Exception as rpc_err:
-            logger.warning(f"RPC save_resume_analysis failed ({rpc_err}). Falling back to direct table insert.")
-
-        ins = supabase_admin.table("resume_analyses").insert({
+        record = {
             "id": analysis_id,
             "resume_id": resume_id,
             "user_id": uid,
             "status": "completed",
-            "analysis_results": analysis_results
-        }).execute()
-        
-        supabase_admin.table("resumes").update({"status": "analyzed"}).eq("id", resume_id).execute()
-        return ins.data[0] if ins.data else {"id": analysis_id}
+            "analysis_results": analysis_results,
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        }
+        db.collection("resume_analyses").document(analysis_id).set(record)
+        try:
+            db.collection("resumes").document(resume_id).update({"status": "analyzed"})
+        except Exception:
+            pass
+        return record
 
     def mock_insert():
         mock_rec = {
@@ -235,7 +226,7 @@ Resume Text to Analyze:
         return mock_rec
 
     try:
-        saved_record = handle_supabase_op(db_insert, mock_insert)
+        saved_record = handle_db_op(db_insert, mock_insert)
         return jsonify({
             "success": True,
             "analysis_id": saved_record.get("id") if isinstance(saved_record, dict) else analysis_id,
@@ -260,13 +251,20 @@ def get_latest_analysis():
         return jsonify({"error": str(val_err)}), 401
 
     def db_select_latest():
-        res = supabase_admin.table("resume_analyses") \
-            .select("*, resumes(filename)") \
-            .eq("user_id", uid) \
-            .order("created_at", desc=True) \
-            .limit(1) \
-            .execute()
-        return res.data[0] if res.data else None
+        docs = db.collection("resume_analyses").where("user_id", "==", uid).stream()
+        records = [doc.to_dict() for doc in docs]
+        if not records:
+            return None
+        sorted_records = sorted(records, key=lambda x: x.get("created_at", ""), reverse=True)
+        latest = sorted_records[0]
+        # Attach resume filename if available
+        try:
+            res_doc = db.collection("resumes").document(latest.get("resume_id")).get()
+            if res_doc.exists:
+                latest["resumes"] = {"filename": res_doc.to_dict().get("filename")}
+        except Exception:
+            pass
+        return latest
 
     def mock_select_latest():
         user_records = [r for r in MOCK_ANALYSES_DB.values() if r.get("user_id") == uid]
@@ -276,7 +274,7 @@ def get_latest_analysis():
         return sorted_records[0]
 
     try:
-        latest = handle_supabase_op(db_select_latest, mock_select_latest)
+        latest = handle_db_op(db_select_latest, mock_select_latest)
         if not latest:
             return jsonify({"message": "No resume analysis records found."}), 404
         return jsonify(latest), 200

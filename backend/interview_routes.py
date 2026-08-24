@@ -1,9 +1,10 @@
 import os
 import json
 import logging
+import uuid
 from flask import Blueprint, request, jsonify
-from supabase_client import supabase_admin
-from resume_routes import get_auth_uid, handle_supabase_op
+from firebase_client import db
+from resume_routes import get_auth_uid, handle_db_op
 
 logger = logging.getLogger(__name__)
 
@@ -66,20 +67,22 @@ def generate_questions():
         return jsonify({"error": "Missing resume_id in request."}), 400
 
     def db_select():
-        res = supabase_admin.table("resumes").select("extracted_text").eq("id", resume_id).eq("user_id", uid).execute()
-        if res.data:
-            return res.data[0].get("extracted_text") or ""
+        doc = db.collection("resumes").document(resume_id).get()
+        if doc.exists:
+            d = doc.to_dict()
+            if d.get("user_id") == uid:
+                return d.get("extracted_text") or ""
         return ""
 
     def mock_select():
         from resume_routes import MOCK_RESUMES_DB
         r = MOCK_RESUMES_DB.get(resume_id)
-        if r and r["user_id"] == uid:
+        if r and r.get("user_id") == uid:
             return r.get("extracted_text") or ""
         return "Developer resume sample text."
 
     try:
-        resume_text = handle_supabase_op(db_select, mock_select)
+        resume_text = handle_db_op(db_select, mock_select)
     except Exception as db_err:
         logger.error(f"Failed to fetch resume details: {db_err}")
         return jsonify({"error": "Failed to fetch resume details."}), 500
@@ -129,7 +132,9 @@ def generate_questions():
         logger.error(f"Gemini Interview generation failed: {e}")
         return jsonify({"error": "AI analysis is temporarily unavailable. Please try again."}), 502
 
+    q_id = str(uuid.uuid4())
     record = {
+        "id": q_id,
         "user_id": uid,
         "resume_id": resume_id,
         "category": category,
@@ -138,17 +143,15 @@ def generate_questions():
     }
 
     def db_insert():
-        res = supabase_admin.table("interview_questions").insert(record).execute()
-        return res.data[0] if res.data else record
+        db.collection("interview_questions").document(q_id).set(record)
+        return record
 
     def mock_insert():
-        q_id = f"interview-{len(MOCK_INTERVIEW_DB) + 1}"
-        record["id"] = q_id
         MOCK_INTERVIEW_DB[q_id] = record
         return record
 
     try:
-        saved_record = handle_supabase_op(db_insert, mock_insert)
+        saved_record = handle_db_op(db_insert, mock_insert)
         return jsonify({
             "success": True,
             "interview_id": saved_record.get("id"),

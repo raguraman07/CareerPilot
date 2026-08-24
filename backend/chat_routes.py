@@ -1,8 +1,10 @@
 import os
+import time
 import logging
+import uuid
 from flask import Blueprint, request, jsonify
-from supabase_client import supabase_admin
-from resume_routes import get_auth_uid, handle_supabase_op
+from firebase_client import db
+from resume_routes import get_auth_uid, handle_db_op
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +67,12 @@ def send_chat_message():
     # Fetch latest user resume for context-aware coaching
     resume_context = ""
     def db_select_resume():
-        res = supabase_admin.table("resumes").select("extracted_text").eq("user_id", uid).order("uploaded_at", desc=True).limit(1).execute()
-        return res.data[0].get("extracted_text") or "" if res.data else ""
+        docs = db.collection("resumes").where("user_id", "==", uid).stream()
+        records = [d.to_dict() for d in docs]
+        if records:
+            sorted_records = sorted(records, key=lambda x: x.get("uploaded_at", ""), reverse=True)
+            return sorted_records[0].get("extracted_text") or ""
+        return ""
 
     def mock_select_resume():
         from resume_routes import MOCK_RESUMES_DB
@@ -77,7 +83,7 @@ def send_chat_message():
         return ""
 
     try:
-        extracted_text = handle_supabase_op(db_select_resume, mock_select_resume)
+        extracted_text = handle_db_op(db_select_resume, mock_select_resume)
         if extracted_text:
             resume_context = f"\nCandidate Resume Context:\n{extracted_text}\n"
     except Exception as db_err:
@@ -111,12 +117,15 @@ def send_chat_message():
         logger.error(f"Gemini Career Coach invocation failed: {e}")
         return jsonify({"error": "AI Career Coach service is temporarily unavailable. Please try again."}), 502
 
-    # Save to chat_history table in Supabase
-    user_record = {"user_id": uid, "message": user_message, "sender": "user"}
-    bot_record = {"user_id": uid, "message": bot_reply, "sender": "bot"}
+    now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    u_id = str(uuid.uuid4())
+    b_id = str(uuid.uuid4())
+    user_record = {"id": u_id, "user_id": uid, "message": user_message, "sender": "user", "timestamp": now_iso}
+    bot_record = {"id": b_id, "user_id": uid, "message": bot_reply, "sender": "bot", "timestamp": now_iso}
 
     def db_insert():
-        supabase_admin.table("chat_history").insert([user_record, bot_record]).execute()
+        db.collection("chat_history").document(u_id).set(user_record)
+        db.collection("chat_history").document(b_id).set(bot_record)
         return True
 
     def mock_insert():
@@ -125,7 +134,7 @@ def send_chat_message():
         return True
 
     try:
-        handle_supabase_op(db_insert, mock_insert)
+        handle_db_op(db_insert, mock_insert)
     except Exception as db_save_err:
         logger.warning(f"Failed to persist chat message: {db_save_err}")
 
