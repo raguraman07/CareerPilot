@@ -433,6 +433,10 @@ a:hover {
     color: var(--primary);
 }
 
+.mobile-only {
+    display: none;
+}
+
 .nav-actions {
     display: flex;
     align-items: center;
