@@ -54,10 +54,6 @@ def get_auth_uid(req):
         return jwt_payload.get("sub") or jwt_payload.get("user_id") or jwt_payload.get("uid")
     raise ValueError("Unauthorized. Invalid session token.")
 
-def handle_supabase_op(callback, fallback_return):
-    """Backward-compatible wrapper to handle DB operations with a local mock fallback."""
-    return handle_db_op(callback, fallback_return)
-
 def handle_db_op(callback, fallback_return):
     """Wrapper to handle Firestore operations with a local mock fallback if DB is offline."""
     try:

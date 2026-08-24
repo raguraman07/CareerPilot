@@ -2,7 +2,7 @@ import time
 import logging
 import uuid
 from firebase_client import db
-from resume_routes import handle_db_op, handle_supabase_op
+from resume_routes import handle_db_op
 
 logger = logging.getLogger(__name__)
 
