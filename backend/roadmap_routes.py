@@ -4,50 +4,54 @@ import logging
 from flask import Blueprint, request, jsonify
 from supabase_client import supabase_admin
 from resume_routes import get_auth_uid, handle_supabase_op
-import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
 
 roadmap_bp = Blueprint('roadmap', __name__)
 
-# Configure Gemini
+genai_module = None
+genai_legacy_module = None
+
+try:
+    from google import genai
+    genai_module = genai
+except ImportError:
+    pass
+
+try:
+    import google.generativeai as genai_legacy
+    genai_legacy_module = genai_legacy
+except ImportError:
+    pass
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-is_gemini_mock = not GEMINI_API_KEY or GEMINI_API_KEY.startswith("your-") or GEMINI_API_KEY.startswith("dummy")
+is_gemini_configured = bool(
+    GEMINI_API_KEY 
+    and not GEMINI_API_KEY.startswith("your-") 
+    and not GEMINI_API_KEY.startswith("dummy") 
+    and GEMINI_API_KEY != "your_gemini_api_key_here"
+)
 
-if not is_gemini_mock:
-    genai.configure(api_key=GEMINI_API_KEY)
+genai_client = None
+genai_legacy_model = None
 
-# Mock fallback data for Career Roadmap
-MOCK_ROADMAP_DATA = {
-    "roadmap_json": {
-        "milestones": [
-            {
-                "phase": "Phase 1: Foundation & Version Control",
-                "duration": "1-2 weeks",
-                "topics": ["Python Advanced Concepts", "Git and GitHub Branching Strategies"],
-                "description": "Strengthen python core syntax, object-oriented concepts, and learn collaborative code practices using Git."
-            },
-            {
-                "phase": "Phase 2: Relational Databases & Server APIs",
-                "duration": "3-4 weeks",
-                "topics": ["SQL Queries & Indices", "REST API standards with Flask", "Row-Level Security (RLS)"],
-                "description": "Understand database designs, construct server endpoints, and learn how to secure public data APIs."
-            },
-            {
-                "phase": "Phase 3: Deployment & Cloud",
-                "duration": "2 weeks",
-                "topics": ["Docker Containers", "Supabase DB Hosting", "CI/CD Actions"],
-                "description": "Containerize your Flask backend app and deploy it on modern hosting platforms connected to Supabase."
-            }
-        ]
-    }
-}
+if is_gemini_configured:
+    if genai_module is not None:
+        try:
+            genai_client = genai_module.Client(api_key=GEMINI_API_KEY)
+        except Exception:
+            pass
+    if genai_client is None and genai_legacy_module is not None:
+        try:
+            genai_legacy_module.configure(api_key=GEMINI_API_KEY)
+            genai_legacy_model = genai_legacy_module.GenerativeModel("gemini-3.6-flash")
+        except Exception:
+            is_gemini_configured = False
 
-# In-memory database fallback for local testing
 MOCK_ROADMAP_DB = {}
 
 @roadmap_bp.route('/api/roadmap/generate', methods=['POST'])
-def generate_career_roadmap():
+def generate_roadmap():
     try:
         uid = get_auth_uid(request)
     except ValueError as val_err:
@@ -55,47 +59,56 @@ def generate_career_roadmap():
 
     data = request.get_json() or {}
     goal = data.get("goal")
-    current_level = data.get("current_level") or "Entry-Level"
+    current_level = data.get("current_level", "entry")
 
     if not goal:
         return jsonify({"error": "Missing goal (target career role) in request."}), 400
 
-    roadmap_result = None
+    if not is_gemini_configured or (not genai_client and not genai_legacy_model):
+        return jsonify({"error": "AI analysis is temporarily unavailable. Please try again."}), 502
 
-    if is_gemini_mock:
-        roadmap_result = MOCK_ROADMAP_DATA
-    else:
-        try:
-            prompt = f"""
-            You are an expert career growth planner and technical mentor.
-            Generate a detailed chronological step-by-step career path roadmap to achieve the goal: '{goal}', starting from '{current_level}'.
-            
-            You must return a raw JSON object matching the exact structure below:
-            {{
-                "roadmap_json": {{
-                    "milestones": [
-                        {{
-                            "phase": "Phase Name / Title",
-                            "duration": "Estimated time (e.g. 2 weeks)",
-                            "topics": ["topic1", "topic2"],
-                            "description": "Short explanation of objectives"
-                        }}
-                    ]
-                }}
+    try:
+        prompt = f"""
+        You are an expert career growth planner and technical mentor.
+        Generate a detailed chronological step-by-step career path roadmap to achieve the target career goal: '{goal}', starting from experience level: '{current_level}'.
+        Do not use predefined or hardcoded skill milestones. Infer relevant topics dynamically based on the target role '{goal}'.
+        
+        You must return a raw JSON object matching the exact structure below:
+        {{
+            "roadmap_json": {{
+                "milestones": [
+                    {{
+                        "phase": "Phase Name / Title",
+                        "duration": "Estimated time (e.g. 2 weeks)",
+                        "topics": ["topic1", "topic2"],
+                        "description": "Short explanation of objectives"
+                    }}
+                ]
             }}
-            Provide at least 3 logical phases.
-            """
-            model = genai.GenerativeModel("gemini-1.5-flash")
-            response = model.generate_content(
+        }}
+        Provide at least 3 logical phases.
+        """
+        raw_text = ""
+        if genai_client:
+            resp = genai_client.models.generate_content(
+                model='gemini-3.6-flash',
+                contents=prompt,
+                config={'response_mime_type': 'application/json'}
+            )
+            raw_text = resp.text or ""
+        elif genai_legacy_model:
+            resp = genai_legacy_model.generate_content(
                 prompt,
                 generation_config={"response_mime_type": "application/json"}
             )
-            roadmap_result = json.loads(response.text.strip())
-        except Exception as e:
-            logger.error(f"Gemini Career Roadmap generation failed: {e}")
-            roadmap_result = MOCK_ROADMAP_DATA
+            raw_text = resp.text or ""
 
-    # Insert into public.career_roadmaps
+        cleaned = raw_text.strip().replace("```json", "").replace("```", "").strip()
+        roadmap_result = json.loads(cleaned)
+    except Exception as e:
+        logger.error(f"Gemini Career Roadmap generation failed: {e}")
+        return jsonify({"error": "AI analysis is temporarily unavailable. Please try again."}), 502
+
     record = {
         "user_id": uid,
         "goal": goal,
@@ -107,46 +120,21 @@ def generate_career_roadmap():
         res = supabase_admin.table("career_roadmaps").insert(record).execute()
         return res.data[0] if res.data else record
 
-    import uuid as uuid_lib
-    import time
     def mock_insert():
-        mock_record = dict(record)
-        mock_record["id"] = str(uuid_lib.uuid4())
-        mock_record["created_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        MOCK_ROADMAP_DB[mock_record["id"]] = mock_record
-        return mock_record
+        r_id = f"roadmap-{len(MOCK_ROADMAP_DB) + 1}"
+        record["id"] = r_id
+        MOCK_ROADMAP_DB[r_id] = record
+        return record
 
     try:
         saved_record = handle_supabase_op(db_insert, mock_insert)
-        return jsonify(saved_record), 200
-    except Exception as db_err:
-        logger.error(f"Failed to save career roadmap: {db_err}")
-        return jsonify({"error": "Failed to save career roadmap to database."}), 500
-
-
-@roadmap_bp.route('/api/roadmap/latest', methods=['GET'])
-def get_latest_roadmap():
-    try:
-        uid = get_auth_uid(request)
-    except ValueError as val_err:
-        return jsonify({"error": str(val_err)}), 401
-
-    def db_select_latest():
-        res = supabase_admin.table("career_roadmaps").select("*").eq("user_id", uid).order("created_at", desc=True).limit(1).execute()
-        return res.data[0] if res.data else None
-
-    def mock_select_latest():
-        user_roadmaps = [r for r in MOCK_ROADMAP_DB.values() if r["user_id"] == uid]
-        if not user_roadmaps:
-            return None
-        sorted_roadmaps = sorted(user_roadmaps, key=lambda x: x.get("created_at", ""), reverse=True)
-        return sorted_roadmaps[0]
-
-    try:
-        latest = handle_supabase_op(db_select_latest, mock_select_latest)
-        if not latest:
-            return jsonify({"message": "No career roadmaps found."}), 404
-        return jsonify(latest), 200
-    except Exception as e:
-        logger.error(f"Failed to retrieve roadmap: {e}")
-        return jsonify({"error": "Failed to retrieve roadmap."}), 500
+        return jsonify({
+            "success": True,
+            "roadmap_id": saved_record.get("id"),
+            "goal": goal,
+            "current_level": current_level,
+            "roadmap": saved_record.get("roadmap_json")
+        }), 201
+    except Exception as save_err:
+        logger.error(f"Failed to save career roadmap: {save_err}")
+        return jsonify({"error": "Failed to save career roadmap."}), 500

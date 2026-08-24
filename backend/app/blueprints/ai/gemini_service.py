@@ -5,232 +5,239 @@ import re
 
 logger = logging.getLogger(__name__)
 
-# Safely import official Google GenAI SDK (google.genai) and legacy SDK (google.generativeai)
+# Safely import Google GenAI SDKs (official google.genai and legacy google.generativeai)
 genai_module = None
 genai_legacy_module = None
 
 try:
     from google import genai
-    from google.genai import types
     genai_module = genai
 except ImportError:
-    logger.warning("google.genai package not found in Python environment.")
+    pass
 
 try:
     import google.generativeai as genai_legacy
     genai_legacy_module = genai_legacy
 except ImportError:
-    logger.warning("google.generativeai package not found in Python environment.")
+    pass
 
-
-# Retrieve API key from environment
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-is_gemini_mock = not GEMINI_API_KEY or GEMINI_API_KEY.startswith("your-") or GEMINI_API_KEY.startswith("dummy") or GEMINI_API_KEY == "your_api_key"
+is_gemini_configured = bool(
+    GEMINI_API_KEY 
+    and not GEMINI_API_KEY.startswith("your-") 
+    and not GEMINI_API_KEY.startswith("dummy") 
+    and GEMINI_API_KEY != "your_gemini_api_key_here"
+)
 
 genai_client = None
 genai_legacy_model = None
 
-if not is_gemini_mock:
+if is_gemini_configured:
     if genai_module is not None:
         try:
             genai_client = genai_module.Client(api_key=GEMINI_API_KEY)
-            logger.info("Google GenAI official SDK (google.genai) client initialized successfully.")
+            logger.info("Gemini Service: Official google.genai SDK client initialized successfully.")
         except Exception as client_err:
-            logger.warning(f"google.genai client initialization failed: {client_err}.")
+            logger.warning(f"Gemini Service: google.genai client initialization failed: {client_err}")
     
     if genai_client is None and genai_legacy_module is not None:
         try:
             genai_legacy_module.configure(api_key=GEMINI_API_KEY)
-            genai_legacy_model = genai_legacy_module.GenerativeModel("gemini-1.5-flash")
-            logger.info("Google GenerativeAI legacy SDK model initialized successfully.")
+            genai_legacy_model = genai_legacy_module.GenerativeModel("gemini-3.6-flash")
+            logger.info("Gemini Service: Legacy google.generativeai SDK configured successfully.")
         except Exception as legacy_err:
-            logger.error(f"Failed to configure Google Gemini legacy SDK: {legacy_err}")
-            is_gemini_mock = True
-
-    if genai_client is None and genai_legacy_model is None:
-        logger.warning("No Google GenAI SDK could be configured with the provided GEMINI_API_KEY. Running in Mock AI Mode.")
-        is_gemini_mock = True
+            logger.error(f"Gemini Service: Failed to configure Google Gemini legacy SDK: {legacy_err}")
+            is_gemini_configured = False
 else:
-    logger.warning("GEMINI_API_KEY is not configured or is placeholder. Resume analysis will run in Mock AI Mode.")
-
+    logger.warning("Gemini Service: GEMINI_API_KEY is not configured or is placeholder in environment.")
 
 REQUIRED_KEYS = [
     "resume_summary",
-    "technical_skills",
-    "soft_skills",
+    "technical_skills_found",
+    "soft_skills_found",
     "strengths",
     "weaknesses",
     "missing_skills",
-    "improvements",
     "recommended_roles",
-    "career_recommendations"
+    "actionable_recommendations"
 ]
-
-MOCK_ANALYSIS_RESULTS = {
-    "resume_summary": "Highly motivated and results-oriented Software Engineer with experience building modern web applications. Proficient in Python, Flask, JavaScript, and SQL, with a strong focus on clean architecture, performance optimization, and scalable backend design.",
-    "technical_skills": ["Python", "Flask", "JavaScript", "HTML5", "CSS3", "SQL", "Git", "RESTful APIs"],
-    "soft_skills": ["Problem-solving", "Collaboration", "Technical Communication", "Adaptability", "Teamwork"],
-    "strengths": [
-        "Strong foundation in web application development using Python and Flask.",
-        "Demonstrated experience with database management and API design.",
-        "Clean project organization and structured implementation."
-    ],
-    "weaknesses": [
-        "Lacks representation of automated testing frameworks (e.g. pytest, Jest).",
-        "Limited exposure to containerization technologies (e.g. Docker, Kubernetes).",
-        "No mention of CI/CD pipeline automation or cloud deployment models (AWS, GCP)."
-    ],
-    "missing_skills": ["TypeScript", "Docker", "pytest", "Jest", "CI/CD Pipelines", "AWS/GCP Cloud Deployments"],
-    "improvements": [
-        "Incorporate a dedicated 'Testing' subsection in technical skills and list unit testing libraries like pytest or Jest.",
-        "Include cloud deployment tools (e.g., Docker, AWS) in your technical stack to demonstrate modern DevOps readiness.",
-        "Rephrase project bullet points using the STAR methodology, focusing on quantifiable metrics (e.g., 'improved query performance by 25%')."
-    ],
-    "recommended_roles": ["Full-Stack Software Engineer", "Backend Developer", "Junior DevOps Specialist", "Application Developer"],
-    "career_recommendations": [
-        "Gain hands-on experience with Docker containerization and deploy a project to AWS or GCP to build cloud competency.",
-        "Learn TypeScript to complement JavaScript skills and increase eligibility for senior Full-Stack roles.",
-        "Contribute to open-source projects or build a portfolio project that implements a full CI/CD deployment pipeline."
-    ]
-}
 
 
 def validate_analysis_json(data):
-    """Validates if the dictionary contains all 9 required keys and correct types."""
+    """
+    Validates that Gemini returned a valid dictionary with all required schema keys,
+    correct data types, non-null values, and bounded ATS score.
+    """
     if not isinstance(data, dict):
         logger.warning("Validation failed: Root data is not a dictionary.")
         return False
+
     for key in REQUIRED_KEYS:
         if key not in data:
             logger.warning(f"Validation failed: missing required key '{key}'")
             return False
-    # Validate resume_summary string
+
+    # Validate summary string
     if not isinstance(data["resume_summary"], str):
         logger.warning("Validation failed: 'resume_summary' is not a string.")
         return False
-    # Validate array fields
-    for k in REQUIRED_KEYS[1:]:
-        if not isinstance(data[k], list):
-            logger.warning(f"Validation failed: '{k}' is not a list/array.")
+
+    # Validate primary list fields
+    array_fields = [
+        "technical_skills_found",
+        "soft_skills_found",
+        "strengths",
+        "weaknesses",
+        "missing_skills",
+        "recommended_roles",
+        "actionable_recommendations"
+    ]
+
+    for field in array_fields:
+        if not isinstance(data[field], list):
+            logger.warning(f"Validation failed: '{field}' is not a list/array.")
             return False
-        # Ensure all elements in lists are strings
-        if not all(isinstance(item, str) for item in data[k]):
-            logger.warning(f"Validation failed: an element in list '{k}' is not a string.")
+        if not all(isinstance(item, str) for item in data[field]):
+            logger.warning(f"Validation failed: an element in list '{field}' is not a string.")
             return False
+
     return True
 
 
 def clean_json_response(raw_text):
-    """Strips markdown formatting, ```json blocks, and leading/trailing whitespace."""
+    """Strips markdown codeblock wrappers, ```json headers, and surrounding whitespace."""
     if not raw_text:
         return ""
     text = raw_text.strip()
-    # Remove codeblock wrappers if present
     text = re.sub(r'^```(?:json)?\s*', '', text, flags=re.IGNORECASE)
     text = re.sub(r'\s*```$', '', text)
     return text.strip()
 
 
+def normalize_analysis_payload(data):
+    """
+    Normalizes keys to support both new dynamic structure and legacy field aliases
+    (technical_skills, soft_skills, improvements, career_recommendations).
+    """
+    normalized = dict(data)
+    
+    normalized["technical_skills"] = data.get("technical_skills_found", [])
+    normalized["soft_skills"] = data.get("soft_skills_found", [])
+    normalized["improvements"] = data.get("actionable_recommendations", [])
+    normalized["career_recommendations"] = data.get("actionable_recommendations", [])
+    
+    if "experience_analysis" not in normalized or not isinstance(normalized["experience_analysis"], dict):
+        normalized["experience_analysis"] = {"strengths": [], "weaknesses": [], "recommendations": []}
+    if "education_analysis" not in normalized or not isinstance(normalized["education_analysis"], dict):
+        normalized["education_analysis"] = {"strengths": [], "weaknesses": [], "recommendations": []}
+    if "project_analysis" not in normalized or not isinstance(normalized["project_analysis"], dict):
+        normalized["project_analysis"] = {"strengths": [], "weaknesses": [], "recommendations": []}
+    if "ats_analysis" not in normalized or not isinstance(normalized["ats_analysis"], dict):
+        normalized["ats_analysis"] = {"score": 75, "keyword_analysis": [], "structure_analysis": [], "formatting_analysis": [], "warnings": []}
+        
+    return normalized
+
+
 def analyze_resume_text(resume_text):
     """
-    Sends resume text to Google Gemini and returns a validated 9-key JSON dictionary.
-    Retries once if response parsing or JSON validation fails.
+    Sends extracted resume text to Google Gemini API for fast dynamic analysis.
+    NO hardcoded or predefined skill lists are supplied.
+    NO fake mock responses are returned if Gemini fails.
+    Returns validated, normalized dictionary or raises RuntimeError.
     """
-    global is_gemini_mock
-    if is_gemini_mock or (not genai_client and not genai_legacy_model):
-        logger.info("Gemini Service: Running in Mock Mode. Returning validated mock analysis results.")
-        return MOCK_ANALYSIS_RESULTS
+    if not is_gemini_configured or (not genai_client and not genai_legacy_model):
+        logger.error("Gemini Service: GEMINI_API_KEY is missing or invalid. AI service unavailable.")
+        raise RuntimeError("AI resume analysis is temporarily unavailable. Please try again.")
 
     prompt = f"""
-You are an expert professional resume reviewer and career advisor.
-Analyze the following resume text carefully.
+You are an expert resume evaluator, recruiter, career advisor, and ATS specialist.
 
-Evaluate:
-- Professional summary
-- Education
-- Technical skills
-- Soft skills
-- Projects
-- Work experience
-- Certifications
-- Achievements
-- Resume structure
-- Resume clarity
-- Career relevance
-- Missing information
-- Potential ATS issues
+Analyze the provided resume independently.
 
-Do NOT invent information that does not exist in the resume. If information is missing or unavailable, return empty arrays or appropriate descriptions instead of hallucinating.
+Use only information supported by the resume.
 
-You MUST return ONLY a raw valid JSON object.
-Do NOT return Markdown.
-Do NOT return ```json formatting.
-Do NOT include explanations outside the JSON.
+Identify the candidate's actual technical skills, soft skills, strengths, weaknesses, experience quality, projects, education, certifications, career relevance, missing competencies, and improvement opportunities.
+
+Do not assume a predefined list of technologies or skills.
+
+Do not invent information.
+
+Do not claim that a candidate has a skill unless it is supported by the resume.
+
+Recommendations should be based on the candidate's actual profile.
+
+You MUST return ONLY a raw valid JSON object matching the requested structure below.
+Do NOT wrap inside markdown ```json codeblocks or include conversational text.
 
 REQUIRED JSON STRUCTURE:
 {{
-  "resume_summary": "Short professional summary paragraph",
-  "technical_skills": ["Skill 1", "Skill 2"],
-  "soft_skills": ["Soft Skill 1", "Soft Skill 2"],
+  "resume_summary": "Professional summary paragraph",
+  "technical_skills_found": ["Detected Skill 1", "Detected Skill 2"],
+  "soft_skills_found": ["Detected Soft Skill 1"],
   "strengths": ["Strength 1", "Strength 2"],
   "weaknesses": ["Weakness 1", "Weakness 2"],
-  "missing_skills": ["Missing Skill 1", "Missing Skill 2"],
-  "improvements": ["Improvement suggestion 1", "Improvement suggestion 2"],
-  "recommended_roles": ["Recommended Role 1", "Recommended Role 2"],
-  "career_recommendations": ["Career Recommendation 1", "Career Recommendation 2"]
+  "missing_skills": ["Inferred Missing Skill 1"],
+  "recommended_roles": ["Recommended Role 1"],
+  "experience_analysis": {{
+    "strengths": ["Experience Strength 1"],
+    "weaknesses": ["Experience Weakness 1"],
+    "recommendations": ["Recommendation 1"]
+  }},
+  "education_analysis": {{
+    "strengths": ["Education Strength 1"],
+    "weaknesses": ["Education Weakness 1"],
+    "recommendations": ["Recommendation 1"]
+  }},
+  "project_analysis": {{
+    "strengths": ["Project Strength 1"],
+    "weaknesses": ["Project Weakness 1"],
+    "recommendations": ["Recommendation 1"]
+  }},
+  "ats_analysis": {{
+    "score": 80,
+    "keyword_analysis": ["Keyword note 1"],
+    "structure_analysis": ["Structure note 1"],
+    "formatting_analysis": ["Formatting note 1"],
+    "warnings": ["ATS warning 1"]
+  }},
+  "actionable_recommendations": ["Actionable recommendation 1", "Actionable recommendation 2"]
 }}
 
-Resume Text:
+Resume Text to Analyze:
 {resume_text}
 """
 
     for attempt in range(1, 3):
-        logger.info(f"Gemini Service: Requesting analysis from Gemini API (Attempt {attempt}/2)...")
+        logger.info(f"Gemini Service: Executing Gemini API request (Attempt {attempt}/2)...")
         try:
-            raw_response_text = ""
+            raw_text = ""
             if genai_client:
-                # Official new SDK call
                 response = genai_client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-3.6-flash',
                     contents=prompt,
-                    config={
-                        'response_mime_type': 'application/json'
-                    }
+                    config={'response_mime_type': 'application/json'}
                 )
-                raw_response_text = response.text or ""
+                raw_text = response.text or ""
             elif genai_legacy_model:
-                # Legacy SDK call
                 response = genai_legacy_model.generate_content(
                     prompt,
                     generation_config={"response_mime_type": "application/json"}
                 )
-                raw_response_text = response.text or ""
+                raw_text = response.text or ""
 
-            cleaned_text = clean_json_response(raw_response_text)
-            logger.info("Gemini Service: Received raw response from Gemini API.")
+            cleaned_text = clean_json_response(raw_text)
+            parsed_data = json.loads(cleaned_text)
 
-            try:
-                parsed_data = json.loads(cleaned_text)
-                if validate_analysis_json(parsed_data):
-                    logger.info("Gemini Service: Successfully validated Gemini response JSON schema.")
-                    return parsed_data
-                else:
-                    logger.warning(f"Gemini Service: Response validation failed on attempt {attempt}.")
-            except json.JSONDecodeError as jde:
-                logger.error(f"Gemini Service: JSON decode error on attempt {attempt}: {jde}. Text: {cleaned_text}")
-
-        except Exception as api_err:
-            err_str = str(api_err).lower()
-            logger.error(f"Gemini Service: API call error on attempt {attempt}: {api_err}")
-            if "invalid authentication credentials" in err_str or "401" in err_str or "api_key" in err_str:
-                logger.warning("Gemini Service: Invalid API key/credentials detected. Falling back to Mock AI Mode.")
-                is_gemini_mock = True
-                return MOCK_ANALYSIS_RESULTS
+            if validate_analysis_json(parsed_data):
+                logger.info("Gemini Service: Response successfully parsed and validated.")
+                return normalize_analysis_payload(parsed_data)
+            else:
+                logger.warning(f"Gemini Service: JSON validation failed on attempt {attempt}.")
+        except Exception as err:
+            logger.error(f"Gemini Service: API call error on attempt {attempt}: {err}")
 
         if attempt == 1:
-            logger.info("Gemini Service: Retrying Gemini request (attempt 2 of 2)...")
+            logger.info("Gemini Service: Retrying Gemini API request...")
 
-    # If attempts failed, fall back safely to mock response to ensure app reliability
-    logger.warning("Gemini Service: All Gemini API attempts failed validation. Falling back to Mock AI Mode.")
-    is_gemini_mock = True
-    return MOCK_ANALYSIS_RESULTS
+    logger.error("Gemini Service: All Gemini API attempts failed or produced invalid JSON.")
+    raise RuntimeError("AI resume analysis is temporarily unavailable. Please try again.")

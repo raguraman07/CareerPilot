@@ -58,6 +58,15 @@ def after_request(response):
 # 2. Acting as a secure admin client (using service_role) to insert/modify user profile data
 # 3. Providing token verification endpoints for future backend-rendered pages or services.
 
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({
+        "service": "CareerPilot AI Backend API",
+        "status": "online",
+        "health_check": "/api/health",
+        "version": "1.0.0"
+    }), 200
+
 @app.route('/api/health', methods=['GET'])
 def health():
     return jsonify({"status": "healthy", "service": "careercopilot-auth-api"}), 200

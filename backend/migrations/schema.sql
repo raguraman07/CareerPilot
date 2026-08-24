@@ -50,6 +50,26 @@ create table if not exists public.ats_scores (
 );
 alter table public.ats_scores enable row level security;
 
+-- 4b. resume_ats_scores table (Phase 6 ATS Evaluation Engine)
+create table if not exists public.resume_ats_scores (
+  id uuid default gen_random_uuid() primary key,
+  resume_id uuid references public.resumes(id) on delete cascade not null,
+  user_id text not null,
+  overall_score integer not null,
+  keyword_score integer not null,
+  skills_score integer not null,
+  experience_score integer not null,
+  structure_score integer not null,
+  formatting_score integer not null,
+  education_score integer not null,
+  achievements_score integer not null,
+  score_level text not null,
+  ats_results jsonb not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.resume_ats_scores enable row level security;
+
 -- 5. job_matches table
 create table if not exists public.job_matches (
   id uuid default gen_random_uuid() primary key,

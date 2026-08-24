@@ -3,6 +3,10 @@
 *.env
 backend/.env
 
+.env
+backend/firebase/serviceAccountKey.json
+backend/firebase/*.json
+
 # Python
 __pycache__/
 *.pyc
@@ -20,3 +24,4 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+

@@ -95,7 +95,10 @@ def analyze_resume():
         logger.info(f"Gemini response received and validated for resume_id {resume_id}")
     except Exception as gemini_err:
         logger.error(f"Gemini API Analysis failed for resume {resume_id}: {gemini_err}")
-        return jsonify({"error": "Unable to analyze resume. Please try again."}), 502
+        return jsonify({
+            "success": False,
+            "error": "AI resume analysis is temporarily unavailable. Please try again."
+        }), 502
 
     # 4. Save results in database
     try:
