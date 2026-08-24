@@ -276,7 +276,7 @@ def get_latest_analysis():
     try:
         latest = handle_db_op(db_select_latest, mock_select_latest)
         if not latest:
-            return jsonify({"message": "No resume analysis records found."}), 404
+            return jsonify({"success": True, "data": None, "message": "No resume analysis records found."}), 200
         return jsonify(latest), 200
     except Exception as e:
         logger.error(f"Failed to retrieve latest analysis: {e}")

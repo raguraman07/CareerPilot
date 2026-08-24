@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from auth_routes import auth_bp
 from resume_routes import resume_bp
 from analysis_routes import analysis_bp
@@ -11,12 +11,13 @@ from roadmap_routes import roadmap_bp
 from chat_routes import chat_bp
 from app.blueprints.ai import ai_bp
 
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
+frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend'))
+
+app = Flask(__name__, static_folder=frontend_dir, static_url_path='')
 
 # Configure maximum file upload size (5MB)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
@@ -36,9 +37,7 @@ app.register_blueprint(roadmap_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(ai_bp)
 
-
 # Custom CORS Handlers
-# We implement CORS manually using Flask middleware to avoid external package dependencies
 @app.before_request
 def before_request():
     if request.method == "OPTIONS":
@@ -51,15 +50,12 @@ def after_request(response):
     response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
     return response
 
-# Server-side auth split rationale:
-# Although the frontend JS client can call Supabase Auth APIs directly (which is standard practice),
-# this Flask API serves three critical purposes:
-# 1. Enforcing server-side validation and sanitization of user data (e.g. sanitizing profiles' full_name)
-# 2. Acting as a secure admin client (using service_role) to insert/modify user profile data
-# 3. Providing token verification endpoints for future backend-rendered pages or services.
-
+# Static & Frontend Routing
 @app.route('/', methods=['GET'])
 def index():
+    index_path = os.path.join(frontend_dir, 'index.html')
+    if os.path.exists(index_path) and 'application/json' not in request.headers.get('Accept', ''):
+        return send_from_directory(frontend_dir, 'index.html')
     return jsonify({
         "service": "CareerPilot AI Backend API",
         "status": "online",
@@ -67,9 +63,34 @@ def index():
         "version": "1.0.0"
     }), 200
 
+@app.route('/favicon.ico', methods=['GET'])
+def favicon():
+    fav_path = os.path.join(frontend_dir, 'favicon.ico')
+    if os.path.exists(fav_path):
+        return send_from_directory(frontend_dir, 'favicon.ico')
+    return "", 204
+
 @app.route('/api/health', methods=['GET'])
 def health():
     return jsonify({"status": "healthy", "service": "careercopilot-auth-api"}), 200
+
+@app.route('/<path:path>', methods=['GET'])
+def serve_static(path):
+    # Do not intercept API requests
+    if path.startswith('api/'):
+        return jsonify({"error": "Resource not found"}), 404
+        
+    full_path = os.path.join(frontend_dir, path)
+    if os.path.exists(full_path) and os.path.isfile(full_path):
+        return send_from_directory(frontend_dir, path)
+        
+    # Check if adding .html resolves the file (e.g. /dashboard -> dashboard.html)
+    if not path.endswith('.html'):
+        html_path = path + '.html'
+        if os.path.exists(os.path.join(frontend_dir, html_path)):
+            return send_from_directory(frontend_dir, html_path)
+            
+    return jsonify({"error": f"File not found: {path}"}), 404
 
 if __name__ == '__main__':
     port = int(os.getenv("PORT", 5000))

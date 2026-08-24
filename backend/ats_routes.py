@@ -274,7 +274,7 @@ def get_latest_ats_score():
     try:
         latest = handle_db_op(db_select_latest, mock_select_latest)
         if not latest:
-            return jsonify({"success": False, "message": "No ATS score logs found."}), 404
+            return jsonify({"success": True, "data": None, "message": "No ATS score logs found."}), 200
         return jsonify(latest), 200
     except Exception as e:
         logger.error(f"Failed to retrieve latest ATS score: {e}")
