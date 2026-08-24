@@ -16,14 +16,7 @@
 
 /* Background elements for depth */
 .auth-bg-blob {
-    position: absolute;
-    width: 600px;
-    height: 600px;
-    background: var(--hero-gradient);
-    filter: blur(80px);
-    z-index: 1;
-    pointer-events: none;
-    opacity: 0.6;
+    display: none;
 }
 
 .auth-card {

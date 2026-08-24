@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Career Coach - CareerPilot AI</title>
+    <title>AI Career Assistant - CareerPilot</title>
     
     <!-- Meta Descriptions for SEO -->
-    <meta name="description" content="CareerPilot AI Career Coach - Real-time conversational advisory on job search, interview tips, and skills.">
-    <meta name="keywords" content="CareerPilot, AI Coach, Chatbot Coach, Tech Career Advisor, Conversation Log">
-    <meta name="author" content="CareerPilot AI Team">
+    <meta name="description" content="CareerPilot RAG-Powered AI Career Assistant - Ask personalized career questions based on your resume, ATS scores, job matches, and interview preparation.">
+    <meta name="keywords" content="CareerPilot, AI Career Assistant, RAG Career Advisor, Resume Chatbot, Skill Gap Analysis, Interview Advice">
+    <meta name="author" content="CareerPilot Team">
 
     <!-- Fonts Preconnect and Links for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
@@ -27,15 +27,43 @@
         })();
     </script>
     <style>
-        .chat-panel {
-            background: var(--bg-surface, #1e1e24);
-            border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-            border-radius: 12px;
-            height: 600px;
+        .chat-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 1.5rem;
+            height: calc(100vh - 160px);
+            min-height: 600px;
+        }
+        @media (max-width: 900px) {
+            .chat-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+        .chat-sidebar {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: 1.25rem;
             display: flex;
             flex-direction: column;
-            margin-top: 1.5rem;
+            gap: 1rem;
+        }
+        .chat-main {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
+        }
+        .chat-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--background-color);
         }
         .chat-messages {
             flex: 1;
@@ -43,83 +71,70 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-            background: rgba(255, 255, 255, 0.01);
+            gap: 1.25rem;
         }
         .message-bubble {
-            max-width: 70%;
+            max-width: 82%;
             padding: 1rem 1.25rem;
-            border-radius: 12px;
-            font-size: 0.92rem;
-            line-height: 1.5;
+            border-radius: var(--border-radius-md);
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
         .message-bubble.user {
             align-self: flex-end;
-            background: var(--color-primary, #6366f1);
+            background: var(--primary-color);
             color: #ffffff;
             border-bottom-right-radius: 2px;
         }
-        .message-bubble.bot {
+        .message-bubble.assistant {
             align-self: flex-start;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            color: #ffffff;
+            background: var(--background-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
             border-bottom-left-radius: 2px;
         }
-        .chat-input-area {
-            padding: 1.25rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            background: var(--bg-surface, #1e1e24);
-            display: flex;
-            gap: 1rem;
-        }
-        .chat-input-field {
-            flex: 1;
-            padding: 0.75rem 1.25rem;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: #ffffff;
-            font-size: 0.95rem;
-        }
-        .chat-input-field:focus {
-            outline: none;
-            border-color: var(--color-primary, #6366f1);
-        }
-        .btn-send {
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            border-radius: 8px;
-            background: var(--color-primary, #6366f1);
-            color: #ffffff;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .btn-send:hover {
-            background: var(--color-primary-hover, #4f46e5);
-        }
-        .typing-indicator {
-            align-self: flex-start;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 0.75rem 1.25rem;
-            border-radius: 12px;
-            display: flex;
+        .sources-tag {
+            display: inline-flex;
             align-items: center;
             gap: 0.35rem;
+            margin-top: 0.65rem;
+            padding: 0.2rem 0.6rem;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
         }
-        .typing-dot {
-            width: 6px;
-            height: 6px;
-            background: var(--text-muted);
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
+        .chat-input-bar {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            background: var(--background-color);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
-        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1.0); }
+        .starter-pills {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .pill-btn {
+            background: var(--background-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 0.4rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .pill-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background: var(--primary-light);
         }
     </style>
 </head>
@@ -128,7 +143,7 @@
     <!-- Skip link -->
     <a href="#main-content" class="skip-link">Skip to content</a>
 
-    <!-- Page guard and login session checking -->
+    <!-- Page guard and session initialization -->
     <script type="module">
         import { requireAuth, logoutUser } from './js/auth.js';
         
@@ -162,16 +177,16 @@
 
     <div class="dashboard-shell">
         
-        <!-- Left Sidebar -->
+        <!-- Left Sidebar Navigation -->
         <aside class="sidebar-wrapper" id="sidebar-wrapper" aria-label="Dashboard Sidebar">
             <div class="sidebar-header">
-                <a href="index.html" class="logo" aria-label="CareerPilot AI Home">
+                <a href="index.html" class="logo" aria-label="CareerPilot Home">
                     <div class="logo-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none">
                             <polygon points="5 3 19 12 5 21 5 3"></polygon>
                         </svg>
                     </div>
-                    <span>CareerPilot <span class="text-gradient">AI</span></span>
+                    <span>CareerPilot</span>
                 </a>
                 <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close sidebar">
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -262,9 +277,9 @@
         <!-- Sidebar Overlay -->
         <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
-        <!-- Main Workspace Area -->
+        <!-- Workspace Area -->
         <div class="workspace-wrapper">
-            <!-- Top Navigation Bar -->
+            <!-- Top Navbar Header -->
             <header class="top-navbar" aria-label="Top Navigation Header">
                 <div class="navbar-left">
                     <button class="hamburger-menu-btn" id="hamburger-menu-btn" aria-label="Toggle Navigation Sidebar" aria-expanded="false" aria-controls="sidebar-wrapper">
@@ -274,10 +289,16 @@
                             <line class="line-3" x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <h1 class="navbar-title">AI Career Coach</h1>
+                    <h1 class="navbar-title">AI Career Assistant</h1>
                 </div>
 
                 <div class="navbar-right">
+                    <!-- Theme Toggle -->
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Switch theme">
+                        <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    </button>
+
                     <!-- User Profile Dropdown -->
                     <div class="navbar-action-wrapper dropdown-container">
                         <button class="profile-avatar-btn" id="profile-dropdown-btn" aria-label="Open profile menu" aria-expanded="false" aria-haspopup="true">
@@ -293,7 +314,7 @@
                                 </span>
                                 <div class="profile-meta">
                                     <h4 class="dropdown-profile-name">User Name</h4>
-                                    <p class="dropdown-profile-email">user@careercopilot.ai</p>
+                                    <p class="dropdown-profile-email">user@careerpilot.com</p>
                                 </div>
                             </div>
                             <div class="dropdown-divider"></div>
@@ -310,23 +331,77 @@
                 </div>
             </header>
 
-            <!-- Main Content Area -->
+            <!-- Workspace Content -->
             <main class="workspace-content" id="main-content">
-                <header class="content-header">
-                    <h2>AI Conversational Career Coach</h2>
-                    <p class="content-subtitle">Ask questions about career progression, target skill roadmaps, or mock interview preparation details.</p>
+                <header class="content-header" style="margin-bottom: 1.25rem;">
+                    <h2>RAG-Powered AI Career Assistant</h2>
+                    <p class="content-subtitle">Ask questions about your resume, ATS scores, job matches, skill gaps, and interview prep. Answers are dynamically retrieved from your actual CareerPilot data.</p>
                 </header>
 
-                <div class="chat-panel">
-                    <div id="chat-messages" class="chat-messages">
-                        <div class="message-bubble bot">
-                            Hello! I am your AI Career Coach. Ask me anything about career progression, skill optimization, or how to align your resume with target listings.
+                <!-- RAG Chat Layout -->
+                <div class="chat-layout">
+                    <!-- Chat History Sidebar -->
+                    <aside class="chat-sidebar">
+                        <button class="btn btn-primary" id="btn-new-chat" style="width: 100%; justify-content: center;">
+                            <span>+ New Conversation</span>
+                        </button>
+                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-top: 0.5rem;">Conversations</div>
+                        <div id="chats-history-list" style="display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto; flex: 1;">
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">Loading conversations...</p>
                         </div>
-                    </div>
-                    <form id="chat-form" class="chat-input-area">
-                        <input type="text" id="chat-input" class="chat-input-field" placeholder="Type your career coaching questions..." required autocomplete="off">
-                        <button type="submit" class="btn-send" id="btn-send-msg">Send</button>
-                    </form>
+                    </aside>
+
+                    <!-- Main Chat Area -->
+                    <section class="chat-main">
+                        <!-- Chat Header -->
+                        <div class="chat-header">
+                            <div>
+                                <h3 id="current-chat-title" style="font-size: 1.05rem; font-weight: 600;">New Conversation</h3>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);" id="chat-subtitle">Context: Resumes, ATS Scores, Job Matches & Interviews</span>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-secondary" id="btn-clear-chat" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">Clear Messages</button>
+                                <button class="btn btn-secondary" id="btn-delete-chat" style="padding: 0.35rem 0.75rem; font-size: 0.82rem; color: var(--error-color); border-color: rgba(220,38,38,0.3);">Delete</button>
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages Container -->
+                        <div class="chat-messages" id="chat-messages">
+                            <!-- Empty State Warning if no data -->
+                            <div id="empty-state-notice" class="alert-box" style="display: none; background: rgba(37,99,235,0.08); color: var(--text-color); border: 1px solid rgba(37,99,235,0.2);">
+                                💡 <strong>Tip:</strong> Upload a resume and run a job match to get personalized, context-aware career guidance based on your profile.
+                            </div>
+
+                            <!-- Starter Question Pills -->
+                            <div>
+                                <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.5rem;">Suggested questions you can ask:</p>
+                                <div class="starter-pills">
+                                    <button class="pill-btn" data-q="What are my biggest skill gaps for my target job?">What are my biggest skill gaps?</button>
+                                    <button class="pill-btn" data-q="How can I improve my resume ATS score?">How to improve my ATS score?</button>
+                                    <button class="pill-btn" data-q="What should I prepare for my next interview?">What to prepare for interview?</button>
+                                    <button class="pill-btn" data-q="What technical projects should I build to boost my resume?">What projects should I build?</button>
+                                </div>
+                            </div>
+
+                            <!-- Initial Assistant Welcome Message -->
+                            <div class="message-bubble assistant">
+                                Hello! I'm your CareerPilot AI Assistant. I have access to your uploaded resume, ATS scores, job match analysis, and interview prep feedback. How can I help you advance your career today?
+                            </div>
+                        </div>
+
+                        <!-- Chat Input Bar -->
+                        <form id="chat-input-form" class="chat-input-bar">
+                            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                                <input type="text" id="chat-user-input" class="form-input" style="flex: 1;" placeholder="Ask CareerPilot AI about your resume, skill gaps, or interview prep..." required autocomplete="off">
+                                <button type="submit" class="btn btn-primary" id="btn-send-msg">
+                                    <span>Send</span>
+                                </button>
+                            </div>
+                            <div id="chat-status-msg" style="font-size: 0.82rem; color: var(--text-muted); display: none; margin-top: 0.25rem;">
+                                CareerPilot is analyzing your career information...
+                            </div>
+                        </form>
+                    </section>
                 </div>
             </main>
         </div>

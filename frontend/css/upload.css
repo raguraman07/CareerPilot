@@ -13,14 +13,14 @@
 
 /* Upload Dropzone Container styling */
 .upload-dropzone {
-    border: 2.5px dashed var(--border-color);
-    background-color: var(--background-color);
+    border: 1.5px dashed var(--border-color);
+    background-color: var(--surface-color);
     border-radius: var(--border-radius-md);
-    padding: 3rem 2rem;
+    padding: 2.5rem 2rem;
     text-align: center;
     cursor: pointer;
     outline: none;
-    transition: border-color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -35,7 +35,6 @@
 .upload-dropzone.dragover {
     border-color: var(--accent-color);
     background-color: var(--accent-light);
-    transform: scale(1.01);
 }
 
 .dropzone-content-wrapper {

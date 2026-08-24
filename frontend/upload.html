@@ -13,7 +13,7 @@
     <!-- Fonts Preconnect and Links for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
@@ -398,40 +398,7 @@
                     </section>
                 </div>
 
-                <!-- Previously Uploaded Resumes Table -->
-                <section class="panel-container uploads-log-section" aria-labelledby="uploads-log-title">
-                    <div class="panel-header">
-                        <h2 id="uploads-log-title" class="panel-title">Uploaded Resumes</h2>
-                        <button class="btn btn-secondary btn-sm" id="btn-refresh-resumes" aria-label="Refresh Resume List">
-                            <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-                            <span>Refresh</span>
-                        </button>
-                    </div>
 
-                    <div class="table-responsive">
-                        <table class="activity-table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Filename</th>
-                                    <th scope="col">Type</th>
-                                    <th scope="col">Pages</th>
-                                    <th scope="col">Uploaded At</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col" style="text-align: right;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="resumes-tbody">
-                                <!-- Populated dynamically by JS -->
-                                <tr>
-                                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">
-                                        <span class="spinner" style="display: inline-block; margin-bottom: 0.5rem;"></span>
-                                        <p>Loading your resumes...</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
 
             </main>
         </div>

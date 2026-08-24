@@ -6,63 +6,64 @@
    deep indigo-ink for authority, brass for the seal-of-approval accent,
    cool paper (not warm cream) for the base surface. */
 :root {
-    /* Color Palette */
-    --primary-color: #3B3A79;
-    --primary-hover: #2E2D60;
-    --primary-light: rgba(59, 58, 121, 0.08);
+    /* Clean Minimal Color Palette */
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --primary-light: #eff6ff;
 
-    --secondary-color: #14151F;
-    --secondary-hover: #0A0A11;
+    --secondary-color: #111827;
+    --secondary-hover: #000000;
 
-    --accent-color: #A97C2F;
-    --accent-hover: #8C6626;
-    --accent-light: rgba(169, 124, 47, 0.12);
+    --accent-color: #2563eb;
+    --accent-hover: #1d4ed8;
+    --accent-light: #eff6ff;
 
-    /* Light Mode Variables (Default) */
-    --background-color: #F4F5F3;
-    --surface-color: #ffffff;
-    --text-color: #14151F;
-    --text-muted: #5B5D6E;
-    --border-color: #E2E1DA;
-    --card-shadow: 0 10px 25px -5px rgba(20, 21, 31, 0.06), 0 8px 10px -6px rgba(20, 21, 31, 0.05);
-    --card-hover-shadow: 0 24px 32px -8px rgba(20, 21, 31, 0.12), 0 10px 10px -5px rgba(20, 21, 31, 0.05);
-    --glass-background: rgba(244, 245, 243, 0.75);
-    --glass-border: rgba(226, 225, 218, 0.8);
-    --hero-gradient: radial-gradient(circle at top right, rgba(59, 58, 121, 0.07), transparent 45%), radial-gradient(circle at bottom left, rgba(169, 124, 47, 0.06), transparent 40%);
+    /* Light Theme Tokens */
+    --background-color: #ffffff;
+    --surface-color: #f8f9fa;
+    --text-color: #111827;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    --card-hover-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+    --glass-background: rgba(255, 255, 255, 0.95);
+    --glass-border: #e5e7eb;
 
     /* Layout & Spacing */
-    --container-max-width: 1200px;
-    --border-radius-sm: 8px;
-    --border-radius-md: 16px;
-    --border-radius-lg: 24px;
-    --font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-    --font-mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+    --container-max-width: 1160px;
+    --border-radius-sm: 6px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 10px;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'Inter', monospace;
 
     /* Transitions */
-    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
 
     /* Feedback Colors */
-    --error-color: #D32F2F;
-    --success-color: #388E3C;
+    --error-color: #dc2626;
+    --success-color: #16a34a;
 }
 
-/* Dark Mode Variables Override */
-body.dark-mode {
-    --background-color: #101019;
-    --surface-color: #191A24;
-    --text-color: #F4F5F3;
-    --text-muted: #9B9CAE;
-    --border-color: #2B2C38;
-    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-    --card-hover-shadow: 0 24px 32px -8px rgba(0, 0, 0, 0.45), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-    --glass-background: rgba(16, 16, 25, 0.8);
-    --glass-border: rgba(43, 44, 56, 0.8);
-    --hero-gradient: radial-gradient(circle at top right, rgba(102, 100, 200, 0.14), transparent 45%), radial-gradient(circle at bottom left, rgba(169, 124, 47, 0.08), transparent 40%);
-    --error-color: #E57373;
-    --success-color: #81C784;
+/* Dark Mode Tokens Override */
+body.dark-mode, html.dark-mode {
+    --background-color: #0f172a;
+    --surface-color: #1e293b;
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+    --card-hover-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --glass-background: rgba(15, 23, 42, 0.95);
+    --glass-border: #334155;
+    --primary-color: #2563eb;
+    --primary-hover: #3b82f6;
+    --primary-light: rgba(37, 99, 235, 0.15);
+    --error-color: #ef4444;
+    --success-color: #22c55e;
 }
 
 /* ==========================================================================
@@ -81,21 +82,21 @@ html {
 }
 
 html.dark-mode {
-    background-color: #101019;
+    background-color: #09090B;
 }
 
 body {
     font-family: var(--font-family);
     background-color: var(--background-color);
     color: var(--text-color);
-    line-height: 1.6;
+    line-height: 1.5;
     overflow-x: hidden;
     opacity: 0;
-    transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1), background-color var(--transition-normal), color var(--transition-normal);
+    transition: opacity 0.2s ease, background-color var(--transition-normal), color var(--transition-normal);
 }
 
 body.dark-mode {
-    background-color: #101019;
+    background-color: #09090B;
 }
 
 /* ==========================================================================
@@ -200,8 +201,8 @@ h1, h2 {
 }
 
 .text-gradient {
-    color: var(--accent-color);
-    font-style: italic;
+    color: var(--primary-color);
+    font-style: normal;
 }
 
 .mono-figure {
@@ -239,8 +240,7 @@ h1, h2 {
 }
 .btn-primary:hover {
     background-color: var(--primary-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 58, 121, 0.28);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-secondary {
@@ -249,8 +249,8 @@ h1, h2 {
     border-color: var(--border-color);
 }
 .btn-secondary:hover {
-    background-color: var(--border-color);
-    transform: translateY(-2px);
+    background-color: var(--surface-color);
+    border-color: var(--text-muted);
 }
 
 .btn-accent {
@@ -259,8 +259,7 @@ h1, h2 {
 }
 .btn-accent:hover {
     background-color: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(169, 124, 47, 0.28);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* ==========================================================================
@@ -292,14 +291,14 @@ h1, h2 {
     align-items: center;
     gap: 0.5rem;
     font-size: 1.25rem;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: -0.025em;
 }
 
 .logo-icon {
     width: 32px;
     height: 32px;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    background-color: var(--primary-color);
     border-radius: var(--border-radius-sm);
     display: flex;
     align-items: center;

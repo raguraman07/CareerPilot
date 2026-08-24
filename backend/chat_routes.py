@@ -1,144 +1,278 @@
 import os
-import time
+import json
 import logging
 import uuid
+import datetime
 from flask import Blueprint, request, jsonify
 from firebase_client import db
 from resume_routes import get_auth_uid, handle_db_op
+from services.rag_service import generate_rag_answer, is_gemini_configured
 
 logger = logging.getLogger(__name__)
 
 chat_bp = Blueprint('chat', __name__)
 
-genai_module = None
-genai_legacy_module = None
+MOCK_CHATS_DB = {}
 
-try:
-    from google import genai
-    genai_module = genai
-except ImportError:
-    pass
 
-try:
-    import google.generativeai as genai_legacy
-    genai_legacy_module = genai_legacy
-except ImportError:
-    pass
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-is_gemini_configured = bool(
-    GEMINI_API_KEY 
-    and not GEMINI_API_KEY.startswith("your-") 
-    and not GEMINI_API_KEY.startswith("dummy") 
-    and GEMINI_API_KEY != "your_gemini_api_key_here"
-)
-
-genai_client = None
-genai_legacy_model = None
-
-if is_gemini_configured:
-    if genai_module is not None:
-        try:
-            genai_client = genai_module.Client(api_key=GEMINI_API_KEY)
-        except Exception:
-            pass
-    if genai_client is None and genai_legacy_module is not None:
-        try:
-            genai_legacy_module.configure(api_key=GEMINI_API_KEY)
-            genai_legacy_model = genai_legacy_module.GenerativeModel("gemini-3.6-flash")
-        except Exception:
-            is_gemini_configured = False
-
-MOCK_CHAT_DB = []
-
-@chat_bp.route('/api/chat/send', methods=['POST'])
-def send_chat_message():
+def _run_chat_handler():
     try:
         uid = get_auth_uid(request)
     except ValueError as val_err:
         return jsonify({"error": str(val_err)}), 401
 
     data = request.get_json() or {}
-    user_message = data.get("message")
+    user_message = (data.get("message") or "").strip()
+    chat_id = data.get("chat_id")
 
     if not user_message:
         return jsonify({"error": "Missing message in request."}), 400
 
-    # Fetch latest user resume for context-aware coaching
-    resume_context = ""
-    def db_select_resume():
-        docs = db.collection("resumes").where("user_id", "==", uid).stream()
-        records = [d.to_dict() for d in docs]
-        if records:
-            sorted_records = sorted(records, key=lambda x: x.get("uploaded_at", ""), reverse=True)
-            return sorted_records[0].get("extracted_text") or ""
-        return ""
+    if not chat_id:
+        chat_id = str(uuid.uuid4())
 
-    def mock_select_resume():
-        from resume_routes import MOCK_RESUMES_DB
-        user_resumes = [r for r in MOCK_RESUMES_DB.values() if r["user_id"] == uid]
-        if user_resumes:
-            sorted_res = sorted(user_resumes, key=lambda x: x.get("uploaded_at", ""), reverse=True)
-            return sorted_res[0].get("extracted_text") or ""
-        return ""
+    now_iso = datetime.datetime.utcnow().isoformat() + "Z"
 
-    try:
-        extracted_text = handle_db_op(db_select_resume, mock_select_resume)
-        if extracted_text:
-            resume_context = f"\nCandidate Resume Context:\n{extracted_text}\n"
-    except Exception as db_err:
-        logger.warning(f"Could not load user resume context for chat: {db_err}")
+    # Retrieve existing chat to fetch message history for context
+    def db_select_chat():
+        doc = db.collection("career_assistant_chats").document(chat_id).get()
+        if doc.exists:
+            d = doc.to_dict()
+            if d.get("user_id") == uid:
+                return d
+        return None
 
-    if not is_gemini_configured or (not genai_client and not genai_legacy_model):
-        return jsonify({"error": "AI Career Coach service is temporarily unavailable. Please try again."}), 502
+    def mock_select_chat():
+        c = MOCK_CHATS_DB.get(chat_id)
+        if c and c.get("user_id") == uid:
+            return c
+        return None
 
     try:
-        prompt = f"""
-        You are a helpful and professional AI Career Coach. 
-        Answer the user's career, resume, or job search query. Use their resume details to provide personalized, concrete advice.
-        Keep your response conversational, concise, and professional.
-        
-        {resume_context}
-        
-        User's Query:
-        {user_message}
-        """
-        bot_reply = ""
-        if genai_client:
-            resp = genai_client.models.generate_content(
-                model='gemini-3.6-flash',
-                contents=prompt
-            )
-            bot_reply = (resp.text or "").strip()
-        elif genai_legacy_model:
-            resp = genai_legacy_model.generate_content(prompt)
-            bot_reply = (resp.text or "").strip()
-    except Exception as e:
-        logger.error(f"Gemini Career Coach invocation failed: {e}")
-        return jsonify({"error": "AI Career Coach service is temporarily unavailable. Please try again."}), 502
+        chat_doc = handle_db_op(db_select_chat, mock_select_chat)
+    except Exception as err:
+        logger.warning(f"Could not load chat session {chat_id}: {err}")
+        chat_doc = None
 
-    now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    u_id = str(uuid.uuid4())
-    b_id = str(uuid.uuid4())
-    user_record = {"id": u_id, "user_id": uid, "message": user_message, "sender": "user", "timestamp": now_iso}
-    bot_record = {"id": b_id, "user_id": uid, "message": bot_reply, "sender": "bot", "timestamp": now_iso}
+    existing_messages = chat_doc.get("messages", []) if chat_doc else []
 
-    def db_insert():
-        db.collection("chat_history").document(u_id).set(user_record)
-        db.collection("chat_history").document(b_id).set(bot_record)
-        return True
+    # Execute RAG Pipeline via Gemini AI
+    try:
+        bot_reply, sources_used = generate_rag_answer(
+            uid=uid,
+            user_message=user_message,
+            chat_history=existing_messages
+        )
+    except (ValueError, RuntimeError) as ai_err:
+        logger.error(f"RAG Career Assistant invocation failed: {ai_err}")
+        return jsonify({"error": "AI Career Assistant is temporarily unavailable. Please try again."}), 502
+    except Exception as exc:
+        logger.error(f"Unexpected error during RAG chat: {exc}")
+        return jsonify({"error": "AI Career Assistant is temporarily unavailable. Please try again."}), 502
 
-    def mock_insert():
-        MOCK_CHAT_DB.append(user_record)
-        MOCK_CHAT_DB.append(bot_record)
-        return True
+    # Append new messages
+    user_msg_obj = {
+        "id": str(uuid.uuid4()),
+        "role": "user",
+        "content": user_message,
+        "created_at": now_iso
+    }
+    bot_msg_obj = {
+        "id": str(uuid.uuid4()),
+        "role": "assistant",
+        "content": bot_reply,
+        "sources_used": sources_used,
+        "created_at": now_iso
+    }
+
+    new_messages = existing_messages + [user_msg_obj, bot_msg_obj]
+    chat_title = chat_doc.get("title") if chat_doc else (user_message[:35] + "..." if len(user_message) > 35 else user_message)
+
+    chat_record = {
+        "id": chat_id,
+        "user_id": uid,
+        "title": chat_title,
+        "messages": new_messages,
+        "created_at": chat_doc.get("created_at") if chat_doc else now_iso,
+        "updated_at": now_iso
+    }
+
+    def db_save_chat():
+        db.collection("career_assistant_chats").document(chat_id).set(chat_record)
+        return chat_record
+
+    def mock_save_chat():
+        MOCK_CHATS_DB[chat_id] = chat_record
+        return chat_record
 
     try:
-        handle_db_op(db_insert, mock_insert)
+        handle_db_op(db_save_chat, mock_save_chat)
     except Exception as db_save_err:
-        logger.warning(f"Failed to persist chat message: {db_save_err}")
+        logger.warning(f"Failed to persist chat session {chat_id}: {db_save_err}")
 
     return jsonify({
         "success": True,
-        "reply": bot_reply
+        "chat_id": chat_id,
+        "reply": bot_reply,
+        "sources_used": sources_used,
+        "messages": new_messages
     }), 200
+
+
+@chat_bp.route('/api/career-assistant/chat', methods=['POST'])
+def career_assistant_chat():
+    return _run_chat_handler()
+
+@chat_bp.route('/api/chat/send', methods=['POST'])
+def send_chat_alias():
+    return _run_chat_handler()
+
+
+def _run_list_chats_handler():
+    try:
+        uid = get_auth_uid(request)
+    except ValueError as val_err:
+        return jsonify({"error": str(val_err)}), 401
+
+    def db_select_chats():
+        docs = db.collection("career_assistant_chats").where("user_id", "==", uid).stream()
+        chats = [d.to_dict() for d in docs]
+        return sorted(chats, key=lambda x: x.get("updated_at", ""), reverse=True)
+
+    def mock_select_chats():
+        user_chats = [c for c in MOCK_CHATS_DB.values() if c.get("user_id") == uid]
+        return sorted(user_chats, key=lambda x: x.get("updated_at", ""), reverse=True)
+
+    try:
+        chats = handle_db_op(db_select_chats, mock_select_chats)
+        return jsonify(chats), 200
+    except Exception as e:
+        logger.error(f"Failed to fetch chats: {e}")
+        return jsonify({"error": "Failed to fetch chat history."}), 500
+
+@chat_bp.route('/api/career-assistant/chats', methods=['GET'])
+def list_chats():
+    return _run_list_chats_handler()
+
+@chat_bp.route('/api/chat/history', methods=['GET'])
+def list_chats_alias():
+    return _run_list_chats_handler()
+
+
+def _run_get_chat_handler(chat_id):
+    try:
+        uid = get_auth_uid(request)
+    except ValueError as val_err:
+        return jsonify({"error": str(val_err)}), 401
+
+    def db_select_one():
+        doc = db.collection("career_assistant_chats").document(chat_id).get()
+        if doc.exists:
+            d = doc.to_dict()
+            if d.get("user_id") == uid:
+                return d
+        return None
+
+    def mock_select_one():
+        c = MOCK_CHATS_DB.get(chat_id)
+        if c and c.get("user_id") == uid:
+            return c
+        return None
+
+    try:
+        chat = handle_db_op(db_select_one, mock_select_one)
+        if not chat:
+            return jsonify({"error": "Chat session not found or unauthorized."}), 404
+        return jsonify(chat), 200
+    except Exception as e:
+        logger.error(f"Failed to fetch chat {chat_id}: {e}")
+        return jsonify({"error": "Failed to fetch chat session."}), 500
+
+@chat_bp.route('/api/career-assistant/chats/<chat_id>', methods=['GET'])
+def get_chat(chat_id):
+    return _run_get_chat_handler(chat_id)
+
+
+def _run_delete_chat_handler(chat_id):
+    try:
+        uid = get_auth_uid(request)
+    except ValueError as val_err:
+        return jsonify({"error": str(val_err)}), 401
+
+    def db_select_one():
+        doc = db.collection("career_assistant_chats").document(chat_id).get()
+        if doc.exists and doc.to_dict().get("user_id") == uid:
+            return doc.to_dict()
+        return None
+
+    def mock_select_one():
+        c = MOCK_CHATS_DB.get(chat_id)
+        if c and c.get("user_id") == uid:
+            return c
+        return None
+
+    try:
+        chat = handle_db_op(db_select_one, mock_select_one)
+        if not chat:
+            return jsonify({"error": "Chat session not found or unauthorized."}), 404
+
+        def db_delete():
+            db.collection("career_assistant_chats").document(chat_id).delete()
+            return True
+
+        def mock_delete():
+            if chat_id in MOCK_CHATS_DB:
+                del MOCK_CHATS_DB[chat_id]
+            return True
+
+        handle_db_op(db_delete, mock_delete)
+        return jsonify({"message": "Chat session successfully deleted.", "id": chat_id}), 200
+    except Exception as e:
+        logger.error(f"Failed to delete chat {chat_id}: {e}")
+        return jsonify({"error": "Failed to delete chat session."}), 500
+
+@chat_bp.route('/api/career-assistant/chats/<chat_id>', methods=['DELETE'])
+def delete_chat(chat_id):
+    return _run_delete_chat_handler(chat_id)
+
+
+@chat_bp.route('/api/career-assistant/chats/<chat_id>/clear', methods=['DELETE'])
+def clear_chat_messages(chat_id):
+    try:
+        uid = get_auth_uid(request)
+    except ValueError as val_err:
+        return jsonify({"error": str(val_err)}), 401
+
+    def db_select_one():
+        doc = db.collection("career_assistant_chats").document(chat_id).get()
+        if doc.exists and doc.to_dict().get("user_id") == uid:
+            return doc.to_dict()
+        return None
+
+    def mock_select_one():
+        c = MOCK_CHATS_DB.get(chat_id)
+        if c and c.get("user_id") == uid:
+            return c
+        return None
+
+    try:
+        chat = handle_db_op(db_select_one, mock_select_one)
+        if not chat:
+            return jsonify({"error": "Chat session not found or unauthorized."}), 404
+
+        chat["messages"] = []
+        chat["updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+
+        def db_update():
+            db.collection("career_assistant_chats").document(chat_id).set(chat)
+            return chat
+
+        def mock_update():
+            MOCK_CHATS_DB[chat_id] = chat
+            return chat
+
+        handle_db_op(db_update, mock_update)
+        return jsonify({"message": "Chat history cleared.", "chat": chat}), 200
+    except Exception as e:
+        logger.error(f"Failed to clear chat {chat_id}: {e}")
+        return jsonify({"error": "Failed to clear chat history."}), 500

@@ -13,7 +13,7 @@
     <!-- Fonts Preconnect and Links for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
@@ -206,14 +206,6 @@
                     <h1 class="navbar-title">Dashboard</h1>
                 </div>
 
-                <div class="navbar-center" role="search">
-                    <div class="search-box">
-                        <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" id="navbar-search" placeholder="Search analytics, features, roadmaps..." aria-label="Search dashboard contents">
-                        <span class="search-shortcut" aria-hidden="true">/</span>
-                    </div>
-                </div>
-
                 <div class="navbar-right">
                     <!-- Notifications -->
                     <div class="navbar-action-wrapper dropdown-container">
@@ -288,128 +280,31 @@
             <!-- Main Work Content -->
             <main id="main-content" class="main-content-flow">
                 
-                <!-- Welcome Section -->
-                <section class="welcome-banner-card" aria-labelledby="welcome-banner-title">
-                    <div class="welcome-card-content">
-                        <span class="eyebrow-accent">WORKSPACE OVERVIEW</span>
-                        <h2 id="welcome-banner-title" class="welcome-header">Welcome back, <span id="welcome-user-name">User</span>!</h2>
-                        <p class="welcome-text">Ready to accelerate your professional journey today? Check your metrics and run a fresh ATS scan to optimize your profile.</p>
-                        <div class="welcome-meta-badges">
-                            <span class="dashboard-badge-pill">
-                                <span class="badge-dot pulse"></span> Verified Profile
-                            </span>
-                            <span class="dashboard-badge-pill">
-                                <svg viewBox="0 0 24 24" class="pill-svg"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                Resume Scanned
-                            </span>
-                        </div>
-                    </div>
-                    <div class="welcome-banner-graphics" aria-hidden="true">
-                        <div class="g-circle circle-1"></div>
-                        <div class="g-circle circle-2"></div>
-                    </div>
+                <!-- Simple Welcome Header -->
+                <section class="simple-welcome-section" aria-labelledby="welcome-banner-title">
+                    <h2 id="welcome-banner-title" class="welcome-header">Welcome back, <span id="welcome-user-name">User</span> 👋</h2>
+                    <p class="welcome-subtitle">Here's how your job search is going.</p>
                 </section>
 
-                <!-- Statistics Cards Row -->
-                <section class="dashboard-stats-grid" id="dashboard-stats-grid" aria-label="Key Performance Indicators">
+                <!-- 4 Key Information Cards -->
+                <section class="dashboard-stats-grid" id="dashboard-stats-grid" aria-label="Key Career Metrics">
                     <!-- Populated dynamically by JS -->
                 </section>
 
-                <!-- Quick Actions Grid -->
-                <section class="dashboard-actions-section" aria-labelledby="quick-actions-title">
-                    <h2 id="quick-actions-title" class="section-title">Quick Actions</h2>
-                    <div class="actions-grid">
-                        <a href="upload.html" class="action-card">
-                            <div class="action-icon-container primary-bg">
-                                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                            </div>
-                            <h3>Upload Resume</h3>
-                            <p>Upload a new copy of your resume to start tracking scores.</p>
-                            <span class="action-arrow">
-                                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </span>
-                        </a>
-
-                        <a href="analysis.html" class="action-card">
-                            <div class="action-icon-container accent-bg">
-                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                            </div>
-                            <h3>Analyze Resume</h3>
-                            <p>Run detailed AI compatibility check and get feedback.</p>
-                            <span class="action-arrow">
-                                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </span>
-                        </a>
-
-                        <a href="jobmatch.html" class="action-card">
-                            <div class="action-icon-container success-bg">
-                                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                            </div>
-                            <h3>Job Match</h3>
-                            <p>Check compatibility scores against custom job descriptions.</p>
-                            <span class="action-arrow">
-                                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </span>
-                        </a>
-
-                        <a href="interview.html" class="action-card">
-                            <div class="action-icon-container info-bg">
-                                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                            </div>
-                            <h3>Generate Questions</h3>
-                            <p>Get customized interview questions based on your experience.</p>
-                            <span class="action-arrow">
-                                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </span>
-                        </a>
-
-                        <a href="roadmap.html" class="action-card">
-                            <div class="action-icon-container purple-bg">
-                                <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                            </div>
-                            <h3>Career Roadmap</h3>
-                            <p>View your personalized path to target job criteria.</p>
-                            <span class="action-arrow">
-                                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </span>
-                        </a>
-
-                        <a href="careercoach.html" class="action-card">
-                            <div class="action-icon-container warning-bg">
-                                <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
-                            </div>
-                            <h3>AI Career Coach</h3>
-                            <p>Ask our AI mentor about strategy, negotiation, and more.</p>
-                            <span class="action-arrow">
-                                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </span>
-                        </a>
+                <!-- Main Next Step Section -->
+                <section class="next-step-section panel-container" id="next-step-section" aria-labelledby="next-step-title">
+                    <div class="next-step-header">
+                        <span class="next-step-badge">RECOMMENDED NEXT STEP</span>
+                        <h3 id="next-step-title" class="next-step-heading">Improve your resume</h3>
                     </div>
-                </section>
-
-                <!-- AI Resume Insights Section -->
-                <section class="panel-container" id="dashboard-ai-insights-panel" style="margin-bottom: 1.5rem; display: none;">
-                    <div class="panel-header">
-                        <h2 class="panel-title">AI Resume Insights</h2>
-                        <span class="dashboard-badge-pill" id="dashboard-analysis-status" style="font-weight: 700;">Status</span>
-                    </div>
-                    <div class="results-grid" style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; border: none; box-shadow: none; padding: 0; margin-top: 1rem;">
-                        <div style="border-right: 1px solid var(--border-color); padding-right: 1.5rem;">
-                            <div class="card-content-block">
-                                <h4 class="content-label" style="font-size: 0.75rem;">Latest Analysis Date</h4>
-                                <p class="content-value" id="dashboard-analysis-date" style="font-weight: 700;">N/A</p>
-                            </div>
-                            <div class="card-content-block" style="margin-top: 1rem;">
-                                <h4 class="content-label" style="font-size: 0.75rem;">Readability</h4>
-                                <p class="content-value" id="dashboard-format-summary" style="font-size: 0.88rem;">N/A</p>
-                            </div>
-                        </div>
-                        <div>
-                            <h4 class="content-label" style="font-size: 0.75rem; margin-bottom: 0.5rem;">Top Actionable Recommendations</h4>
-                            <ul class="analysis-list" id="dashboard-insights-list" style="margin-top: 0.5rem;">
-                                <!-- Dynamic recommendations -->
-                            </ul>
-                        </div>
+                    <p class="next-step-desc" id="next-step-desc">
+                        Your ATS score is 84%. Make a few improvements to increase your chances of getting shortlisted.
+                    </p>
+                    <div>
+                        <a href="analysis.html" class="btn btn-primary next-step-btn" id="next-step-btn">
+                            <span>Analyze Resume</span>
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </a>
                     </div>
                 </section>
 

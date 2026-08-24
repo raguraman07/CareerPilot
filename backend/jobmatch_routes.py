@@ -2,58 +2,20 @@ import os
 import json
 import logging
 import uuid
+import datetime
 from flask import Blueprint, request, jsonify
 from firebase_client import db
 from resume_routes import get_auth_uid, handle_db_op
+from services.job_matching_service import analyze_job_match, is_gemini_configured
 
 logger = logging.getLogger(__name__)
 
 jobmatch_bp = Blueprint('jobmatch', __name__)
 
-# Safely import Google GenAI SDKs
-genai_module = None
-genai_legacy_module = None
-
-try:
-    from google import genai
-    genai_module = genai
-except ImportError:
-    pass
-
-try:
-    import google.generativeai as genai_legacy
-    genai_legacy_module = genai_legacy
-except ImportError:
-    pass
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-is_gemini_configured = bool(
-    GEMINI_API_KEY 
-    and not GEMINI_API_KEY.startswith("your-") 
-    and not GEMINI_API_KEY.startswith("dummy") 
-    and GEMINI_API_KEY != "your_gemini_api_key_here"
-)
-
-genai_client = None
-genai_legacy_model = None
-
-if is_gemini_configured:
-    if genai_module is not None:
-        try:
-            genai_client = genai_module.Client(api_key=GEMINI_API_KEY)
-        except Exception:
-            pass
-    if genai_client is None and genai_legacy_module is not None:
-        try:
-            genai_legacy_module.configure(api_key=GEMINI_API_KEY)
-            genai_legacy_model = genai_legacy_module.GenerativeModel("gemini-3.6-flash")
-        except Exception:
-            is_gemini_configured = False
-
 MOCK_JOBMATCH_DB = {}
 
-@jobmatch_bp.route('/api/jobmatch/match', methods=['POST'])
-def run_job_match():
+
+def _run_analyze_handler():
     try:
         uid = get_auth_uid(request)
     except ValueError as val_err:
@@ -62,89 +24,79 @@ def run_job_match():
     data = request.get_json() or {}
     resume_id = data.get("resume_id")
     job_description = data.get("job_description")
+    job_title = data.get("job_title", "").strip()
 
-    if not resume_id or not job_description:
-        return jsonify({"error": "Missing resume_id or job_description in request."}), 400
+    if not resume_id or not job_description or not job_description.strip():
+        return jsonify({"error": "Missing required fields: resume_id and job_description."}), 400
 
-    def db_select():
+    # Fetch resume text and verify ownership
+    def db_select_resume():
         doc = db.collection("resumes").document(resume_id).get()
         if doc.exists:
             d = doc.to_dict()
             if d.get("user_id") == uid:
-                return d.get("extracted_text") or ""
-        return ""
+                return d
+        return None
 
-    def mock_select():
+    def mock_select_resume():
         from resume_routes import MOCK_RESUMES_DB
         r = MOCK_RESUMES_DB.get(resume_id)
         if r and r.get("user_id") == uid:
-            return r.get("extracted_text") or ""
-        return "Developer Resume text sample."
+            return r
+        return None
 
     try:
-        resume_text = handle_db_op(db_select, mock_select)
+        resume_doc = handle_db_op(db_select_resume, mock_select_resume)
     except Exception as db_err:
         logger.error(f"Failed to fetch resume details: {db_err}")
         return jsonify({"error": "Failed to fetch resume details."}), 500
 
-    if not is_gemini_configured or (not genai_client and not genai_legacy_model) or not resume_text:
-        return jsonify({"error": "AI analysis is temporarily unavailable. Please try again."}), 502
+    if not resume_doc:
+        return jsonify({"error": "Resume not found or unauthorized access."}), 404
 
+    resume_text = resume_doc.get("extracted_text") or resume_doc.get("text") or ""
+    resume_filename = resume_doc.get("filename") or "Resume.pdf"
+
+    if not resume_text.strip():
+        return jsonify({"error": "Selected resume does not contain any readable text."}), 400
+
+    # Execute dynamic AI Job Matching analysis using Gemini
     try:
-        prompt = f"""
-        You are a technical recruiter and resume matching specialist.
-        Compare the candidate's resume text against the target job description.
-        Evaluate matching skills, identify missing keywords/skills, compute a match percentage (0-100), and provide helpful tips.
-        
-        Do not use predefined lists of skills. Extract skills dynamically from the provided text.
-        
-        You must return a raw JSON object matching the exact structure below:
-        {{
-            "match_percentage": 78,
-            "missing_skills": ["missing1", "missing2"],
-            "matching_skills": ["matching1", "matching2"],
-            "recommendations": [
-                "rec1", "rec2"
-            ]
-        }}
-        
-        Job Description:
-        {job_description}
-        
-        Resume Text:
-        {resume_text}
-        """
-        raw_text = ""
-        if genai_client:
-            resp = genai_client.models.generate_content(
-                model='gemini-3.6-flash',
-                contents=prompt,
-                config={'response_mime_type': 'application/json'}
-            )
-            raw_text = resp.text or ""
-        elif genai_legacy_model:
-            resp = genai_legacy_model.generate_content(
-                prompt,
-                generation_config={"response_mime_type": "application/json"}
-            )
-            raw_text = resp.text or ""
-
-        cleaned = raw_text.strip().replace("```json", "").replace("```", "").strip()
-        match_data = json.loads(cleaned)
-    except Exception as e:
-        logger.error(f"Gemini Job Match failed: {e}")
-        return jsonify({"error": "AI analysis is temporarily unavailable. Please try again."}), 502
+        analysis_result = analyze_job_match(
+            resume_text=resume_text,
+            job_description=job_description,
+            job_title=job_title
+        )
+    except (ValueError, RuntimeError) as ai_err:
+        logger.error(f"AI Job Match analysis failed: {ai_err}")
+        return jsonify({"error": "AI job matching is temporarily unavailable. Please try again."}), 502
+    except Exception as exc:
+        logger.error(f"Unexpected error during job match: {exc}")
+        return jsonify({"error": "AI job matching is temporarily unavailable. Please try again."}), 502
 
     match_id = str(uuid.uuid4())
+    now_iso = datetime.datetime.utcnow().isoformat() + "Z"
+
     record = {
         "id": match_id,
         "user_id": uid,
         "resume_id": resume_id,
+        "resume_filename": resume_filename,
+        "job_title": analysis_result.get("job_title") or job_title or "Position",
         "job_description": job_description,
-        "match_percentage": int(match_data.get("match_percentage", 0)),
-        "missing_skills": match_data.get("missing_skills", []),
-        "matching_skills": match_data.get("matching_skills", []),
-        "recommendations": match_data.get("recommendations", [])
+        "match_score": analysis_result.get("match_score", 0),
+        "match_level": analysis_result.get("match_level", "Moderate Match"),
+        "matching_skills": analysis_result.get("matching_skills", []),
+        "missing_skills": analysis_result.get("missing_skills", []),
+        "experience_match": analysis_result.get("experience_match", {}),
+        "education_match": analysis_result.get("education_match", {}),
+        "qualification_match": analysis_result.get("qualification_match", {}),
+        "candidate_strengths": analysis_result.get("candidate_strengths", []),
+        "candidate_weaknesses": analysis_result.get("candidate_weaknesses", []),
+        "skill_gaps": analysis_result.get("skill_gaps", []),
+        "recommendations": analysis_result.get("recommendations", []),
+        "summary": analysis_result.get("summary", ""),
+        "created_at": now_iso
     }
 
     def db_insert():
@@ -160,11 +112,145 @@ def run_job_match():
         return jsonify({
             "success": True,
             "match_id": saved_record.get("id"),
-            "match_percentage": saved_record.get("match_percentage"),
-            "missing_skills": saved_record.get("missing_skills"),
+            "analysis": saved_record,
+            # Backward compatibility fields
+            "match_percentage": saved_record.get("match_score"),
             "matching_skills": saved_record.get("matching_skills"),
+            "missing_skills": saved_record.get("missing_skills"),
             "recommendations": saved_record.get("recommendations")
         }), 201
     except Exception as save_err:
         logger.error(f"Failed to save job match results: {save_err}")
         return jsonify({"error": "Failed to save job match results."}), 500
+
+
+@jobmatch_bp.route('/api/job-matching/analyze', methods=['POST'])
+def analyze_job_matching():
+    return _run_analyze_handler()
+
+@jobmatch_bp.route('/api/jobmatch/match', methods=['POST'])
+def match_jobmatch_alias():
+    return _run_analyze_handler()
+
+@jobmatch_bp.route('/api/jobmatch/analyze', methods=['POST'])
+def analyze_jobmatch_alias():
+    return _run_analyze_handler()
+
+
+def _run_history_handler():
+    try:
+        uid = get_auth_uid(request)
+    except ValueError as val_err:
+        return jsonify({"error": str(val_err)}), 401
+
+    def db_select_history():
+        docs = db.collection("job_matches").where("user_id", "==", uid).stream()
+        history = []
+        for doc in docs:
+            d = doc.to_dict()
+            history.append(d)
+        return sorted(history, key=lambda x: x.get("created_at", ""), reverse=True)
+
+    def mock_select_history():
+        user_matches = [m for m in MOCK_JOBMATCH_DB.values() if m.get("user_id") == uid]
+        return sorted(user_matches, key=lambda x: x.get("created_at", ""), reverse=True)
+
+    try:
+        history_data = handle_db_op(db_select_history, mock_select_history)
+        return jsonify(history_data), 200
+    except Exception as e:
+        logger.error(f"Failed to fetch job match history: {e}")
+        return jsonify({"error": "Failed to fetch job match history."}), 500
+
+@jobmatch_bp.route('/api/job-matching/history', methods=['GET'])
+def history_job_matching():
+    return _run_history_handler()
+
+@jobmatch_bp.route('/api/jobmatch/history', methods=['GET'])
+def history_jobmatch_alias():
+    return _run_history_handler()
+
+
+def _run_get_one_handler(analysis_id):
+    try:
+        uid = get_auth_uid(request)
+    except ValueError as val_err:
+        return jsonify({"error": str(val_err)}), 401
+
+    def db_select_one():
+        doc = db.collection("job_matches").document(analysis_id).get()
+        if doc.exists:
+            d = doc.to_dict()
+            if d.get("user_id") == uid:
+                return d
+        return None
+
+    def mock_select_one():
+        m = MOCK_JOBMATCH_DB.get(analysis_id)
+        if m and m.get("user_id") == uid:
+            return m
+        return None
+
+    try:
+        record = handle_db_op(db_select_one, mock_select_one)
+        if not record:
+            return jsonify({"error": "Job match analysis not found or unauthorized."}), 404
+        return jsonify(record), 200
+    except Exception as e:
+        logger.error(f"Failed to fetch job match record {analysis_id}: {e}")
+        return jsonify({"error": "Failed to fetch job match record."}), 500
+
+@jobmatch_bp.route('/api/job-matching/<analysis_id>', methods=['GET'])
+def get_job_matching(analysis_id):
+    return _run_get_one_handler(analysis_id)
+
+@jobmatch_bp.route('/api/jobmatch/<analysis_id>', methods=['GET'])
+def get_jobmatch_alias(analysis_id):
+    return _run_get_one_handler(analysis_id)
+
+
+def _run_delete_handler(analysis_id):
+    try:
+        uid = get_auth_uid(request)
+    except ValueError as val_err:
+        return jsonify({"error": str(val_err)}), 401
+
+    def db_select_one():
+        doc = db.collection("job_matches").document(analysis_id).get()
+        if doc.exists and doc.to_dict().get("user_id") == uid:
+            return doc.to_dict()
+        return None
+
+    def mock_select_one():
+        m = MOCK_JOBMATCH_DB.get(analysis_id)
+        if m and m.get("user_id") == uid:
+            return m
+        return None
+
+    try:
+        record = handle_db_op(db_select_one, mock_select_one)
+        if not record:
+            return jsonify({"error": "Job match record not found or unauthorized."}), 404
+
+        def db_delete():
+            db.collection("job_matches").document(analysis_id).delete()
+            return True
+
+        def mock_delete():
+            if analysis_id in MOCK_JOBMATCH_DB:
+                del MOCK_JOBMATCH_DB[analysis_id]
+            return True
+
+        handle_db_op(db_delete, mock_delete)
+        return jsonify({"message": "Job match analysis successfully deleted.", "id": analysis_id}), 200
+    except Exception as e:
+        logger.error(f"Failed to delete job match analysis {analysis_id}: {e}")
+        return jsonify({"error": "Failed to delete job match analysis."}), 500
+
+@jobmatch_bp.route('/api/job-matching/<analysis_id>', methods=['DELETE'])
+def delete_job_matching(analysis_id):
+    return _run_delete_handler(analysis_id)
+
+@jobmatch_bp.route('/api/jobmatch/<analysis_id>', methods=['DELETE'])
+def delete_jobmatch_alias(analysis_id):
+    return _run_delete_handler(analysis_id)
