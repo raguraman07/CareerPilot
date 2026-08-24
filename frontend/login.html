@@ -19,11 +19,9 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/auth.css">
     <link rel="stylesheet" href="css/responsive.css">
+    <!-- Light Theme Enforcement -->
     <script>
-        (function() {
-            var t = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            if (t === 'dark') document.documentElement.classList.add('dark-mode');
-        })();
+        document.documentElement.classList.remove('dark-mode');
     </script>
 </head>
 <body>

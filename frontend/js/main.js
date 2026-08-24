@@ -1,23 +1,16 @@
 /**
  * CareerPilot AI - Main Javascript Handler
- * Handles global interactions: Theme toggling, Mobile Drawer Navigation, Profile Dropdowns, Scroll animations, and Active State tracking.
+ * Handles global interactions: Light theme enforcement, Mobile Drawer Navigation, Profile Dropdowns, and Page Transitions.
  */
 
 // -------------------------------------------------------------
-// Early Anti-Flicker Page Transition & Theme Helper
+// Enforce Light Theme Early (Dark Theme Removed)
 // -------------------------------------------------------------
-(function syncThemeEarly() {
+(function enforceLightThemeEarly() {
     try {
-        const storedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = storedTheme || (systemPrefersDark ? 'dark' : 'light');
-        if (theme === 'dark') {
-            document.documentElement.classList.add('dark-mode');
-            if (document.body) document.body.classList.add('dark-mode');
-        } else {
-            document.documentElement.classList.remove('dark-mode');
-            if (document.body) document.body.classList.remove('dark-mode');
-        }
+        localStorage.removeItem('theme');
+        document.documentElement.classList.remove('dark-mode');
+        if (document.body) document.body.classList.remove('dark-mode');
     } catch (e) {
         // Silently fail if localStorage is disabled
     }
@@ -83,50 +76,18 @@ const setupPageTransitions = () => {
 setupPageTransitions();
 
 document.addEventListener('DOMContentLoaded', () => {
-    // -------------------------------------------------------------
-    // 1. Theme Manager (Light / Dark Mode)
-    // -------------------------------------------------------------
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    // Enforce light theme state on DOM load
+    document.documentElement.classList.remove('dark-mode');
+    document.body.classList.remove('dark-mode');
     
-    const getInitialTheme = () => {
-        const storedTheme = localStorage.getItem('theme');
-        if (storedTheme) return storedTheme;
-        return systemPrefersDark.matches ? 'dark' : 'light';
-    };
-
-    const applyTheme = (theme) => {
-        if (theme === 'dark') {
-            document.documentElement.classList.add('dark-mode');
-            document.body.classList.add('dark-mode');
-        } else {
-            document.documentElement.classList.remove('dark-mode');
-            document.body.classList.remove('dark-mode');
-        }
-        localStorage.setItem('theme', theme);
-        
-        if (themeToggleBtn) {
-            themeToggleBtn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
-        }
-    };
-
-    applyTheme(getInitialTheme());
-
+    const themeToggleBtn = document.getElementById('theme-toggle');
     if (themeToggleBtn) {
-        themeToggleBtn.addEventListener('click', () => {
-            const isDark = document.body.classList.contains('dark-mode');
-            applyTheme(isDark ? 'light' : 'dark');
-        });
+        // Hide theme toggle button since only light theme is used
+        themeToggleBtn.style.display = 'none';
     }
 
-    systemPrefersDark.addEventListener('change', (e) => {
-        if (!localStorage.getItem('theme')) {
-            applyTheme(e.matches ? 'dark' : 'light');
-        }
-    });
-
     // -------------------------------------------------------------
-    // 2. Dashboard Mobile Drawer & Profile Dropdown
+    // Dashboard Mobile Drawer & Profile Dropdown
     // -------------------------------------------------------------
     const sidebar = document.getElementById('sidebar-wrapper');
     const hamburgerBtn = document.getElementById('hamburger-menu-btn');
@@ -170,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 3. Landing Page Nav Toggle (If Present)
+    // Landing Page Nav Toggle (If Present)
     // -------------------------------------------------------------
     const menuToggle = document.getElementById('menu-toggle');
     const navLinksList = document.querySelector('.nav-links');

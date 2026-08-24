@@ -248,9 +248,7 @@
     fill: none;
 }
 
-.theme-toggle .sun-icon { display: none; }
-body.dark-mode .theme-toggle .moon-icon { display: none; }
-body.dark-mode .theme-toggle .sun-icon { display: block; }
+.theme-toggle { display: none !important; }
 
 /* User Avatar Profile Button & Dropdown */
 .profile-avatar-btn {

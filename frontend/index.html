@@ -21,12 +21,9 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
-    <!-- Anti-Flicker & Early Theme Sync -->
+    <!-- Light Theme Enforcement -->
     <script>
-        (function () {
-            var t = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            if (t === 'dark') document.documentElement.classList.add('dark-mode');
-        })();
+        document.documentElement.classList.remove('dark-mode');
     </script>
     <style>
         /* Custom clean layout enhancements for minimal landing page */

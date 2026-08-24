@@ -88,33 +88,6 @@
     --success-color: var(--success);
 }
 
-/* Dark Mode Theme Tokens */
-body.dark-mode, html.dark-mode {
-    --dark: #FCF2E5;
-    --secondary: #c9c5b5;
-    --background: #252020;
-    --surface: #332c2c;
-    --surface-secondary: #403838;
-
-    --text-primary: #FCF2E5;
-    --text-secondary: #c9c5b5;
-    --text-muted: #A8A492;
-
-    --border: #524646;
-
-    --primary: #EC5B38;
-    --primary-hover: #f06c4b;
-    --primary-light: rgba(236, 91, 56, 0.2);
-
-    --sidebar-bg: #1c1717;
-    --sidebar-text: #FCF2E5;
-    --sidebar-muted: #A8A492;
-
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 8px -1px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 10px 20px -3px rgba(0, 0, 0, 0.5);
-}
-
 /* Base Reset & Typography */
 *, *::before, *::after {
     box-sizing: border-box;
