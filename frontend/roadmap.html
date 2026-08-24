@@ -6,8 +6,8 @@
     <title>AI Career Roadmap - CareerPilot</title>
     
     <!-- Meta Descriptions for SEO -->
-    <meta name="description" content="CareerPilot AI Career Roadmap - Personalized step-by-step learning plan and skill development strategy derived from your resume, job match skill gaps, ATS scores, and interview performance.">
-    <meta name="keywords" content="CareerPilot, AI Career Roadmap, Learning Plan, Skill Gap Strategy, Career Readiness Score, Project Recommendations">
+    <meta name="description" content="CareerPilot AI Career Roadmap - Generate personalized milestone learning plans, career readiness scores, project recommendations, and skill progression checklists.">
+    <meta name="keywords" content="CareerPilot, AI Career Roadmap, Learning Plan, Readiness Score, Skill Gap, Gemini AI">
     <meta name="author" content="CareerPilot Team">
 
     <!-- Fonts Preconnect and Links for Performance -->
@@ -18,6 +18,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/analysis.css">
     <link rel="stylesheet" href="css/responsive.css">
     <!-- Anti-Flicker & Early Theme Sync -->
     <script>
@@ -26,112 +27,6 @@
             if (t === 'dark') document.documentElement.classList.add('dark-mode');
         })();
     </script>
-    <style>
-        .roadmap-panel {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 2rem;
-            margin-top: 1.5rem;
-            box-shadow: var(--card-shadow);
-        }
-        .two-col-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-        @media (max-width: 868px) {
-            .two-col-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        .readiness-card {
-            background: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-        .readiness-circle {
-            width: 84px;
-            height: 84px;
-            border-radius: 50%;
-            background: var(--primary-light);
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.75rem;
-            font-weight: 700;
-            border: 2px solid var(--primary-color);
-            flex-shrink: 0;
-        }
-        .phase-card {
-            background: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 1.75rem;
-            margin-bottom: 1.25rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            transition: border-color var(--transition-fast);
-        }
-        .phase-card:hover {
-            border-color: var(--primary-color);
-        }
-        .phase-meta {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        .phase-badge {
-            background: var(--primary-light);
-            color: var(--primary-color);
-            border: 1px solid rgba(37, 99, 235, 0.2);
-            padding: 0.25rem 0.65rem;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 700;
-        }
-        .progress-bar-container {
-            width: 100%;
-            height: 10px;
-            background: var(--background-color);
-            border-radius: 9999px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-        .progress-bar-fill {
-            height: 100%;
-            background: var(--primary-color);
-            transition: width 0.4s ease;
-        }
-        .history-card {
-            background: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 1.25rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            transition: border-color var(--transition-fast);
-        }
-        .history-card:hover {
-            border-color: var(--primary-color);
-        }
-        @media (max-width: 640px) {
-            .history-card {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-    </style>
 </head>
 <body>
 
@@ -272,7 +167,7 @@
         <!-- Sidebar Overlay -->
         <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
-        <!-- Workspace Area -->
+        <!-- Main Workspace Area -->
         <div class="workspace-wrapper">
             <!-- Top Navbar Header -->
             <header class="top-navbar" aria-label="Top Navigation Header">
@@ -326,118 +221,87 @@
                 </div>
             </header>
 
-            <!-- Main Content -->
+            <!-- Main Workspace Area -->
             <main class="workspace-content" id="main-content">
                 <header class="content-header">
                     <h2>AI Career Roadmap & Personalized Learning Plan</h2>
-                    <p class="content-subtitle">Get a customized learning path and milestone roadmap derived from your actual resume, ATS feedback, job match skill gaps, and interview performance.</p>
+                    <p class="content-subtitle">Generate a custom milestone roadmap, track your overall readiness score (0-100), update phase completion status, and build recommended portfolio projects.</p>
                 </header>
 
-                <!-- Input Setup Panel -->
-                <div class="roadmap-panel">
-                    <form id="roadmap-setup-form" style="display:flex; flex-direction:column; gap:1.25rem;">
-                        <div class="form-group">
-                            <label for="career-goal-input" class="form-label">Target Career Goal / Role <span style="color:var(--text-muted); font-weight:normal;">(Optional - e.g. Senior Backend Engineer, Data Analyst)</span></label>
-                            <input type="text" id="career-goal-input" class="form-input" placeholder="e.g. Full Stack Python & React Developer">
+                <!-- Roadmap Generator Form Card -->
+                <div class="card" style="margin-bottom: 2rem;">
+                    <form id="roadmap-setup-form">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+                            <div class="form-group">
+                                <label for="roadmap-target-role" class="form-label">Target Career Goal / Role Title</label>
+                                <input type="text" id="roadmap-target-role" class="form-input" placeholder="e.g. Senior Full-Stack Engineer, AI Specialist" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="roadmap-resume-select" class="form-label">Select Base Resume (Optional)</label>
+                                <select id="roadmap-resume-select" class="form-select">
+                                    <option value="" selected>-- Use latest active profile --</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 1rem;">
                             <button type="submit" class="btn btn-primary" id="btn-generate-roadmap">
-                                <span>Generate Career Roadmap</span>
+                                <span>Generate Learning Plan Roadmap</span>
                             </button>
-                            <span id="gen-status-msg" style="font-size: 0.9rem; color: var(--text-muted); display: none;"></span>
+                            <span id="roadmap-status-msg" style="font-size: 0.9rem; color: var(--text-muted); display: none;"></span>
                         </div>
                     </form>
-
-                    <!-- Alert Box -->
-                    <div id="roadmap-alert-box" class="alert-box" style="display: none; margin-top: 1.5rem; padding: 1rem; border-radius: 6px; font-size: 0.9rem;"></div>
+                    <div id="roadmap-alert-box" class="alert-box" style="display: none; margin-top: 1.25rem;"></div>
                 </div>
 
-                <!-- Roadmap Dashboard & Results Container -->
-                <div id="roadmap-results-wrapper" style="display: none; margin-top: 2.5rem;">
+                <!-- Roadmap Workspace Output -->
+                <div id="roadmap-workspace-results" class="analysis-results-grid" style="display: none;">
                     
-                    <!-- Header Summary Card -->
-                    <div class="roadmap-panel" style="margin-top:0; margin-bottom: 2rem;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                            <div>
-                                <h3 id="res-goal-title" style="font-size: 1.35rem;">Target Role Roadmap</h3>
-                                <p id="res-profile-summary" style="color: var(--text-muted); font-size: 0.92rem; margin-top: 0.25rem; max-width: 750px;">Profile Summary</p>
-                            </div>
-                            <span class="phase-badge" id="res-timeline-badge" style="font-size: 0.88rem; padding: 0.4rem 0.85rem;">Timeline: 4–6 weeks</span>
-                        </div>
-
-                        <!-- Progress Bar -->
-                        <div style="margin-top: 1.5rem;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.88rem; font-weight: 600; margin-bottom: 0.4rem;">
-                                <span>Roadmap Completion Progress</span>
-                                <span id="res-progress-pct" style="color: var(--primary-color);">0%</span>
-                            </div>
-                            <div class="progress-bar-container">
-                                <div class="progress-bar-fill" id="res-progress-bar" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Readiness Score & Strengths Overview -->
-                    <div class="two-col-grid" style="margin-bottom: 2rem;">
-                        <!-- Readiness Card -->
-                        <div class="readiness-card">
-                            <div class="readiness-circle" id="res-readiness-val">75</div>
-                            <div>
-                                <h4 id="res-readiness-label" style="font-size: 1.1rem; font-weight: 700; color: var(--text-color);">Strongly Prepared</h4>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Overall Career Readiness Score calculated across your skills, job matches, and ATS feedback.</p>
+                    <!-- Readiness Score & Progress Hero Header -->
+                    <div class="analysis-card" style="display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap;">
+                        <div>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Career Readiness Index</span>
+                            <div style="display: flex; align-items: baseline; gap: 0.75rem; margin-top: 0.25rem;">
+                                <h3 id="roadmap-readiness-score" style="font-size: 2.75rem; font-weight: 700; color: var(--primary);">72/100</h3>
+                                <span class="badge badge-info" id="roadmap-readiness-label" style="font-size: 0.9rem; padding: 0.35rem 0.75rem;">Intermediate Ready</span>
                             </div>
                         </div>
 
-                        <!-- Strengths & Priority Gaps Card -->
-                        <div class="roadmap-panel" style="margin-top:0; padding: 1.5rem;">
-                            <div class="two-col-grid" style="gap: 1rem;">
-                                <div>
-                                    <strong style="color: #16a34a; font-size: 0.88rem;">Current Strengths:</strong>
-                                    <ul id="res-strengths-ul" style="padding-left: 1.25rem; font-size: 0.88rem; margin-top: 0.35rem; color: var(--text-color); flex-direction: column; gap: 0.3rem;"></ul>
-                                </div>
-                                <div>
-                                    <strong style="color: #dc2626; font-size: 0.88rem;">Priority Skill Gaps:</strong>
-                                    <ul id="res-gaps-ul" style="padding-left: 1.25rem; font-size: 0.88rem; margin-top: 0.35rem; color: var(--text-color); flex-direction: column; gap: 0.3rem;"></ul>
-                                </div>
+                        <!-- Progress Bar Container -->
+                        <div style="flex: 1; max-width: 400px; min-width: 260px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.88rem; font-weight: 600;">
+                                <span>Overall Milestone Completion</span>
+                                <span id="roadmap-progress-percent">0%</span>
+                            </div>
+                            <div style="height: 10px; background-color: var(--surface-secondary); border-radius: var(--radius-full); overflow: hidden; border: 1px solid var(--border);">
+                                <div id="roadmap-progress-bar-fill" style="height: 100%; width: 0%; background-color: var(--primary); transition: width 0.4s ease;"></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Roadmap Sequenced Timeline Phases -->
-                    <section style="margin-bottom: 2.5rem;">
-                        <h3 style="font-size: 1.25rem; margin-bottom: 1.25rem;">Sequenced Learning Milestone Roadmap</h3>
-                        <div id="res-phases-container">
-                            <!-- Dynamic Phase Cards appended via JS -->
-                        </div>
-                    </section>
-
-                    <!-- Projects & Readiness Checklist Grid -->
-                    <div class="two-col-grid" style="margin-bottom: 2rem;">
-                        <!-- Recommended Projects -->
-                        <div class="roadmap-panel" style="margin-top:0;">
-                            <h4 style="font-size: 1.05rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.75rem;">Recommended Portfolio Projects</h4>
-                            <ul id="res-projects-ul" style="padding-left: 1.25rem; font-size: 0.9rem; color: var(--text-color); display: flex; flex-direction: column; gap: 0.5rem;"></ul>
-                        </div>
-
-                        <!-- Job Readiness Checklist -->
-                        <div class="roadmap-panel" style="margin-top:0;">
-                            <h4 style="font-size: 1.05rem; font-weight: 600; color: var(--text-color); margin-bottom: 0.75rem;">Job Readiness Checklist</h4>
-                            <ul id="res-checklist-ul" style="padding-left: 1.25rem; font-size: 0.9rem; color: var(--text-color); display: flex; flex-direction: column; gap: 0.5rem;"></ul>
+                    <!-- Sequential Roadmap Phases List -->
+                    <div class="analysis-card">
+                        <h3 class="analysis-card-title">Milestone Roadmap Phases</h3>
+                        <div id="roadmap-phases-container" style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1rem;">
+                            <!-- Phases injected dynamically -->
                         </div>
                     </div>
+
+                    <!-- Recommended Portfolio Projects & Priority Skills -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--primary);">Recommended Portfolio Projects</h3>
+                            <ul class="analysis-list" id="roadmap-projects-list"></ul>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--warning);">Priority Skill Gaps to Focus</h3>
+                            <div class="skills-badge-list" id="roadmap-priority-skills"></div>
+                        </div>
+                    </div>
+
                 </div>
-
-                <!-- Roadmap History Section -->
-                <section style="margin-top: 3.5rem;" id="history-section">
-                    <header class="content-header" style="margin-bottom: 1.5rem;">
-                        <h3>Previous Career Roadmaps</h3>
-                        <p class="content-subtitle">Review your past generated learning roadmaps and progress records.</p>
-                    </header>
-                    <div id="history-list" style="display: flex; flex-direction: column; gap: 1rem;">
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Loading history...</p>
-                    </div>
-                </section>
             </main>
         </div>
     </div>

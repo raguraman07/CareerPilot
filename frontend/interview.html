@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Mock Interview Preparation - CareerPilot</title>
+    <title>AI Interview Preparation - CareerPilot</title>
     
     <!-- Meta Descriptions for SEO -->
-    <meta name="description" content="CareerPilot AI Interview Trainer - Practice customized technical, behavioral, and HR interview questions dynamically tailored to your resume and job description.">
-    <meta name="keywords" content="CareerPilot, AI Interview Prep, Mock Interview, Technical Questions, Behavioral Questions, Answer Evaluation">
+    <meta name="description" content="CareerPilot AI Interview Prep - Practice interactive technical, behavioral, and HR interview questions with real-time AI evaluation feedback.">
+    <meta name="keywords" content="CareerPilot, Interview Preparation, AI Mock Interview, Technical Questions, STAR Method, Gemini AI">
     <meta name="author" content="CareerPilot Team">
 
     <!-- Fonts Preconnect and Links for Performance -->
@@ -18,6 +18,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/analysis.css">
     <link rel="stylesheet" href="css/responsive.css">
     <!-- Anti-Flicker & Early Theme Sync -->
     <script>
@@ -26,123 +27,6 @@
             if (t === 'dark') document.documentElement.classList.add('dark-mode');
         })();
     </script>
-    <style>
-        .interview-panel {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 2rem;
-            margin-top: 1.5rem;
-            box-shadow: var(--card-shadow);
-        }
-        .two-col-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-        @media (max-width: 868px) {
-            .two-col-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        .form-textarea {
-            width: 100%;
-            height: 120px;
-            padding: 0.85rem 1rem;
-            background: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-sm);
-            color: var(--text-color);
-            font-family: var(--font-family);
-            font-size: 0.95rem;
-            line-height: 1.5;
-            resize: vertical;
-            transition: border-color var(--transition-fast);
-        }
-        .form-textarea:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px var(--primary-light);
-        }
-        .q-card {
-            background: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-        }
-        .q-meta-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        .q-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.25rem 0.65rem;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            background: var(--primary-light);
-            color: var(--primary-color);
-            border: 1px solid rgba(37, 99, 235, 0.2);
-        }
-        .collapsible-box {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-sm);
-            padding: 1rem 1.25rem;
-            font-size: 0.9rem;
-            color: var(--text-color);
-        }
-        .eval-feedback-card {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: var(--border-radius-md);
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        body.dark-mode .eval-feedback-card {
-            background: #1e293b;
-            border-color: #334155;
-        }
-        .eval-score-badge {
-            display: inline-block;
-            padding: 0.35rem 0.85rem;
-            border-radius: 9999px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            background: var(--primary-color);
-            color: #ffffff;
-        }
-        .history-card {
-            background: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 1.25rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            transition: border-color var(--transition-fast);
-        }
-        .history-card:hover {
-            border-color: var(--primary-color);
-        }
-        @media (max-width: 640px) {
-            .history-card {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-    </style>
 </head>
 <body>
 
@@ -183,7 +67,7 @@
 
     <div class="dashboard-shell">
         
-        <!-- Left Sidebar -->
+        <!-- Left Sidebar Navigation -->
         <aside class="sidebar-wrapper" id="sidebar-wrapper" aria-label="Dashboard Sidebar">
             <div class="sidebar-header">
                 <a href="index.html" class="logo" aria-label="CareerPilot Home">
@@ -223,7 +107,7 @@
                         </li>
                         <li>
                             <a href="analysis.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="6" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
                                 <span>AI Resume Analysis</span>
                             </a>
                         </li>
@@ -285,7 +169,7 @@
 
         <!-- Main Workspace Area -->
         <div class="workspace-wrapper">
-            <!-- Top Navigation Bar -->
+            <!-- Top Navbar Header -->
             <header class="top-navbar" aria-label="Top Navigation Header">
                 <div class="navbar-left">
                     <button class="hamburger-menu-btn" id="hamburger-menu-btn" aria-label="Toggle Navigation Sidebar" aria-expanded="false" aria-controls="sidebar-wrapper">
@@ -299,13 +183,13 @@
                 </div>
 
                 <div class="navbar-right">
-                    <!-- Dark Mode Toggle -->
+                    <!-- Theme Toggle -->
                     <button id="theme-toggle" class="theme-toggle" aria-label="Switch theme">
                         <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                         <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     </button>
 
-                    <!-- User Profile Dropdown -->
+                    <!-- Profile Dropdown -->
                     <div class="navbar-action-wrapper dropdown-container">
                         <button class="profile-avatar-btn" id="profile-dropdown-btn" aria-label="Open profile menu" aria-expanded="false" aria-haspopup="true">
                             <span class="avatar-circle">
@@ -337,199 +221,104 @@
                 </div>
             </header>
 
-            <!-- Main Content Area -->
+            <!-- Main Workspace Area -->
             <main class="workspace-content" id="main-content">
                 <header class="content-header">
-                    <h2>AI Mock Interview Preparation</h2>
-                    <p class="content-subtitle">Generate custom technical, behavioral, HR, and resume-based questions dynamically tailored to your background and target job description.</p>
+                    <h2>AI Interview Preparation & Practice</h2>
+                    <p class="content-subtitle">Generate custom technical, behavioral, and HR interview questions. Submit answers for immediate AI scoring, feedback, and suggested responses.</p>
                 </header>
 
-                <!-- Interview Setup Panel -->
-                <div class="interview-panel">
-                    <form id="interview-setup-form" style="display:flex; flex-direction:column; gap:1.25rem;">
-                        <div class="two-col-grid">
+                <!-- Interview Setup Card -->
+                <div class="card" style="margin-bottom: 2rem;">
+                    <form id="interview-setup-form">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
                             <div class="form-group">
-                                <label for="resume-select" class="form-label">Select Resume <span style="color:var(--error-color);">*</span></label>
-                                <select id="resume-select" class="form-input" required>
-                                    <option value="" disabled selected>-- Loading your resumes... --</option>
+                                <label for="interview-resume-select" class="form-label">Select Your Resume</label>
+                                <select id="interview-resume-select" class="form-select" required>
+                                    <option value="" disabled selected>-- Loading resumes... --</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="jobmatch-select" class="form-label">Select Previous Job Match <span style="color:var(--text-muted); font-weight: normal;">(Optional)</span></label>
-                                <select id="jobmatch-select" class="form-input">
-                                    <option value="" selected>-- Select a previous job match analysis --</option>
-                                </select>
-                            </div>
-                        </div>
 
-                        <div class="two-col-grid">
                             <div class="form-group">
-                                <label for="job-title-input" class="form-label">Job Title <span style="color:var(--text-muted); font-weight: normal;">(Optional)</span></label>
-                                <input type="text" id="job-title-input" class="form-input" placeholder="e.g. Senior Software Engineer">
+                                <label for="interview-role-input" class="form-label">Target Role Title</label>
+                                <input type="text" id="interview-role-input" class="form-input" placeholder="e.g. Software Engineer, Data Scientist" required>
                             </div>
-                            <div class="form-group">
-                                <label for="interview-type-select" class="form-label">Interview Type</label>
-                                <select id="interview-type-select" class="form-input">
-                                    <option value="Mixed" selected>Mixed (Technical, Behavioral & HR)</option>
-                                    <option value="Technical">Technical Deep Dive</option>
-                                    <option value="Behavioral">Behavioral & Leadership</option>
-                                    <option value="HR">HR & Culture Fit</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="two-col-grid">
-                            <div class="form-group">
-                                <label for="difficulty-select" class="form-label">Difficulty Level</label>
-                                <select id="difficulty-select" class="form-input">
-                                    <option value="Beginner">Beginner (Fundamentals)</option>
-                                    <option value="Intermediate" selected>Intermediate (Problem Solving & Systems)</option>
-                                    <option value="Advanced">Advanced (Architecture & Trade-offs)</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="num-questions-select" class="form-label">Number of Questions</label>
-                                <select id="num-questions-select" class="form-input">
-                                    <option value="5">5 Questions</option>
-                                    <option value="10" selected>10 Questions</option>
-                                    <option value="15">15 Questions</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="job-desc-input" class="form-label">Job Description <span style="color:var(--text-muted); font-weight: normal;">(Optional if Job Match selected)</span></label>
-                            <textarea id="job-desc-input" class="form-textarea" placeholder="Paste target job responsibilities and technical requirements..."></textarea>
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <button type="submit" class="btn btn-primary" id="btn-generate-interview" disabled>
-                                <span>Generate Interview Session</span>
+                            <button type="submit" class="btn btn-primary" id="btn-generate-questions">
+                                <span>Generate Interview Questions</span>
                             </button>
-                            <span id="gen-status-msg" style="font-size: 0.9rem; color: var(--text-muted); display: none;"></span>
+                            <span id="interview-status-msg" style="font-size: 0.9rem; color: var(--text-muted); display: none;"></span>
                         </div>
                     </form>
-
-                    <!-- Alert message box -->
-                    <div id="interview-alert-box" class="alert-box" style="display: none; margin-top: 1.5rem; padding: 1rem; border-radius: 6px; font-size: 0.9rem;"></div>
+                    <div id="interview-alert-box" class="alert-box" style="display: none; margin-top: 1.25rem;"></div>
                 </div>
 
-                <!-- Active Interview Workspace / Interactive Practice View -->
-                <div id="active-interview-wrapper" style="display: none; margin-top: 2.5rem;">
-                    <!-- Session Header Card -->
-                    <div class="interview-panel" style="margin-top:0; margin-bottom: 2rem;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                <!-- Active Interview Practice Workspace -->
+                <div id="interview-workspace" style="display: none; flex-direction: column; gap: 1.75rem;">
+                    
+                    <!-- Question Header & Answer Box -->
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <span class="badge badge-info" id="q-category-badge">Technical</span>
+                                <span class="badge badge-neutral" id="q-difficulty-badge">Medium</span>
+                            </div>
+                            <span style="font-size: 0.88rem; font-weight: 600; color: var(--text-muted);" id="q-progress-text">Question 1 of 5</span>
+                        </div>
+
+                        <h3 id="q-title-text" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.25rem; line-height: 1.4;"></h3>
+
+                        <!-- Guidance Collapsible -->
+                        <div style="background-color: var(--surface-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem;">
+                            <span style="font-size: 0.85rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">Answering Guidance</span>
+                            <p id="q-guidance-text" style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.25rem;"></p>
+                        </div>
+
+                        <!-- Answer Input Form -->
+                        <form id="answer-form">
+                            <div class="form-group" style="margin-bottom: 1.25rem;">
+                                <label for="answer-textarea" class="form-label">Your Response</label>
+                                <textarea id="answer-textarea" class="form-textarea" placeholder="Type your answer using the STAR method (Situation, Task, Action, Result)..." required style="min-height: 140px;"></textarea>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <button type="submit" class="btn btn-primary" id="btn-submit-answer">
+                                    <span>Submit Answer for AI Evaluation</span>
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="btn-next-question" style="display: none;">Next Question →</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- AI Answer Evaluation Feedback Card -->
+                    <div id="answer-feedback-card" class="card" style="display: none;">
+                        <h3 class="analysis-card-title">AI Evaluation Feedback</h3>
+                        
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
+                            <span style="font-size: 0.88rem; font-weight: 600; color: var(--text-muted);">Answer Score:</span>
+                            <span id="feedback-score-val" style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">8/10</span>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
                             <div>
-                                <h3 id="sess-title" style="font-size: 1.25rem;">Interview Practice Session</h3>
-                                <p id="sess-subtitle" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Session summary</p>
+                                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--success); margin-bottom: 0.5rem;">Strengths</h4>
+                                <ul class="analysis-list" id="feedback-strengths"></ul>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <span class="q-badge" id="sess-diff-badge">Intermediate</span>
-                                <span class="q-badge" id="sess-type-badge">Mixed</span>
-                                <span class="eval-score-badge" id="sess-overall-score" style="display: none;">Overall: 0/100</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Active Question Card -->
-                    <div class="q-card" id="q-card-container">
-                        <div class="q-meta-bar">
-                            <span style="font-weight: 700; font-size: 0.9rem; color: var(--primary-color);" id="q-counter">Question 1 of 10</span>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <span class="q-badge" id="q-cat-badge">Technical</span>
-                                <button type="button" class="btn btn-secondary" id="btn-toggle-guidance" style="padding: 0.25rem 0.65rem; font-size: 0.8rem;">Show Guidance</button>
-                            </div>
-                        </div>
-
-                        <h3 id="q-text" style="font-size: 1.15rem; line-height: 1.5; color: var(--text-color);">Question Text</h3>
-
-                        <!-- Collapsible Info Boxes -->
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            <div class="collapsible-box" id="q-why-box">
-                                <strong>Why Interviewer Asks This:</strong> <span id="q-why-text">Loading...</span>
-                            </div>
-                            <div class="collapsible-box" id="q-eval-box">
-                                <strong>What Is Evaluated:</strong> <span id="q-eval-text">Loading...</span>
-                            </div>
-                            <div class="collapsible-box" id="q-guidance-box" style="display: none; background: var(--primary-light); border-color: rgba(37,99,235,0.2);">
-                                <strong>Answer Guidance:</strong> <span id="q-guidance-text">Loading...</span>
-                            </div>
-                        </div>
-
-                        <!-- Practice Answer Form -->
-                        <div class="form-group" style="margin-top: 0.5rem;">
-                            <label for="candidate-answer-input" class="form-label">Your Practice Answer</label>
-                            <textarea id="candidate-answer-input" class="form-textarea" style="height: 140px;" placeholder="Type your response here to receive instant AI evaluation feedback..."></textarea>
-                        </div>
-
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-primary" id="btn-submit-answer">
-                                <span>Submit Practice Answer</span>
-                            </button>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button type="button" class="btn btn-secondary" id="btn-prev-q" disabled>Previous</button>
-                                <button type="button" class="btn btn-secondary" id="btn-next-q">Next Question</button>
-                                <button type="button" class="btn btn-primary" id="btn-complete-sess" style="display: none; background: #16a34a;">Complete Session</button>
-                            </div>
-                        </div>
-
-                        <!-- Evaluation Feedback Card -->
-                        <div class="eval-feedback-card" id="eval-feedback-card" style="display: none;">
-                            <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <h4 style="font-weight: 700; font-size: 1.05rem;">AI Answer Evaluation</h4>
-                                <span class="eval-score-badge" id="eval-score">85 / 100</span>
-                            </div>
-                            <p id="eval-feedback-text" style="font-size: 0.92rem; color: var(--text-color);">Feedback text...</p>
-
-                            <div class="two-col-grid" style="gap: 1rem;">
-                                <div>
-                                    <strong style="color: #16a34a; font-size: 0.85rem;">Strengths:</strong>
-                                    <ul id="eval-strengths-ul" style="padding-left: 1.25rem; font-size: 0.88rem; margin-top: 0.25rem;"></ul>
-                                </div>
-                                <div>
-                                    <strong style="color: #dc2626; font-size: 0.85rem;">Areas to Improve:</strong>
-                                    <ul id="eval-weaknesses-ul" style="padding-left: 1.25rem; font-size: 0.88rem; margin-top: 0.25rem;"></ul>
-                                </div>
-                            </div>
-
                             <div>
-                                <strong style="font-size: 0.85rem; color: var(--primary-color);">Suggested Improvement:</strong>
-                                <p id="eval-improved-guidance" style="font-size: 0.88rem; margin-top: 0.25rem; color: var(--text-color);"></p>
-                            </div>
-
-                            <div id="eval-followup-container" style="display: none;">
-                                <strong style="font-size: 0.85rem; color: var(--text-color);">Suggested Follow-Up Question:</strong>
-                                <p id="eval-followup-text" style="font-size: 0.88rem; font-style: italic; margin-top: 0.25rem; color: var(--text-muted);"></p>
+                                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--danger); margin-bottom: 0.5rem;">Areas to Improve</h4>
+                                <ul class="analysis-list" id="feedback-improvements"></ul>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Preparation Overview Dashboard -->
-                <div id="prep-overview-wrapper" class="interview-panel" style="display: none; margin-top: 2rem;">
-                    <h3 style="font-size: 1.2rem; margin-bottom: 1rem;">Preparation Dashboard & Guidance</h3>
-                    <div class="two-col-grid">
                         <div>
-                            <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--primary-color);">Overall Preparation Tips</h4>
-                            <ul id="prep-tips-ul" style="padding-left: 1.25rem; color: var(--text-color); font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.4rem;"></ul>
-                        </div>
-                        <div>
-                            <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: #dc2626;">Potential Interview Weaknesses</h4>
-                            <ul id="prep-weaknesses-ul" style="padding-left: 1.25rem; color: var(--text-color); font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.4rem;"></ul>
+                            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem;">Suggested Ideal Answer Model</h4>
+                            <p id="feedback-model-answer" style="font-size: 0.92rem; color: var(--text-primary); line-height: 1.6; background-color: var(--surface-secondary); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border);"></p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Interview Session History Section -->
-                <section style="margin-top: 3.5rem;" id="history-section">
-                    <header class="content-header" style="margin-bottom: 1.5rem;">
-                        <h3>Previous Interview Preparation Sessions</h3>
-                        <p class="content-subtitle">Review your past practice sessions, AI answer evaluations, and preparation guidelines.</p>
-                    </header>
-                    <div id="history-list" style="display: flex; flex-direction: column; gap: 1rem;">
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Loading history...</p>
-                    </div>
-                </section>
+                </div>
             </main>
         </div>
     </div>

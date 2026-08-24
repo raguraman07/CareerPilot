@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Job Matching & Skill Gap Analysis - CareerPilot</title>
+    <title>AI Job Match & Skill Gap Analysis - CareerPilot</title>
     
     <!-- Meta Descriptions for SEO -->
-    <meta name="description" content="CareerPilot AI Job Matcher - Instantly align your resume against any job description with dynamic AI skill gap analysis and personalized recommendations.">
-    <meta name="keywords" content="CareerPilot, Job Matching, Resume Alignment, Skill Gap Analysis, Gemini AI, Recruiter Grader">
+    <meta name="description" content="CareerPilot AI Job Matcher - Instantly align your resume against any job description with dynamic AI skill gap analysis and recommendations.">
+    <meta name="keywords" content="CareerPilot, Job Matching, Resume Alignment, Skill Gap Analysis, Gemini AI">
     <meta name="author" content="CareerPilot Team">
 
     <!-- Fonts Preconnect and Links for Performance -->
@@ -18,6 +18,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/analysis.css">
     <link rel="stylesheet" href="css/responsive.css">
     <!-- Anti-Flicker & Early Theme Sync -->
     <script>
@@ -26,211 +27,13 @@
             if (t === 'dark') document.documentElement.classList.add('dark-mode');
         })();
     </script>
-    <style>
-        .match-panel {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 2rem;
-            margin-top: 1.5rem;
-            box-shadow: var(--card-shadow);
-        }
-        .form-textarea {
-            width: 100%;
-            height: 160px;
-            padding: 0.85rem 1rem;
-            background: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-sm);
-            color: var(--text-color);
-            font-family: var(--font-family);
-            font-size: 0.95rem;
-            line-height: 1.5;
-            resize: vertical;
-            transition: border-color var(--transition-fast);
-        }
-        .form-textarea:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px var(--primary-light);
-        }
-        .results-container {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-        .score-hero-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 1.75rem 2rem;
-            gap: 2rem;
-        }
-        @media (max-width: 768px) {
-            .score-hero-card {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-        .score-box {
-            display: flex;
-            align-items: center;
-            gap: 1.25rem;
-        }
-        .score-circle {
-            width: 84px;
-            height: 84px;
-            border-radius: 50%;
-            background: var(--primary-light);
-            border: 3px solid var(--primary-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .score-value {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            line-height: 1;
-        }
-        .score-denom {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
-        .match-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.35rem 0.85rem;
-            border-radius: 9999px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-        .match-badge.excellent { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-        .match-badge.strong { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-        .match-badge.moderate { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-        .match-badge.low { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-        .match-badge.poor { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
-
-        .two-col-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-        @media (max-width: 868px) {
-            .two-col-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        .three-col-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
-        }
-        @media (max-width: 992px) {
-            .three-col-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        .result-card {
-            background: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .result-card-title {
-            font-size: 1.05rem;
-            font-weight: 600;
-            color: var(--text-color);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .badge-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-        .skill-badge {
-            padding: 0.35rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            font-weight: 600;
-        }
-        .skill-badge.match {
-            background: #dcfce7;
-            color: #15803d;
-            border: 1px solid #bbf7d0;
-        }
-        .skill-badge.missing {
-            background: #fee2e2;
-            color: #b91c1c;
-            border: 1px solid #fecaca;
-        }
-        .skill-gap-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-        .skill-gap-table th, .skill-gap-table td {
-            padding: 0.75rem 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .skill-gap-table th {
-            background: var(--surface-color);
-            font-weight: 600;
-            color: var(--text-color);
-        }
-        .importance-badge {
-            display: inline-block;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .importance-badge.high { background: #fee2e2; color: #b91c1c; }
-        .importance-badge.medium { background: #fef3c7; color: #b45309; }
-        .importance-badge.low { background: #f3f4f6; color: #4b5563; }
-
-        .history-card {
-            background: var(--background-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 1.25rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            transition: border-color var(--transition-fast);
-        }
-        .history-card:hover {
-            border-color: var(--primary-color);
-        }
-        @media (max-width: 640px) {
-            .history-card {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-    </style>
 </head>
 <body>
 
     <!-- Skip link -->
     <a href="#main-content" class="skip-link">Skip to content</a>
 
-    <!-- Page guard and login session checking -->
+    <!-- Page guard and session initialization -->
     <script type="module">
         import { requireAuth, logoutUser } from './js/auth.js';
         
@@ -264,7 +67,7 @@
 
     <div class="dashboard-shell">
         
-        <!-- Left Sidebar -->
+        <!-- Left Sidebar Navigation -->
         <aside class="sidebar-wrapper" id="sidebar-wrapper" aria-label="Dashboard Sidebar">
             <div class="sidebar-header">
                 <a href="index.html" class="logo" aria-label="CareerPilot Home">
@@ -366,7 +169,7 @@
 
         <!-- Main Workspace Area -->
         <div class="workspace-wrapper">
-            <!-- Top Navigation Bar -->
+            <!-- Top Navbar Header -->
             <header class="top-navbar" aria-label="Top Navigation Header">
                 <div class="navbar-left">
                     <button class="hamburger-menu-btn" id="hamburger-menu-btn" aria-label="Toggle Navigation Sidebar" aria-expanded="false" aria-controls="sidebar-wrapper">
@@ -380,13 +183,13 @@
                 </div>
 
                 <div class="navbar-right">
-                    <!-- Dark Mode Toggle -->
+                    <!-- Theme Toggle -->
                     <button id="theme-toggle" class="theme-toggle" aria-label="Switch theme">
                         <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                         <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     </button>
 
-                    <!-- User Profile Dropdown -->
+                    <!-- Profile Dropdown -->
                     <div class="navbar-action-wrapper dropdown-container">
                         <button class="profile-avatar-btn" id="profile-dropdown-btn" aria-label="Open profile menu" aria-expanded="false" aria-haspopup="true">
                             <span class="avatar-circle">
@@ -418,157 +221,95 @@
                 </div>
             </header>
 
-            <!-- Main Content Area -->
+            <!-- Main Workspace Area -->
             <main class="workspace-content" id="main-content">
                 <header class="content-header">
-                    <h2>AI Job Matching & Skill Gap Analysis</h2>
-                    <p class="content-subtitle">Compare your uploaded resume against target job requirements to identify matching skills, experience gaps, and recruiter recommendations.</p>
+                    <h2>AI Job Match & Skill Gap Analysis</h2>
+                    <p class="content-subtitle">Compare your resume against any target job description to obtain instant Gemini AI match percentage, qualification fit, missing skills, and priority recommendations.</p>
                 </header>
 
-                <div class="match-panel">
-                    <form id="job-match-form" style="display:flex; flex-direction:column; gap:1.25rem;">
-                        <div class="two-col-grid">
-                            <div class="form-group">
-                                <label for="resume-select" class="form-label">Select Resume <span style="color:var(--error-color);">*</span></label>
-                                <select id="resume-select" class="form-input" required>
-                                    <option value="" disabled selected>-- Loading your resumes... --</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="job-title-input" class="form-label">Job Title <span style="color:var(--text-muted); font-weight: normal;">(Optional)</span></label>
-                                <input type="text" id="job-title-input" class="form-input" placeholder="e.g. Backend Engineer / Data Scientist">
-                            </div>
+                <!-- Job Match Form Panel -->
+                <div class="card" style="margin-bottom: 2rem;">
+                    <form id="jobmatch-form">
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label for="jobmatch-resume-select" class="form-label">Select Your Resume</label>
+                            <select id="jobmatch-resume-select" class="form-select" required>
+                                <option value="" disabled selected>-- Loading resumes... --</option>
+                            </select>
                         </div>
 
-                        <div class="form-group">
-                            <label for="job-desc-input" class="form-label">Target Job Description <span style="color:var(--error-color);">*</span></label>
-                            <textarea id="job-desc-input" class="form-textarea" placeholder="Paste the job description and requirements here..." required></textarea>
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label for="job-title-input" class="form-label">Job Title / Role Name (Optional)</label>
+                            <input type="text" id="job-title-input" class="form-input" placeholder="e.g. Senior Frontend Engineer, Data Analyst">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="job-description-input" class="form-label">Target Job Description / Qualifications</label>
+                            <textarea id="job-description-input" class="form-textarea" placeholder="Paste the job description or required skills here..." required></textarea>
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <button type="submit" class="btn btn-primary" id="btn-run-match" disabled>
+                            <button type="submit" class="btn btn-primary" id="btn-run-jobmatch">
                                 <span>Analyze Job Match</span>
                             </button>
-                            <span id="match-status-msg" style="font-size: 0.9rem; color: var(--text-muted); display: none;"></span>
+                            <span id="jobmatch-status-msg" style="font-size: 0.9rem; color: var(--text-muted); display: none;"></span>
                         </div>
                     </form>
-
-                    <!-- Alert message container -->
-                    <div id="match-alert-box" class="alert-box" style="display: none; margin-top: 1.5rem; padding: 1rem; border-radius: 6px; font-size: 0.9rem;"></div>
-
-                    <!-- Results Output Container -->
-                    <div id="match-results-wrapper" class="results-container" style="display: none;">
-                        <!-- Score Hero Card -->
-                        <div class="score-hero-card">
-                            <div class="score-box">
-                                <div class="score-circle">
-                                    <span class="score-value" id="res-score-val">0</span>
-                                    <span class="score-denom">out of 100</span>
-                                </div>
-                                <div>
-                                    <span class="match-badge strong" id="res-match-level">Strong Match</span>
-                                    <h3 id="res-job-title" style="font-size: 1.25rem; margin-top: 0.25rem;">Target Position</h3>
-                                    <p id="res-summary-text" style="color: var(--text-muted); font-size: 0.92rem; margin-top: 0.5rem; max-width: 650px;">AI summary of alignment.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Matching & Missing Skills -->
-                        <div class="two-col-grid">
-                            <div class="result-card">
-                                <div class="result-card-title" style="color: #16a34a;">
-                                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="#16a34a" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                    <span>Matching Skills</span>
-                                </div>
-                                <div class="badge-list" id="res-matching-skills"></div>
-                            </div>
-                            <div class="result-card">
-                                <div class="result-card-title" style="color: #dc2626;">
-                                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="#dc2626" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                                    <span>Missing Skills & Requirements</span>
-                                </div>
-                                <div class="badge-list" id="res-missing-skills"></div>
-                            </div>
-                        </div>
-
-                        <!-- Strengths & Weaknesses -->
-                        <div class="two-col-grid">
-                            <div class="result-card">
-                                <div class="result-card-title">
-                                    <span>Candidate Strengths</span>
-                                </div>
-                                <ul id="res-candidate-strengths" style="padding-left: 1.25rem; color: var(--text-color); display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.92rem;"></ul>
-                            </div>
-                            <div class="result-card">
-                                <div class="result-card-title">
-                                    <span>Areas for Development</span>
-                                </div>
-                                <ul id="res-candidate-weaknesses" style="padding-left: 1.25rem; color: var(--text-color); display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.92rem;"></ul>
-                            </div>
-                        </div>
-
-                        <!-- Breakdown: Experience, Education & Qualifications -->
-                        <div class="three-col-grid">
-                            <div class="result-card">
-                                <div class="result-card-title">
-                                    <span>Experience Fit</span>
-                                </div>
-                                <div id="res-exp-content" style="font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;"></div>
-                            </div>
-                            <div class="result-card">
-                                <div class="result-card-title">
-                                    <span>Education Match</span>
-                                </div>
-                                <div id="res-edu-content" style="font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;"></div>
-                            </div>
-                            <div class="result-card">
-                                <div class="result-card-title">
-                                    <span>Qualifications Fit</span>
-                                </div>
-                                <div id="res-qual-content" style="font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;"></div>
-                            </div>
-                        </div>
-
-                        <!-- Skill Gap Analysis -->
-                        <div class="result-card">
-                            <div class="result-card-title">
-                                <span>Skill Gap Analysis</span>
-                            </div>
-                            <div style="overflow-x: auto;">
-                                <table class="skill-gap-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Skill / Requirement</th>
-                                            <th>Importance</th>
-                                            <th>Gap Reason</th>
-                                            <th>Actionable Recommendation</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="res-skill-gaps-tbody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Recommendations -->
-                        <div class="result-card">
-                            <div class="result-card-title">
-                                <span>Personalized Recommendations</span>
-                            </div>
-                            <ul id="res-recommendations-list" style="padding-left: 1.25rem; color: var(--text-color); display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.92rem;"></ul>
-                        </div>
-                    </div>
+                    <div id="jobmatch-alert-box" class="alert-box" style="display: none; margin-top: 1.25rem;"></div>
                 </div>
 
-                <!-- Job Match History Section -->
-                <section style="margin-top: 3rem;" id="history-section">
-                    <header class="content-header" style="margin-bottom: 1.5rem;">
-                        <h3>Previous Job Matches</h3>
-                        <p class="content-subtitle">Review and compare your historical job description analyses.</p>
-                    </header>
-                    <div id="history-list" style="display: flex; flex-direction: column; gap: 1rem;">
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Loading history...</p>
+                <!-- Job Match Results Dashboard -->
+                <div id="jobmatch-results-wrapper" class="analysis-results-grid" style="display: none;">
+                    
+                    <!-- Score Hero Card -->
+                    <div class="analysis-card" style="display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap;">
+                        <div>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Job Fit Compatibility</span>
+                            <div style="display: flex; align-items: baseline; gap: 0.75rem; margin-top: 0.25rem;">
+                                <h3 id="res-match-score" style="font-size: 2.75rem; font-weight: 700; color: var(--primary);">78%</h3>
+                                <span class="badge badge-info" id="res-qualification-badge" style="font-size: 0.9rem; padding: 0.35rem 0.75rem;">Strong Qualification Fit</span>
+                            </div>
+                            <p id="res-match-summary" style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem; max-width: 600px;"></p>
+                        </div>
                     </div>
-                </section>
+
+                    <!-- Skills Matching & Missing Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--success);">Matching Skills</h3>
+                            <div class="skills-badge-list" id="res-matching-skills"></div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--danger);">Missing Required Skills</h3>
+                            <div class="skills-badge-list" id="res-missing-skills"></div>
+                        </div>
+                    </div>
+
+                    <!-- Skill Gap Analysis Table -->
+                    <div class="analysis-card">
+                        <h3 class="analysis-card-title">Skill Gap Breakdown & Priority Action</h3>
+                        <div class="resumes-table-wrapper" style="margin-top: 0.75rem;">
+                            <table class="resumes-table">
+                                <thead>
+                                    <tr>
+                                        <th>Skill Name</th>
+                                        <th>Importance</th>
+                                        <th>Recommendation</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="res-skill-gap-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Match Recommendations -->
+                    <div class="analysis-card">
+                        <h3 class="analysis-card-title" style="color: var(--primary);">Improvement Recommendations</h3>
+                        <ul class="analysis-list" id="res-match-recommendations"></ul>
+                    </div>
+
+                </div>
             </main>
         </div>
     </div>

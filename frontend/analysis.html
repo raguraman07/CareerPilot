@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Resume Analysis - CareerPilot AI</title>
+    <title>AI Resume Analysis - CareerPilot</title>
     
     <!-- Meta Descriptions for SEO -->
-    <meta name="description" content="CareerPilot AI Resume Analysis - Get detailed AI feedback on your professional summary, skills, projects, formatting, and actionable recommendations.">
-    <meta name="keywords" content="CareerPilot, Resume Analysis, Gemini AI, Resume Feedback, Career Coaching">
-    <meta name="author" content="CareerPilot AI Team">
+    <meta name="description" content="CareerPilot AI Resume Analysis - Get immediate AI feedback on technical skills, strengths, weaknesses, and formatting readability.">
+    <meta name="keywords" content="CareerPilot, AI Resume Analysis, Technical Skills, Resume Audit, Gemini AI">
+    <meta name="author" content="CareerPilot Team">
 
     <!-- Fonts Preconnect and Links for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,7 +30,7 @@
 </head>
 <body>
 
-    <!-- Skip link for accessibility -->
+    <!-- Skip link -->
     <a href="#main-content" class="skip-link">Skip to content</a>
 
     <!-- Page guard and session initialization -->
@@ -39,7 +39,6 @@
         
         requireAuth().then(session => {
             if (session) {
-                // Personalize dashboard dropdown user names
                 const dropdownName = document.querySelector('.dropdown-profile-name');
                 const dropdownEmail = document.querySelector('.dropdown-profile-email');
                 const avatarInitials = document.querySelectorAll('.avatar-initials');
@@ -55,7 +54,6 @@
                     avatarInitials.forEach(el => el.textContent = initials);
                 }
 
-                // Handle sign out triggers
                 const logoutLinks = document.querySelectorAll('.logout-trigger');
                 logoutLinks.forEach(link => {
                     link.addEventListener('click', (e) => {
@@ -67,23 +65,18 @@
         });
     </script>
 
-    <!-- Toast container for notifications -->
-    <div id="toast-container" class="toast-container" aria-live="polite"></div>
-
     <div class="dashboard-shell">
         
-        <!-- ==========================================
-             Left Sidebar (Collapsible Drawer)
-             ========================================== -->
+        <!-- Left Sidebar Navigation -->
         <aside class="sidebar-wrapper" id="sidebar-wrapper" aria-label="Dashboard Sidebar">
             <div class="sidebar-header">
-                <a href="index.html" class="logo" aria-label="CareerPilot AI Home">
+                <a href="index.html" class="logo" aria-label="CareerPilot Home">
                     <div class="logo-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none">
                             <polygon points="5 3 19 12 5 21 5 3"></polygon>
                         </svg>
                     </div>
-                    <span>CareerPilot <span class="text-gradient">AI</span></span>
+                    <span>CareerPilot</span>
                 </a>
                 <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close sidebar">
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -119,6 +112,12 @@
                             </a>
                         </li>
                         <li>
+                            <a href="ats.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <span>ATS Score</span>
+                            </a>
+                        </li>
+                        <li>
                             <a href="jobmatch.html" class="nav-item">
                                 <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72"></path><path d="M2 12h20"></path></svg>
                                 <span>Job Match</span>
@@ -140,13 +139,6 @@
                             <a href="roadmap.html" class="nav-item">
                                 <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                                 <span>Career Roadmap</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="nav-item disabled" aria-disabled="true">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                <span>Application Tracker</span>
-                                <span class="sidebar-badge">Soon</span>
                             </a>
                         </li>
                     </ul>
@@ -172,15 +164,12 @@
             </nav>
         </aside>
 
-        <!-- Sidebar Overlay for mobile views -->
+        <!-- Sidebar Overlay -->
         <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
-        <!-- ==========================================
-             Main Workspace Area
-             ========================================== -->
+        <!-- Main Workspace Area -->
         <div class="workspace-wrapper">
-            
-            <!-- Top Navigation Bar -->
+            <!-- Top Navbar Header -->
             <header class="top-navbar" aria-label="Top Navigation Header">
                 <div class="navbar-left">
                     <button class="hamburger-menu-btn" id="hamburger-menu-btn" aria-label="Toggle Navigation Sidebar" aria-expanded="false" aria-controls="sidebar-wrapper">
@@ -190,58 +179,17 @@
                             <line class="line-3" x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    
-                    <!-- Logo in mobile topbar -->
-                    <a href="index.html" class="logo mobile-logo" aria-label="CareerPilot AI Home">
-                        <div class="logo-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none">
-                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                            </svg>
-                        </div>
-                    </a>
-                    
                     <h1 class="navbar-title">AI Resume Analysis</h1>
                 </div>
 
-                <div class="navbar-center" role="search">
-                    <div class="search-box">
-                        <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" id="navbar-search" placeholder="Search analytics, features, roadmaps..." aria-label="Search dashboard contents">
-                        <span class="search-shortcut" aria-hidden="true">/</span>
-                    </div>
-                </div>
-
                 <div class="navbar-right">
-                    <!-- Notifications -->
-                    <div class="navbar-action-wrapper dropdown-container">
-                        <button class="nav-action-btn" id="notification-btn" aria-label="View notifications" aria-expanded="false" aria-haspopup="true">
-                            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                            <span class="notif-badge" id="notif-badge" style="display: none;">0</span>
-                        </button>
-                        
-                        <div class="dropdown-menu notif-dropdown" id="notif-dropdown" role="menu">
-                            <div class="dropdown-header">
-                                <h3>Notifications</h3>
-                                <button class="btn-text" id="mark-all-read">Mark all as read</button>
-                            </div>
-                            <ul class="notif-list" id="notif-list">
-                                <li style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.82rem;">
-                                    All caught up! No notifications.
-                                </li>
-                            </ul>
-                            <div class="dropdown-footer">
-                                <a href="#">See all notifications</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dark Mode Toggle -->
+                    <!-- Theme Toggle -->
                     <button id="theme-toggle" class="theme-toggle" aria-label="Switch theme">
                         <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                         <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     </button>
 
-                    <!-- User Profile Dropdown -->
+                    <!-- Profile Dropdown -->
                     <div class="navbar-action-wrapper dropdown-container">
                         <button class="profile-avatar-btn" id="profile-dropdown-btn" aria-label="Open profile menu" aria-expanded="false" aria-haspopup="true">
                             <span class="avatar-circle">
@@ -256,7 +204,7 @@
                                 </span>
                                 <div class="profile-meta">
                                     <h4 class="dropdown-profile-name">User Name</h4>
-                                    <p class="dropdown-profile-email">user@careercopilot.ai</p>
+                                    <p class="dropdown-profile-email">user@careerpilot.com</p>
                                 </div>
                             </div>
                             <div class="dropdown-divider"></div>
@@ -268,203 +216,85 @@
                                     </a>
                                 </li>
                             </ul>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item logout-trigger logout-item" role="menuitem">
-                                <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                                <span>Sign Out</span>
-                            </a>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <!-- Main Work Content -->
-            <main id="main-content" class="main-content-flow">
-                
-                <!-- Page Banner -->
-                <section class="welcome-banner-card" style="padding: 2rem; margin-bottom: 2rem;">
-                    <div class="welcome-card-content">
-                        <span class="eyebrow-accent">AI POWERED AUDIT</span>
-                        <h2 class="welcome-header" style="font-size: 1.8rem;">Gemini Resume Auditor</h2>
-                        <p class="welcome-text" style="max-width: 600px;">Get state-of-the-art AI analysis of your resume formatting, skills, summary, projects, and actionable growth items.</p>
-                    </div>
-                </section>
+            <!-- Main Workspace Area -->
+            <main class="workspace-content" id="main-content">
+                <header class="content-header">
+                    <h2>AI Resume Analysis</h2>
+                    <p class="content-subtitle">Select an uploaded resume to perform deep Gemini AI feedback on technical skills, candidate strengths, weaknesses, and actionable improvement recommendations.</p>
+                </header>
 
-                <!-- Layout wrapper for two column style -->
-                <div class="analysis-layout-wrapper">
-                    
-                    <!-- Main column (Left side) -->
-                    <div class="analysis-main-column">
-                        
-                        <!-- Configuration Setup Panel -->
-                        <section class="analysis-setup-panel" aria-label="Resume Selection Form">
-                            <div class="setup-form-group">
-                                <label for="resume-select">Select Resume to Analyze</label>
-                                <select id="resume-select" class="custom-select">
-                                    <option value="" disabled selected>Loading your resumes...</option>
-                                </select>
-                            </div>
-                            <div style="display: flex; gap: 1rem;">
-                                <button id="btn-run-analysis" class="btn-primary" disabled>
-                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                                    Run AI Analysis
-                                </button>
-                            </div>
-                        </section>
-
-                        <!-- Loading State Wrapper -->
-                        <section id="analysis-loading" class="loading-wrapper" aria-label="Running Analysis Status">
-                            <div class="spinner" aria-hidden="true"></div>
-                            <div class="progress-container" aria-hidden="true">
-                                <div id="progress-fill" class="progress-bar-fill"></div>
-                            </div>
-                            <p id="progress-status" class="progress-status">Initializing analyzer engine...</p>
-                            <p id="estimated-wait" class="progress-status" style="margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.8;">Estimated wait time: ~5 seconds...</p>
-                        </section>
-
-                        <!-- Error Retry Panel -->
-                        <section id="analysis-error" class="loading-wrapper" style="border-color: var(--error-color); display: none;" aria-label="Analysis Error Panel">
-                            <svg viewBox="0 0 24 24" style="width: 48px; height: 48px; color: var(--error-color); margin-bottom: 1.5rem;" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-color);">Unable to analyze resume.</h3>
-                            <p style="color: var(--text-muted); margin-bottom: 1.5rem; max-width: 400px; font-size: 0.9rem;">Something went wrong during the analysis phase. The Gemini AI engine could not parse the content correctly or timed out.</p>
-                            <button id="btn-retry-analysis" class="btn-primary" style="background-color: var(--error-color);">
-                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-                                Retry Analysis
-                            </button>
-                        </section>
-
-                        <!-- Results Output Grid -->
-                        <section id="analysis-results" class="analysis-results-container" aria-label="Resume Analysis Results">
-                            <div class="results-header">
-                                <h2 class="section-title">Analysis Insights</h2>
-                                <span class="dashboard-badge-pill" style="font-weight: 700;" id="analysis-status-pill">Completed</span>
-                            </div>
-
-                            <div class="results-grid">
-                                
-                                <!-- 1. Resume Summary -->
-                                <article class="analysis-card results-full-width">
-                                    <div class="card-header-row">
-                                        <svg class="card-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                                        <h3 class="card-title">Resume Summary</h3>
-                                    </div>
-                                    <div class="card-content-block">
-                                        <p class="content-value" id="resume-summary" style="line-height: 1.6; font-size: 0.95rem;">Pending...</p>
-                                    </div>
-                                </article>
-
-                                <!-- 2. Technical Skills -->
-                                <article class="analysis-card">
-                                    <div class="card-header-row">
-                                        <svg class="card-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                                        <h3 class="card-title">Technical Skills</h3>
-                                    </div>
-                                    <div class="card-content-block">
-                                        <div class="badge-container" id="technical-skills"></div>
-                                    </div>
-                                </article>
-
-                                <!-- 3. Soft Skills -->
-                                <article class="analysis-card">
-                                    <div class="card-header-row">
-                                        <svg class="card-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                                        <h3 class="card-title">Soft Skills</h3>
-                                    </div>
-                                    <div class="card-content-block">
-                                        <div class="badge-container" id="soft-skills"></div>
-                                    </div>
-                                </article>
-
-                                <!-- 4. Strengths -->
-                                <article class="analysis-card">
-                                    <div class="card-header-row">
-                                        <svg class="card-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success-color);"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                        <h3 class="card-title">Strengths</h3>
-                                    </div>
-                                    <ul class="analysis-list" id="strengths">
-                                        <!-- Populated dynamically -->
-                                    </ul>
-                                </article>
-
-                                <!-- 5. Weaknesses -->
-                                <article class="analysis-card">
-                                    <div class="card-header-row">
-                                        <svg class="card-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: var(--error-color);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                                        <h3 class="card-title">Weaknesses</h3>
-                                    </div>
-                                    <ul class="analysis-list" id="weaknesses">
-                                        <!-- Populated dynamically -->
-                                    </ul>
-                                </article>
-
-                                <!-- 6. Missing Skills -->
-                                <article class="analysis-card">
-                                    <div class="card-header-row">
-                                        <svg class="card-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: var(--error-color);"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                                        <h3 class="card-title">Missing Skills</h3>
-                                    </div>
-                                    <div class="card-content-block">
-                                        <div class="badge-container" id="missing-skills"></div>
-                                    </div>
-                                </article>
-
-                                <!-- 7. Recommended Roles -->
-                                <article class="analysis-card">
-                                    <div class="card-header-row">
-                                        <svg class="card-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary-color);"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                                        <h3 class="card-title">Recommended Roles</h3>
-                                    </div>
-                                    <div class="card-content-block">
-                                        <div class="badge-container" id="recommended-roles"></div>
-                                    </div>
-                                </article>
-
-                                <!-- 8. Improvement Suggestions -->
-                                <article class="analysis-card results-full-width">
-                                    <div class="card-header-row">
-                                        <svg class="card-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-color);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                                        <h3 class="card-title">Improvement Suggestions</h3>
-                                    </div>
-                                    <ul class="rec-list" id="improvements" style="padding: 0; list-style: none;">
-                                        <!-- Populated dynamically -->
-                                    </ul>
-                                </article>
-
-                                <!-- 9. Career Recommendations -->
-                                <article class="analysis-card results-full-width">
-                                    <div class="card-header-row">
-                                        <svg class="card-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success-color);"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                        <h3 class="card-title">Career Recommendations</h3>
-                                    </div>
-                                    <ol class="rec-list" id="career-recommendations" style="padding: 0; list-style: none;">
-                                        <!-- Populated dynamically -->
-                                    </ol>
-                                </article>
-
-                            </div>
-                        </section>
-                    </div>
-
-                    <!-- Sidebar column (Right side) -->
-                    <aside class="analysis-sidebar-column" aria-label="Recent Analyses History">
-                        <div class="history-title">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                            <span>Analysis History</span>
+                <!-- Analysis Setup Panel -->
+                <div class="analysis-setup-panel">
+                    <form id="analysis-setup-form">
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label for="resume-select" class="form-label">Select Resume to Analyze</label>
+                            <select id="resume-select" class="form-select" required>
+                                <option value="" disabled selected>-- Loading resumes... --</option>
+                            </select>
                         </div>
-                        <ul class="history-list" id="history-list">
-                            <li style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-                                Loading history logs...
-                            </li>
-                        </ul>
-                    </aside>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <button type="submit" class="btn btn-primary" id="btn-run-analysis">
+                                <span>Run AI Resume Analysis</span>
+                            </button>
+                            <span id="analysis-status-msg" style="font-size: 0.9rem; color: var(--text-muted); display: none;"></span>
+                        </div>
+                    </form>
+                    <div id="analysis-alert-box" class="alert-box" style="display: none; margin-top: 1.25rem;"></div>
                 </div>
 
+                <!-- Analysis Results Dashboard -->
+                <div id="analysis-results-wrapper" class="analysis-results-grid" style="display: none;">
+                    
+                    <!-- Overview Summary Card -->
+                    <div class="analysis-card">
+                        <h3 class="analysis-card-title">Executive Summary</h3>
+                        <p id="res-summary" style="font-size: 0.95rem; color: var(--text-primary); line-height: 1.6;"></p>
+                    </div>
+
+                    <!-- Technical & Soft Skills Badges Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--primary);">Technical Skills Identified</h3>
+                            <div class="skills-badge-list" id="res-tech-skills"></div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--text-primary);">Soft Skills & Trait Badges</h3>
+                            <div class="skills-badge-list" id="res-soft-skills"></div>
+                        </div>
+                    </div>
+
+                    <!-- Strengths & Weaknesses 2-Column Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--success);">Candidate Strengths</h3>
+                            <ul class="analysis-list" id="res-strengths"></ul>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--danger);">Key Areas for Improvement</h3>
+                            <ul class="analysis-list" id="res-weaknesses"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Actionable Recommendations Card -->
+                    <div class="analysis-card">
+                        <h3 class="analysis-card-title" style="color: var(--primary);">Actionable Recommendations</h3>
+                        <ul class="analysis-list" id="res-recommendations"></ul>
+                    </div>
+
+                </div>
             </main>
         </div>
     </div>
 
-    <!-- Script imports -->
-    <script src="js/main.js"></script>
+    <!-- Scripts -->
+    <script type="module" src="js/main.js"></script>
     <script type="module" src="js/analysis.js"></script>
 </body>
 </html>

@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Score Analyzer - CareerPilot AI</title>
+    <title>ATS Score Optimization - CareerPilot</title>
     
     <!-- Meta Descriptions for SEO -->
-    <meta name="description" content="CareerPilot AI ATS Analyzer - Evaluates your resume against 7 core ATS compliance metrics including keyword optimization, skills relevance, structure, formatting, and achievements.">
-    <meta name="keywords" content="CareerPilot, ATS Analyzer, Resume Score, Resume Keywords, Formatting Check, ATS Optimization">
-    <meta name="author" content="CareerPilot AI Team">
+    <meta name="description" content="CareerPilot ATS Score Audit - Check Applicant Tracking System compatibility, missing keywords, parsing warnings, and recommendations.">
+    <meta name="keywords" content="CareerPilot, ATS Score, Applicant Tracking System, Keyword Audit, Resume Parser">
+    <meta name="author" content="CareerPilot Team">
 
     <!-- Fonts Preconnect and Links for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,6 +18,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/analysis.css">
     <link rel="stylesheet" href="css/responsive.css">
     <!-- Anti-Flicker & Early Theme Sync -->
     <script>
@@ -26,188 +27,13 @@
             if (t === 'dark') document.documentElement.classList.add('dark-mode');
         })();
     </script>
-    <style>
-        .ats-panel {
-            background: var(--bg-surface, #1e1e24);
-            border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-            border-radius: 12px;
-            padding: 2rem;
-            margin-top: 1.5rem;
-        }
-        .ats-layout {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 2rem;
-            margin-top: 1.5rem;
-        }
-        @media (max-width: 992px) {
-            .ats-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-        .score-circle-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            text-align: center;
-        }
-        .score-ring {
-            position: relative;
-            width: 160px;
-            height: 160px;
-        }
-        .score-ring svg {
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
-        }
-        .score-ring circle {
-            fill: none;
-            stroke-width: 10;
-        }
-        .score-ring .bg-ring {
-            stroke: rgba(255, 255, 255, 0.05);
-        }
-        .score-ring .fill-ring {
-            stroke: var(--primary-color, #6366f1);
-            stroke-dasharray: 440;
-            stroke-dashoffset: 440;
-            stroke-linecap: round;
-            transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .score-text-block {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .score-text {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: #ffffff;
-            line-height: 1;
-        }
-        .score-max-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-        .score-level-badge {
-            display: inline-block;
-            padding: 0.35rem 0.85rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            background: rgba(99, 102, 241, 0.15);
-            color: #818cf8;
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            text-align: center;
-        }
-        .breakdown-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.25rem;
-            width: 100%;
-        }
-        .sub-score-card {
-            background: rgba(255, 255, 255, 0.02);
-            padding: 1.25rem;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        .sub-score-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .sub-score-label {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-        .sub-score-value {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #ffffff;
-            font-family: var(--font-mono);
-        }
-        .sub-score-bar-bg {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        .sub-score-bar-fill {
-            height: 100%;
-            background: var(--primary-color, #6366f1);
-            width: 0%;
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 3px;
-        }
-        .badge-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-            margin-top: 0.5rem;
-        }
-        .badge-pill {
-            display: inline-block;
-            padding: 0.25rem 0.65rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        .badge-pill--success {
-            background: rgba(56, 142, 60, 0.15);
-            color: #81c784;
-            border: 1px solid rgba(56, 142, 60, 0.3);
-        }
-        .badge-pill--warning {
-            background: rgba(245, 158, 11, 0.15);
-            color: #fbbf24;
-            border: 1px solid rgba(245, 158, 11, 0.3);
-        }
-        .badge-pill--danger {
-            background: rgba(211, 47, 47, 0.15);
-            color: #e57373;
-            border: 1px solid rgba(211, 47, 47, 0.3);
-        }
-        .warning-card {
-            background: rgba(211, 47, 47, 0.05);
-            border: 1px solid rgba(211, 47, 47, 0.2);
-            border-radius: 8px;
-            padding: 1rem;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-        }
-        .warning-icon {
-            color: #e57373;
-            flex-shrink: 0;
-            width: 20px;
-            height: 20px;
-        }
-    </style>
 </head>
 <body>
 
-    <!-- Skip link for accessibility -->
+    <!-- Skip link -->
     <a href="#main-content" class="skip-link">Skip to content</a>
 
-    <!-- Page guard and login session checking -->
+    <!-- Page guard and session initialization -->
     <script type="module">
         import { requireAuth, logoutUser } from './js/auth.js';
         
@@ -241,16 +67,16 @@
 
     <div class="dashboard-shell">
         
-        <!-- Left Sidebar -->
+        <!-- Left Sidebar Navigation -->
         <aside class="sidebar-wrapper" id="sidebar-wrapper" aria-label="Dashboard Sidebar">
             <div class="sidebar-header">
-                <a href="index.html" class="logo" aria-label="CareerPilot AI Home">
+                <a href="index.html" class="logo" aria-label="CareerPilot Home">
                     <div class="logo-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none">
                             <polygon points="5 3 19 12 5 21 5 3"></polygon>
                         </svg>
                     </div>
-                    <span>CareerPilot <span class="text-gradient">AI</span></span>
+                    <span>CareerPilot</span>
                 </a>
                 <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close sidebar">
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -343,7 +169,7 @@
 
         <!-- Main Workspace Area -->
         <div class="workspace-wrapper">
-            <!-- Top Navigation Bar -->
+            <!-- Top Navbar Header -->
             <header class="top-navbar" aria-label="Top Navigation Header">
                 <div class="navbar-left">
                     <button class="hamburger-menu-btn" id="hamburger-menu-btn" aria-label="Toggle Navigation Sidebar" aria-expanded="false" aria-controls="sidebar-wrapper">
@@ -353,17 +179,17 @@
                             <line class="line-3" x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <h1 class="navbar-title">ATS Score & Resume Optimization</h1>
+                    <h1 class="navbar-title">ATS Score Optimization</h1>
                 </div>
 
                 <div class="navbar-right">
-                    <!-- Dark Mode Toggle -->
+                    <!-- Theme Toggle -->
                     <button id="theme-toggle" class="theme-toggle" aria-label="Switch theme">
                         <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                         <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     </button>
 
-                    <!-- User Profile Dropdown -->
+                    <!-- Profile Dropdown -->
                     <div class="navbar-action-wrapper dropdown-container">
                         <button class="profile-avatar-btn" id="profile-dropdown-btn" aria-label="Open profile menu" aria-expanded="false" aria-haspopup="true">
                             <span class="avatar-circle">
@@ -378,7 +204,7 @@
                                 </span>
                                 <div class="profile-meta">
                                     <h4 class="dropdown-profile-name">User Name</h4>
-                                    <p class="dropdown-profile-email">user@careercopilot.ai</p>
+                                    <p class="dropdown-profile-email">user@careerpilot.com</p>
                                 </div>
                             </div>
                             <div class="dropdown-divider"></div>
@@ -395,166 +221,73 @@
                 </div>
             </header>
 
-            <!-- Main Content Area -->
+            <!-- Main Workspace Area -->
             <main class="workspace-content" id="main-content">
                 <header class="content-header">
-                    <h2>ATS Compliance Evaluator</h2>
-                    <p class="content-subtitle">Select an uploaded resume to compute your 100-point ATS compliance score, sub-category breakdown, and keyword optimizations.</p>
+                    <h2>Applicant Tracking System (ATS) Score Audit</h2>
+                    <p class="content-subtitle">Evaluate your resume's machine-readability, ATS score, keyword compatibility, formatting warnings, and optimization steps.</p>
                 </header>
 
-                <div class="ats-panel">
-                    <form id="ats-grader-form" style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
-                        <div class="form-group" style="min-width: 280px; flex: 1;">
-                            <label for="resume-select" class="form-label" style="display:none;">Select Resume</label>
-                            <select id="resume-select" class="form-input" required>
+                <!-- Setup Form -->
+                <div class="analysis-setup-panel">
+                    <form id="ats-setup-form">
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label for="resume-select" class="form-label">Select Resume for ATS Scan</label>
+                            <select id="resume-select" class="form-select" required>
                                 <option value="" disabled selected>-- Loading resumes... --</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="btn-run-ats" disabled style="display:flex; align-items:center; gap:0.5rem;">
-                            <span class="spinner" id="ats-spinner" style="display:none; width:16px; height:16px;"></span>
-                            <span id="btn-text">Analyze ATS</span>
-                        </button>
-                    </form>
-
-                    <!-- Alert message container -->
-                    <div id="ats-alert-box" style="display:none; margin-top:1.5rem; padding:1rem; border-radius:8px; font-size:0.9rem;"></div>
-
-                    <div id="ats-results-wrapper" class="ats-layout" style="display: none;">
-                        <!-- Left column: Score circle card -->
-                        <div style="display:flex; flex-direction:column; gap:1.5rem;">
-                            <div class="score-circle-wrapper">
-                                <h4 style="color:var(--text-muted); font-size:0.85rem; text-transform:uppercase; letter-spacing:1px;">ATS SCORE</h4>
-                                <div class="score-ring">
-                                    <svg>
-                                        <circle class="bg-ring" cx="80" cy="80" r="70"></circle>
-                                        <circle class="fill-ring" id="overall-ring" cx="80" cy="80" r="70"></circle>
-                                    </svg>
-                                    <div class="score-text-block">
-                                        <span class="score-text" id="overall-val">0</span>
-                                        <span class="score-max-label">/ 100</span>
-                                    </div>
-                                </div>
-                                <span class="score-level-badge" id="score-level-badge">Evaluating...</span>
-                            </div>
-
-                            <!-- ATS Warnings Panel -->
-                            <div class="stats-section-card" id="warnings-container" style="display:none;">
-                                <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.75rem; color:#e57373; display:flex; align-items:center; gap:0.4rem;">
-                                    <svg class="warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                                    <span>ATS Warnings</span>
-                                </h4>
-                                <div id="ats-warnings-list" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
-                            </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <button type="submit" class="btn btn-primary" id="btn-run-ats">
+                                <span>Run ATS Audit</span>
+                            </button>
+                            <span id="ats-status-msg" style="font-size: 0.9rem; color: var(--text-muted); display: none;"></span>
                         </div>
+                    </form>
+                    <div id="ats-alert-box" class="alert-box" style="display: none; margin-top: 1.25rem;"></div>
+                </div>
 
-                        <!-- Right column: Sub-scores grid & detailed analysis -->
-                        <div style="display:flex; flex-direction:column; gap:1.5rem;">
-                            <h3 style="font-size:1.1rem; font-weight:700;">Score Breakdown (100 Points Total)</h3>
-                            
-                            <div class="breakdown-grid">
-                                <!-- 1. Keyword Optimization -->
-                                <div class="sub-score-card">
-                                    <div class="sub-score-header">
-                                        <span class="sub-score-label">Keyword Optimization</span>
-                                        <span class="sub-score-value" id="val-keyword">0/25</span>
-                                    </div>
-                                    <div class="sub-score-bar-bg">
-                                        <div class="sub-score-bar-fill" id="fill-keyword"></div>
-                                    </div>
-                                </div>
-
-                                <!-- 2. Skills Relevance -->
-                                <div class="sub-score-card">
-                                    <div class="sub-score-header">
-                                        <span class="sub-score-label">Skills Relevance</span>
-                                        <span class="sub-score-value" id="val-skills">0/20</span>
-                                    </div>
-                                    <div class="sub-score-bar-bg">
-                                        <div class="sub-score-bar-fill" id="fill-skills"></div>
-                                    </div>
-                                </div>
-
-                                <!-- 3. Experience Relevance -->
-                                <div class="sub-score-card">
-                                    <div class="sub-score-header">
-                                        <span class="sub-score-label">Experience Relevance</span>
-                                        <span class="sub-score-value" id="val-experience">0/15</span>
-                                    </div>
-                                    <div class="sub-score-bar-bg">
-                                        <div class="sub-score-bar-fill" id="fill-experience"></div>
-                                    </div>
-                                </div>
-
-                                <!-- 4. Resume Structure -->
-                                <div class="sub-score-card">
-                                    <div class="sub-score-header">
-                                        <span class="sub-score-label">Resume Structure</span>
-                                        <span class="sub-score-value" id="val-structure">0/15</span>
-                                    </div>
-                                    <div class="sub-score-bar-bg">
-                                        <div class="sub-score-bar-fill" id="fill-structure"></div>
-                                    </div>
-                                </div>
-
-                                <!-- 5. ATS Formatting -->
-                                <div class="sub-score-card">
-                                    <div class="sub-score-header">
-                                        <span class="sub-score-label">ATS Formatting</span>
-                                        <span class="sub-score-value" id="val-formatting">0/10</span>
-                                    </div>
-                                    <div class="sub-score-bar-bg">
-                                        <div class="sub-score-bar-fill" id="fill-formatting"></div>
-                                    </div>
-                                </div>
-
-                                <!-- 6. Education & Certifications -->
-                                <div class="sub-score-card">
-                                    <div class="sub-score-header">
-                                        <span class="sub-score-label">Education & Certs</span>
-                                        <span class="sub-score-value" id="val-education">0/10</span>
-                                    </div>
-                                    <div class="sub-score-bar-bg">
-                                        <div class="sub-score-bar-fill" id="fill-education"></div>
-                                    </div>
-                                </div>
-
-                                <!-- 7. Achievements -->
-                                <div class="sub-score-card">
-                                    <div class="sub-score-header">
-                                        <span class="sub-score-label">Achievements</span>
-                                        <span class="sub-score-value" id="val-achievements">0/5</span>
-                                    </div>
-                                    <div class="sub-score-bar-bg">
-                                        <div class="sub-score-bar-fill" id="fill-achievements"></div>
-                                    </div>
-                                </div>
+                <!-- ATS Dashboard Results -->
+                <div id="ats-results-wrapper" class="analysis-results-grid" style="display: none;">
+                    
+                    <!-- Score Hero Card -->
+                    <div class="analysis-card" style="display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap;">
+                        <div>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Overall Compatibility Score</span>
+                            <div style="display: flex; align-items: baseline; gap: 0.75rem; margin-top: 0.25rem;">
+                                <h3 id="res-ats-score" style="font-size: 2.75rem; font-weight: 700; color: var(--primary);">85%</h3>
+                                <span class="badge badge-success" id="res-ats-badge" style="font-size: 0.9rem; padding: 0.35rem 0.75rem;">Strong Fit</span>
                             </div>
-
-                            <!-- Keywords & Skills Audit Panel -->
-                            <div class="stats-section-card" style="width: 100%;">
-                                <h3 style="font-size:1rem; font-weight:700; margin-bottom: 1rem;">Keywords & Skills Audit</h3>
-                                
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
-                                    <div>
-                                        <h4 style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:0.4rem;">FOUND KEYWORDS</h4>
-                                        <div class="badge-list" id="found-keywords-badges"></div>
-                                    </div>
-                                    <div>
-                                        <h4 style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:0.4rem;">MISSING KEYWORDS</h4>
-                                        <div class="badge-list" id="missing-keywords-badges"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Actionable Recommendations Panel -->
-                            <div class="stats-section-card" style="width: 100%;">
-                                <h3 style="font-size:1rem; font-weight:700; margin-bottom: 1rem;">Top Improvements & Recommendations</h3>
-                                <ol id="ats-recs-list" style="display:flex; flex-direction:column; gap:0.75rem; padding-left:1.25rem; color:var(--text-muted); font-size:0.9rem;">
-                                    <!-- Populated dynamically -->
-                                </ol>
-                            </div>
+                            <p id="res-ats-summary" style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem; max-width: 600px;"></p>
                         </div>
                     </div>
+
+                    <!-- Keywords Found vs Missing Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--success);">Matched Keywords Found</h3>
+                            <div class="skills-badge-list" id="res-keywords-found"></div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--danger);">Missing High-Impact Keywords</h3>
+                            <div class="skills-badge-list" id="res-keywords-missing"></div>
+                        </div>
+                    </div>
+
+                    <!-- ATS Warnings & Recommendations Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--warning);">Parsing & Formatting Warnings</h3>
+                            <ul class="analysis-list" id="res-ats-warnings"></ul>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--primary);">ATS Optimization Tips</h3>
+                            <ul class="analysis-list" id="res-ats-recommendations"></ul>
+                        </div>
+                    </div>
+
                 </div>
             </main>
         </div>

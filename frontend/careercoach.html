@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Career Assistant - CareerPilot</title>
+    <title>AI Career Coach - CareerPilot</title>
     
     <!-- Meta Descriptions for SEO -->
-    <meta name="description" content="CareerPilot RAG-Powered AI Career Assistant - Ask personalized career questions based on your resume, ATS scores, job matches, and interview preparation.">
-    <meta name="keywords" content="CareerPilot, AI Career Assistant, RAG Career Advisor, Resume Chatbot, Skill Gap Analysis, Interview Advice">
+    <meta name="description" content="CareerPilot RAG AI Career Coach - Ask career questions answered dynamically using your actual resume, ATS score, job match, and interview performance context.">
+    <meta name="keywords" content="CareerPilot, AI Career Coach, RAG Assistant, Gemini AI, Resume Chatbot">
     <meta name="author" content="CareerPilot Team">
 
     <!-- Fonts Preconnect and Links for Performance -->
@@ -27,45 +27,44 @@
         })();
     </script>
     <style>
-        .chat-layout {
+        .chat-container-layout {
             display: grid;
             grid-template-columns: 280px 1fr;
             gap: 1.5rem;
             height: calc(100vh - 160px);
-            min-height: 600px;
+            min-height: 520px;
         }
-        @media (max-width: 900px) {
-            .chat-layout {
+
+        @media (max-width: 992px) {
+            .chat-container-layout {
                 grid-template-columns: 1fr;
                 height: auto;
             }
+            .chat-history-sidebar {
+                display: none;
+            }
         }
-        .chat-sidebar {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
+
+        .chat-history-sidebar {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
             padding: 1.25rem;
             display: flex;
             flex-direction: column;
             gap: 1rem;
         }
-        .chat-main {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
+
+        .chat-main-area {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
-        .chat-header {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--background-color);
-        }
-        .chat-messages {
+
+        .chat-messages-thread {
             flex: 1;
             padding: 1.5rem;
             overflow-y: auto;
@@ -73,68 +72,49 @@
             flex-direction: column;
             gap: 1.25rem;
         }
-        .message-bubble {
-            max-width: 82%;
+
+        .chat-bubble {
+            max-width: 80%;
             padding: 1rem 1.25rem;
-            border-radius: var(--border-radius-md);
-            font-size: 0.95rem;
-            line-height: 1.6;
+            border-radius: var(--radius-md);
+            font-size: 0.93rem;
+            line-height: 1.55;
         }
-        .message-bubble.user {
+
+        .chat-bubble.user {
             align-self: flex-end;
-            background: var(--primary-color);
+            background-color: var(--primary);
             color: #ffffff;
             border-bottom-right-radius: 2px;
         }
-        .message-bubble.assistant {
+
+        .chat-bubble.assistant {
             align-self: flex-start;
-            background: var(--background-color);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
+            background-color: var(--surface-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
             border-bottom-left-radius: 2px;
         }
-        .sources-tag {
+
+        .context-badge-attribution {
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
             margin-top: 0.65rem;
-            padding: 0.2rem 0.6rem;
-            background: var(--primary-light);
-            color: var(--primary-color);
-            border: 1px solid rgba(37, 99, 235, 0.2);
-            border-radius: 6px;
-            font-size: 0.78rem;
-            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background-color: var(--background);
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
         }
+
         .chat-input-bar {
-            padding: 1rem 1.5rem;
-            border-top: 1px solid var(--border-color);
-            background: var(--background-color);
+            padding: 1rem 1.25rem;
+            border-top: 1px solid var(--border);
+            background-color: var(--surface);
             display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        .starter-pills {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-bottom: 1rem;
-        }
-        .pill-btn {
-            background: var(--background-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 0.4rem 0.85rem;
-            border-radius: 9999px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-        .pill-btn:hover {
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-            background: var(--primary-light);
+            gap: 0.75rem;
         }
     </style>
 </head>
@@ -277,7 +257,7 @@
         <!-- Sidebar Overlay -->
         <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
-        <!-- Workspace Area -->
+        <!-- Main Workspace Area -->
         <div class="workspace-wrapper">
             <!-- Top Navbar Header -->
             <header class="top-navbar" aria-label="Top Navigation Header">
@@ -289,7 +269,7 @@
                             <line class="line-3" x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <h1 class="navbar-title">AI Career Assistant</h1>
+                    <h1 class="navbar-title">RAG AI Career Coach</h1>
                 </div>
 
                 <div class="navbar-right">
@@ -299,7 +279,7 @@
                         <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     </button>
 
-                    <!-- User Profile Dropdown -->
+                    <!-- Profile Dropdown -->
                     <div class="navbar-action-wrapper dropdown-container">
                         <button class="profile-avatar-btn" id="profile-dropdown-btn" aria-label="Open profile menu" aria-expanded="false" aria-haspopup="true">
                             <span class="avatar-circle">
@@ -331,77 +311,36 @@
                 </div>
             </header>
 
-            <!-- Workspace Content -->
+            <!-- Main Workspace Area -->
             <main class="workspace-content" id="main-content">
-                <header class="content-header" style="margin-bottom: 1.25rem;">
-                    <h2>RAG-Powered AI Career Assistant</h2>
-                    <p class="content-subtitle">Ask questions about your resume, ATS scores, job matches, skill gaps, and interview prep. Answers are dynamically retrieved from your actual CareerPilot data.</p>
+                <header class="content-header">
+                    <h2>RAG AI Career Coach</h2>
+                    <p class="content-subtitle">Ask questions about your career trajectory, skill gaps, or interview strategies. Answers are grounded in your actual uploaded resume, ATS scores, and job matches.</p>
                 </header>
 
-                <!-- RAG Chat Layout -->
-                <div class="chat-layout">
-                    <!-- Chat History Sidebar -->
-                    <aside class="chat-sidebar">
-                        <button class="btn btn-primary" id="btn-new-chat" style="width: 100%; justify-content: center;">
-                            <span>+ New Conversation</span>
-                        </button>
-                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-top: 0.5rem;">Conversations</div>
-                        <div id="chats-history-list" style="display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto; flex: 1;">
-                            <p style="font-size: 0.85rem; color: var(--text-muted);">Loading conversations...</p>
+                <div class="chat-container-layout">
+                    <!-- Left History Sidebar -->
+                    <aside class="chat-history-sidebar">
+                        <button class="btn btn-primary" id="btn-new-chat" style="width: 100%;">+ New Chat Session</button>
+                        <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem;" id="chat-history-list">
+                            <!-- History items injected via JS -->
                         </div>
                     </aside>
 
-                    <!-- Main Chat Area -->
-                    <section class="chat-main">
-                        <!-- Chat Header -->
-                        <div class="chat-header">
-                            <div>
-                                <h3 id="current-chat-title" style="font-size: 1.05rem; font-weight: 600;">New Conversation</h3>
-                                <span style="font-size: 0.8rem; color: var(--text-muted);" id="chat-subtitle">Context: Resumes, ATS Scores, Job Matches & Interviews</span>
-                            </div>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button class="btn btn-secondary" id="btn-clear-chat" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">Clear Messages</button>
-                                <button class="btn btn-secondary" id="btn-delete-chat" style="padding: 0.35rem 0.75rem; font-size: 0.82rem; color: var(--error-color); border-color: rgba(220,38,38,0.3);">Delete</button>
-                            </div>
-                        </div>
-
-                        <!-- Chat Messages Container -->
-                        <div class="chat-messages" id="chat-messages">
-                            <!-- Empty State Warning if no data -->
-                            <div id="empty-state-notice" class="alert-box" style="display: none; background: rgba(37,99,235,0.08); color: var(--text-color); border: 1px solid rgba(37,99,235,0.2);">
-                                💡 <strong>Tip:</strong> Upload a resume and run a job match to get personalized, context-aware career guidance based on your profile.
-                            </div>
-
-                            <!-- Starter Question Pills -->
-                            <div>
-                                <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.5rem;">Suggested questions you can ask:</p>
-                                <div class="starter-pills">
-                                    <button class="pill-btn" data-q="What are my biggest skill gaps for my target job?">What are my biggest skill gaps?</button>
-                                    <button class="pill-btn" data-q="How can I improve my resume ATS score?">How to improve my ATS score?</button>
-                                    <button class="pill-btn" data-q="What should I prepare for my next interview?">What to prepare for interview?</button>
-                                    <button class="pill-btn" data-q="What technical projects should I build to boost my resume?">What projects should I build?</button>
-                                </div>
-                            </div>
-
-                            <!-- Initial Assistant Welcome Message -->
-                            <div class="message-bubble assistant">
-                                Hello! I'm your CareerPilot AI Assistant. I have access to your uploaded resume, ATS scores, job match analysis, and interview prep feedback. How can I help you advance your career today?
+                    <!-- Main Chat Thread Area -->
+                    <div class="chat-main-area">
+                        <div class="chat-messages-thread" id="chat-messages-container">
+                            <div class="chat-bubble assistant">
+                                Hello! I'm your AI Career Coach. How can I help you optimize your resume, prepare for target roles, or close your skill gaps today?
                             </div>
                         </div>
 
                         <!-- Chat Input Bar -->
-                        <form id="chat-input-form" class="chat-input-bar">
-                            <div style="display: flex; gap: 0.75rem; align-items: center;">
-                                <input type="text" id="chat-user-input" class="form-input" style="flex: 1;" placeholder="Ask CareerPilot AI about your resume, skill gaps, or interview prep..." required autocomplete="off">
-                                <button type="submit" class="btn btn-primary" id="btn-send-msg">
-                                    <span>Send</span>
-                                </button>
-                            </div>
-                            <div id="chat-status-msg" style="font-size: 0.82rem; color: var(--text-muted); display: none; margin-top: 0.25rem;">
-                                CareerPilot is analyzing your career information...
-                            </div>
+                        <form id="chat-form" class="chat-input-bar">
+                            <input type="text" id="chat-input" class="form-input" placeholder="Type your career question here..." required autocomplete="off">
+                            <button type="submit" class="btn btn-primary" id="btn-send-message">Send</button>
                         </form>
-                    </section>
+                    </div>
                 </div>
             </main>
         </div>

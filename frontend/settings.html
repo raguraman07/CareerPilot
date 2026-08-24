@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Settings - CareerPilot AI</title>
+    <title>Account Settings - CareerPilot</title>
     
     <!-- Meta Descriptions for SEO -->
-    <meta name="description" content="Manage your CareerPilot AI account settings, update your profile info, and change your password.">
-    <meta name="keywords" content="CareerPilot, Settings, Profile, Change Password, Account Management">
-    <meta name="author" content="CareerPilot AI Team">
+    <meta name="description" content="CareerPilot Account Settings - Manage your profile details, theme preferences, and security settings.">
+    <meta name="author" content="CareerPilot Team">
 
     <!-- Fonts Preconnect and Links for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,148 +25,36 @@
             if (t === 'dark') document.documentElement.classList.add('dark-mode');
         })();
     </script>
-    <style>
-        .settings-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-top: 1.5rem;
-        }
-        @media (max-width: 992px) {
-            .settings-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        .settings-card {
-            background: var(--bg-surface, #1e1e24);
-            border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-            border-radius: 12px;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-        .settings-card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-primary, #ffffff);
-            margin-bottom: 0.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 0.75rem;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        .form-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-secondary, #b3b3b3);
-        }
-        .form-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: var(--text-primary, #ffffff);
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-        }
-        .form-input:focus {
-            outline: none;
-            border-color: var(--color-primary, #6366f1);
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .form-input[disabled] {
-            opacity: 0.6;
-            cursor: not-allowed;
-            background: rgba(255, 255, 255, 0.01);
-        }
-        .btn-save {
-            align-self: flex-start;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: var(--color-primary, #6366f1);
-            color: #ffffff;
-            border: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .btn-save:hover {
-            background: var(--color-primary-hover, #4f46e5);
-            transform: translateY(-1px);
-        }
-        .btn-save:active {
-            transform: translateY(0);
-        }
-        .toast-notification {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            background: #10b981;
-            color: white;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 1000;
-        }
-        .toast-notification.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        .toast-notification.error {
-            background: #ef4444;
-        }
-    </style>
 </head>
 <body>
 
-    <!-- Skip link for accessibility -->
+    <!-- Skip link -->
     <a href="#main-content" class="skip-link">Skip to content</a>
 
-    <!-- Page guard and login session checking -->
+    <!-- Page guard and session initialization -->
     <script type="module">
         import { requireAuth, logoutUser } from './js/auth.js';
-        import { supabase } from './js/supabaseClient.js';
         
         requireAuth().then(session => {
             if (session) {
-                // Set user details in the dropdown
                 const dropdownName = document.querySelector('.dropdown-profile-name');
                 const dropdownEmail = document.querySelector('.dropdown-profile-email');
                 const avatarInitials = document.querySelectorAll('.avatar-initials');
+                const nameInput = document.getElementById('settings-name');
+                const emailInput = document.getElementById('settings-email');
                 
-                if (dropdownName && session.user) {
-                    dropdownName.textContent = session.user.full_name;
-                }
-                if (dropdownEmail && session.user) {
-                    dropdownEmail.textContent = session.user.email;
-                }
-                if (avatarInitials.length > 0 && session.user) {
-                    const initials = session.user.full_name ? session.user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : session.user.email.substring(0, 2).toUpperCase();
-                    avatarInitials.forEach(el => el.textContent = initials);
+                if (session.user) {
+                    if (dropdownName) dropdownName.textContent = session.user.full_name;
+                    if (dropdownEmail) dropdownEmail.textContent = session.user.email;
+                    if (nameInput) nameInput.value = session.user.full_name || '';
+                    if (emailInput) emailInput.value = session.user.email || '';
+                    
+                    if (avatarInitials.length > 0) {
+                        const initials = session.user.full_name ? session.user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : session.user.email.substring(0, 2).toUpperCase();
+                        avatarInitials.forEach(el => el.textContent = initials);
+                    }
                 }
 
-                // Populate Form Fields
-                const nameInput = document.getElementById('profile-name');
-                const emailInput = document.getElementById('profile-email');
-                if (nameInput) nameInput.value = session.user.full_name;
-                if (emailInput) emailInput.value = session.user.email;
-
-                // Handle logout
                 const logoutLinks = document.querySelectorAll('.logout-trigger');
                 logoutLinks.forEach(link => {
                     link.addEventListener('click', (e) => {
@@ -181,18 +68,16 @@
 
     <div class="dashboard-shell">
         
-        <!-- ==========================================
-             Left Sidebar
-             ========================================== -->
+        <!-- Left Sidebar Navigation -->
         <aside class="sidebar-wrapper" id="sidebar-wrapper" aria-label="Dashboard Sidebar">
             <div class="sidebar-header">
-                <a href="index.html" class="logo" aria-label="CareerPilot AI Home">
+                <a href="index.html" class="logo" aria-label="CareerPilot Home">
                     <div class="logo-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none">
                             <polygon points="5 3 19 12 5 21 5 3"></polygon>
                         </svg>
                     </div>
-                    <span>CareerPilot <span class="text-gradient">AI</span></span>
+                    <span>CareerPilot</span>
                 </a>
                 <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close sidebar">
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -225,6 +110,12 @@
                             <a href="analysis.html" class="nav-item">
                                 <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
                                 <span>AI Resume Analysis</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="ats.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <span>ATS Score</span>
                             </a>
                         </li>
                         <li>
@@ -277,12 +168,9 @@
         <!-- Sidebar Overlay -->
         <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
-        <!-- ==========================================
-             Main Workspace Area
-             ========================================== -->
+        <!-- Main Workspace Area -->
         <div class="workspace-wrapper">
-            
-            <!-- Top Navigation Bar -->
+            <!-- Top Navbar Header -->
             <header class="top-navbar" aria-label="Top Navigation Header">
                 <div class="navbar-left">
                     <button class="hamburger-menu-btn" id="hamburger-menu-btn" aria-label="Toggle Navigation Sidebar" aria-expanded="false" aria-controls="sidebar-wrapper">
@@ -292,24 +180,17 @@
                             <line class="line-3" x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <a href="index.html" class="logo mobile-logo" aria-label="CareerPilot AI Home">
-                        <div class="logo-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" stroke-width="2.5" fill="none">
-                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                            </svg>
-                        </div>
-                    </a>
-                    <h1 class="navbar-title">Settings</h1>
+                    <h1 class="navbar-title">Account Settings</h1>
                 </div>
 
                 <div class="navbar-right">
-                    <!-- Dark Mode Toggle -->
+                    <!-- Theme Toggle -->
                     <button id="theme-toggle" class="theme-toggle" aria-label="Switch theme">
                         <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                         <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     </button>
 
-                    <!-- User Profile Dropdown -->
+                    <!-- Profile Dropdown -->
                     <div class="navbar-action-wrapper dropdown-container">
                         <button class="profile-avatar-btn" id="profile-dropdown-btn" aria-label="Open profile menu" aria-expanded="false" aria-haspopup="true">
                             <span class="avatar-circle">
@@ -324,7 +205,7 @@
                                 </span>
                                 <div class="profile-meta">
                                     <h4 class="dropdown-profile-name">User Name</h4>
-                                    <p class="dropdown-profile-email">user@careercopilot.ai</p>
+                                    <p class="dropdown-profile-email">user@careerpilot.com</p>
                                 </div>
                             </div>
                             <div class="dropdown-divider"></div>
@@ -335,238 +216,47 @@
                                         <span>My Profile</span>
                                     </a>
                                 </li>
-                                <li role="none">
-                                    <a href="settings.html" class="dropdown-item" role="menuitem">
-                                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                                        <span>Account Settings</span>
-                                    </a>
-                                </li>
                             </ul>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <!-- ==========================================
-                 Settings Workspace Content
-                 ========================================== -->
+            <!-- Main Workspace Area -->
             <main class="workspace-content" id="main-content">
                 <header class="content-header">
-                    <h2>Account Settings</h2>
-                    <p class="content-subtitle">Manage your profile metadata and security preferences.</p>
+                    <h2>Account & Profile Settings</h2>
+                    <p class="content-subtitle">Manage your personal account profile information and security preferences.</p>
                 </header>
 
-                <div class="settings-grid">
-                    <!-- Profile Card -->
-                    <section class="settings-card" aria-labelledby="profile-heading">
-                        <h3 id="profile-heading" class="settings-card-title">Profile Info</h3>
-                        <form id="profile-settings-form" class="auth-form" style="display:flex; flex-direction:column; gap:1.25rem;" novalidate>
+                <div style="display: flex; flex-direction: column; gap: 2rem;">
+                    <!-- Personal Profile Card -->
+                    <div class="card">
+                        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem;">Personal Profile</h3>
+                        <div style="display: flex; flex-direction: column; gap: 1.25rem; max-width: 500px;">
                             <div class="form-group">
-                                <label for="profile-name" class="form-label">Full Name</label>
-                                <input type="text" id="profile-name" class="form-input" required>
+                                <label for="settings-name" class="form-label">Full Name</label>
+                                <input type="text" id="settings-name" class="form-input" readonly>
                             </div>
                             <div class="form-group">
-                                <label for="profile-email" class="form-label">Email Address</label>
-                                <input type="email" id="profile-email" class="form-input" disabled>
+                                <label for="settings-email" class="form-label">Email Address</label>
+                                <input type="email" id="settings-email" class="form-input" readonly>
                             </div>
-                            <button type="submit" class="btn-save" id="btn-save-profile">
-                                <span>Save Changes</span>
-                            </button>
-                        </form>
-                    </section>
+                        </div>
+                    </div>
 
-                    <!-- Security Card -->
-                    <section class="settings-card" aria-labelledby="security-heading">
-                        <h3 id="security-heading" class="settings-card-title">Security & Password</h3>
-                        <form id="password-settings-form" class="auth-form" style="display:flex; flex-direction:column; gap:1.25rem;" novalidate>
-                            <div class="form-group">
-                                <label for="new-password" class="form-label">New Password</label>
-                                <input type="password" id="new-password" class="form-input" placeholder="At least 8 characters" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="confirm-new-password" class="form-label">Confirm New Password</label>
-                                <input type="password" id="confirm-new-password" class="form-input" placeholder="Repeat new password" required>
-                            </div>
-                            <button type="submit" class="btn-save" id="btn-save-password">
-                                <span>Update Password</span>
-                            </button>
-                        </form>
-                    </section>
+                    <!-- Account Security Card -->
+                    <div class="card">
+                        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem;">Account Security</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">Your account is authenticated securely via Firebase Authentication.</p>
+                        <a href="forgot-password.html" class="btn btn-outline" style="align-self: flex-start;">Send Password Reset Link</a>
+                    </div>
                 </div>
             </main>
         </div>
     </div>
 
-    <!-- Toast Notification Banner -->
-    <div id="toast-banner" class="toast-notification" aria-live="polite">
-        <span>Settings successfully updated.</span>
-    </div>
-
-    <!-- Script to handle Sidebar Toggles & Profile Dropdown inside Settings Page -->
-    <script type="module">
-        import { supabase } from './js/supabaseClient.js';
-        
-        // UI Helpers
-        const showToast = (message, isError = false) => {
-            const toast = document.getElementById('toast-banner');
-            if (!toast) return;
-            toast.textContent = message;
-            toast.className = isError ? 'toast-notification error' : 'toast-notification';
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Sidebar toggles
-            const hamburgerBtn = document.getElementById('hamburger-menu-btn');
-            const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
-            const sidebarWrapper = document.getElementById('sidebar-wrapper');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
-            const profileBtn = document.getElementById('profile-dropdown-btn');
-            const profileDropdown = document.getElementById('profile-dropdown');
-
-            const toggleSidebar = (forceState) => {
-                const active = sidebarWrapper.classList.contains('active');
-                const state = typeof forceState === 'boolean' ? forceState : !active;
-                sidebarWrapper.classList.toggle('active', state);
-                sidebarOverlay.classList.toggle('active', state);
-            };
-
-            if (hamburgerBtn) hamburgerBtn.addEventListener('click', () => toggleSidebar());
-            if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', () => toggleSidebar(false));
-            if (sidebarOverlay) sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
-
-            if (profileBtn && profileDropdown) {
-                profileBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    profileDropdown.classList.toggle('show');
-                });
-                document.addEventListener('click', () => profileDropdown.classList.remove('show'));
-                profileDropdown.addEventListener('click', (e) => e.stopPropagation());
-            }
-
-            // Dark Mode toggles
-            const themeToggleBtn = document.getElementById('theme-toggle');
-            if (themeToggleBtn) {
-                themeToggleBtn.addEventListener('click', () => {
-                    const isDark = document.body.classList.contains('dark-mode');
-                    if (isDark) {
-                        document.body.classList.remove('dark-mode');
-                        localStorage.setItem('theme', 'light');
-                    } else {
-                        document.body.classList.add('dark-mode');
-                        localStorage.setItem('theme', 'dark');
-                    }
-                });
-            }
-
-            // Apply Theme on load
-            if (localStorage.getItem('theme') === 'dark') {
-                document.body.classList.add('dark-mode');
-            } else {
-                document.body.classList.remove('dark-mode');
-            }
-
-            // Profile Form Handling
-            const profileForm = document.getElementById('profile-settings-form');
-            if (profileForm) {
-                profileForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const saveBtn = document.getElementById('btn-save-profile');
-                    saveBtn.disabled = true;
-                    saveBtn.textContent = 'Saving...';
-
-                    const newName = document.getElementById('profile-name').value.trim();
-                    if (!newName) {
-                        showToast("Full name is required.", true);
-                        saveBtn.disabled = false;
-                        saveBtn.textContent = 'Save Changes';
-                        return;
-                    }
-
-                    try {
-                        const { data: { session } } = await supabase.auth.getSession();
-                        if (!session) throw new Error("No active session.");
-
-                        // 1. Update the database table
-                        const { error: dbErr } = await supabase
-                            .from('profiles')
-                            .update({ full_name: newName })
-                            .eq('id', session.user.id);
-                        if (dbErr) throw dbErr;
-
-                        // 2. Update user metadata
-                        const { error: authErr } = await supabase.auth.updateUser({
-                            data: { full_name: newName }
-                        });
-                        if (authErr) throw authErr;
-
-                        showToast("Profile details updated successfully!");
-                        
-                        // Update UI names in layout
-                        const dropdownName = document.querySelector('.dropdown-profile-name');
-                        if (dropdownName) dropdownName.textContent = newName;
-                        
-                        const avatarInitials = document.querySelectorAll('.avatar-initials');
-                        if (avatarInitials.length > 0) {
-                            const initials = newName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                            avatarInitials.forEach(el => el.textContent = initials);
-                        }
-                    } catch (err) {
-                        showToast(err.message || "Failed to update profile.", true);
-                    } finally {
-                        saveBtn.disabled = false;
-                        saveBtn.textContent = 'Save Changes';
-                    }
-                });
-            }
-
-            // Password Form Handling
-            const passwordForm = document.getElementById('password-settings-form');
-            if (passwordForm) {
-                passwordForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const updateBtn = document.getElementById('btn-save-password');
-                    updateBtn.disabled = true;
-                    updateBtn.textContent = 'Updating...';
-
-                    const newPassword = document.getElementById('new-password').value;
-                    const confirmPassword = document.getElementById('confirm-new-password').value;
-
-                    if (newPassword.length < 8) {
-                        showToast("Password must be at least 8 characters long.", true);
-                        updateBtn.disabled = false;
-                        updateBtn.textContent = 'Update Password';
-                        return;
-                    }
-
-                    if (newPassword !== confirmPassword) {
-                        showToast("Passwords do not match.", true);
-                        updateBtn.disabled = false;
-                        updateBtn.textContent = 'Update Password';
-                        return;
-                    }
-
-                    try {
-                        const { error } = await supabase.auth.updateUser({ password: newPassword });
-                        if (error) throw error;
-
-                        showToast("Password updated successfully!");
-                        passwordForm.reset();
-                    } catch (err) {
-                        showToast(err.message || "Failed to update password.", true);
-                    } finally {
-                        updateBtn.disabled = false;
-                        updateBtn.textContent = 'Update Password';
-                    }
-                });
-            }
-        });
-    </script>
-
-    <!-- Global Main Javascript -->
+    <!-- Scripts -->
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
