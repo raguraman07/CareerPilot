@@ -375,27 +375,33 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Selection changes listener
-    resumeSelect.addEventListener('change', () => {
-        if (resumeSelect.value) {
-            btnRunAnalysis.disabled = false;
-        }
-    });
+    if (resumeSelect) {
+        resumeSelect.addEventListener('change', () => {
+            if (resumeSelect.value && btnRunAnalysis) {
+                btnRunAnalysis.disabled = false;
+            }
+        });
+    }
 
     // Run AI analysis manually
-    btnRunAnalysis.addEventListener('click', () => {
-        const resumeId = resumeSelect.value;
-        if (resumeId) {
-            runResumeAnalysis(resumeId);
-        }
-    });
+    if (btnRunAnalysis) {
+        btnRunAnalysis.addEventListener('click', () => {
+            const resumeId = resumeSelect ? resumeSelect.value : null;
+            if (resumeId) {
+                runResumeAnalysis(resumeId);
+            }
+        });
+    }
 
     // Retry button click listener
-    btnRetryAnalysis.addEventListener('click', () => {
-        const resumeId = resumeSelect.value;
-        if (resumeId) {
-            runResumeAnalysis(resumeId);
-        }
-    });
+    if (btnRetryAnalysis) {
+        btnRetryAnalysis.addEventListener('click', () => {
+            const resumeId = resumeSelect ? resumeSelect.value : null;
+            if (resumeId) {
+                runResumeAnalysis(resumeId);
+            }
+        });
+    }
 
     // Initialize list load once auth is completed
     const init = () => {

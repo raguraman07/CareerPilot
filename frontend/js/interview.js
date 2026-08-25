@@ -264,101 +264,113 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Guidance Toggle
-    btnToggleGuidance.addEventListener('click', () => {
-        const isHidden = qGuidanceBox.style.display === 'none';
-        qGuidanceBox.style.display = isHidden ? 'block' : 'none';
-        btnToggleGuidance.textContent = isHidden ? 'Hide Guidance' : 'Show Guidance';
-    });
+    if (btnToggleGuidance) {
+        btnToggleGuidance.addEventListener('click', () => {
+            if (!qGuidanceBox) return;
+            const isHidden = qGuidanceBox.style.display === 'none';
+            qGuidanceBox.style.display = isHidden ? 'block' : 'none';
+            btnToggleGuidance.textContent = isHidden ? 'Hide Guidance' : 'Show Guidance';
+        });
+    }
 
     // Navigation Controls
-    btnPrevQ.addEventListener('click', () => {
-        if (currentQuestionIndex > 0) {
-            currentQuestionIndex--;
-            renderActiveQuestion();
-        }
-    });
+    if (btnPrevQ) {
+        btnPrevQ.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderActiveQuestion();
+            }
+        });
+    }
 
-    btnNextQ.addEventListener('click', () => {
-        if (currentSession && currentQuestionIndex < currentSession.questions.length - 1) {
-            currentQuestionIndex++;
-            renderActiveQuestion();
-        }
-    });
+    if (btnNextQ) {
+        btnNextQ.addEventListener('click', () => {
+            if (currentSession && currentQuestionIndex < currentSession.questions.length - 1) {
+                currentQuestionIndex++;
+                renderActiveQuestion();
+            }
+        });
+    }
 
     // 5. Submit Candidate Practice Answer for Evaluation
-    btnSubmitAnswer.addEventListener('click', async () => {
-        if (!currentSession || !currentSession.id) return;
-        const q = currentSession.questions[currentQuestionIndex];
-        const answerText = candidateAnswerInput.value.trim();
+    if (btnSubmitAnswer) {
+        btnSubmitAnswer.addEventListener('click', async () => {
+            if (!currentSession || !currentSession.id) return;
+            const q = currentSession.questions[currentQuestionIndex];
+            const answerText = candidateAnswerInput ? candidateAnswerInput.value.trim() : '';
 
-        if (!answerText) {
-            showAlert("Please type your response before submitting for evaluation.");
-            return;
-        }
-
-        btnSubmitAnswer.disabled = true;
-        btnSubmitAnswer.querySelector('span').textContent = 'AI is evaluating your answer...';
-
-        try {
-            const token = await getAuthToken();
-            const res = await fetch(`${API_BASE_URL}/api/interview/${currentSession.id}/answer`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    question_id: q.id,
-                    answer: answerText
-                })
-            });
-
-            const data = await res.json();
-            if (!res.ok) {
-                showAlert(data.error || "AI evaluation is temporarily unavailable. Please try again.");
+            if (!answerText) {
+                showAlert("Please type your response before submitting for evaluation.");
                 return;
             }
 
-            renderAnswerEvaluation(data.evaluation);
+            btnSubmitAnswer.disabled = true;
+            const btnSpan = btnSubmitAnswer.querySelector('span');
+            if (btnSpan) btnSpan.textContent = 'AI is evaluating your answer...';
 
-            // Update local session state
-            if (!currentSession.answers) currentSession.answers = [];
-            currentSession.answers = currentSession.answers.filter(a => String(a.question_id) !== String(q.id));
-            currentSession.answers.push({ question_id: q.id, answer: answerText, evaluation: data.evaluation });
+            try {
+                const token = await getAuthToken();
+                const res = await fetch(`${API_BASE_URL}/api/interview/${currentSession.id}/answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        question_id: q.id,
+                        answer: answerText
+                    })
+                });
 
-            if (typeof data.overall_score === 'number') {
-                currentSession.overall_score = data.overall_score;
-                sessOverallScore.style.display = 'inline-block';
-                sessOverallScore.textContent = `Overall Performance: ${data.overall_score}/100`;
+                const data = await res.json();
+                if (!res.ok) {
+                    showAlert(data.error || "AI evaluation is temporarily unavailable. Please try again.");
+                    return;
+                }
+
+                renderAnswerEvaluation(data.evaluation);
+
+                // Update local session state
+                if (!currentSession.answers) currentSession.answers = [];
+                currentSession.answers = currentSession.answers.filter(a => String(a.question_id) !== String(q.id));
+                currentSession.answers.push({ question_id: q.id, answer: answerText, evaluation: data.evaluation });
+
+                if (typeof data.overall_score === 'number' && sessOverallScore) {
+                    currentSession.overall_score = data.overall_score;
+                    sessOverallScore.style.display = 'inline-block';
+                    sessOverallScore.textContent = `Overall Performance: ${data.overall_score}/100`;
+                }
+
+            } catch (err) {
+                console.error("Answer evaluation error:", err);
+                showAlert("AI interview preparation is temporarily unavailable. Please try again.");
+            } finally {
+                btnSubmitAnswer.disabled = false;
+                if (btnSpan) btnSpan.textContent = 'Submit Practice Answer';
             }
-
-        } catch (err) {
-            console.error("Answer evaluation error:", err);
-            showAlert("AI interview preparation is temporarily unavailable. Please try again.");
-        } finally {
-            btnSubmitAnswer.disabled = false;
-            btnSubmitAnswer.querySelector('span').textContent = 'Submit Practice Answer';
-        }
-    });
+        });
+    }
 
     // 6. Complete Session
-    btnCompleteSess.addEventListener('click', async () => {
-        if (!currentSession || !currentSession.id) return;
-        try {
-            const token = await getAuthToken();
-            const res = await fetch(`${API_BASE_URL}/api/interview/${currentSession.id}/complete`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                showAlert(`Session completed! Final Performance Score: ${data.overall_score}/100`, false);
-                loadHistory();
+    if (btnCompleteSess) {
+        btnCompleteSess.addEventListener('click', async () => {
+            if (!currentSession || !currentSession.id) return;
+            try {
+                const token = await getAuthToken();
+                const res = await fetch(`${API_BASE_URL}/api/interview/${currentSession.id}/complete`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    showAlert(`Session completed! Final Performance Score: ${data.overall_score}/100`, false);
+                    loadHistory();
+                }
+            } catch (err) {
+                console.error("Complete session error:", err);
             }
-        } catch (err) {
-            console.error("Complete session error:", err);
-        }
-    });
+        });
+    }
 
     // 7. Load Session History
     const loadHistory = async () => {
