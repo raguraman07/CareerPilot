@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const successParseBanner = document.getElementById('success-parse-banner');
     const successParsePages = document.getElementById('success-parse-pages');
     
-    const resumesTbody = document.getElementById('resumes-tbody');
+    const resumesTbody = document.getElementById('resumes-list-tbody') || document.getElementById('resumes-tbody');
     const btnRefreshResumes = document.getElementById('btn-refresh-resumes');
     const toastContainer = document.getElementById('toast-container');
 
@@ -227,90 +227,88 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             if (!selectedFile) return;
 
-        // Initialize progress view states
-        progressWrapper.style.display = 'block';
-        actionRow.style.display = 'none';
-        btnSubmitUpload.disabled = true;
-        
-        progressStatus.textContent = "Uploading resume to secure storage...";
-        progressFill.style.width = '0%';
-        progressPercent.textContent = '0%';
-
-        try {
-            const token = await getAuthToken();
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-
-            const xhr = new XMLHttpRequest();
+            // Initialize progress view states if present
+            if (progressWrapper) progressWrapper.style.display = 'block';
+            if (actionRow) actionRow.style.display = 'none';
+            btnSubmitUpload.disabled = true;
             
-            // XHR Upload Progress Event Handlers
-            xhr.upload.addEventListener('progress', (e) => {
-                if (e.lengthComputable) {
-                    const percent = Math.round((e.loaded / e.total) * 100);
-                    // Cap upload percent at 95% until server returns complete parse response
-                    const displayedPercent = Math.min(percent, 95);
-                    progressFill.style.width = `${displayedPercent}%`;
-                    progressPercent.textContent = `${displayedPercent}%`;
-                    
-                    if (percent >= 100) {
-                        progressStatus.textContent = "Extracting text structure and content elements...";
-                    }
-                }
-            });
+            if (progressStatus) progressStatus.textContent = "Uploading resume to secure storage...";
+            if (progressFill) progressFill.style.width = '0%';
+            if (progressPercent) progressPercent.textContent = '0%';
 
-            // XHR Response Handlers
-            xhr.addEventListener('load', () => {
-                btnSubmitUpload.disabled = false;
+            try {
+                const token = await getAuthToken();
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                const xhr = new XMLHttpRequest();
                 
-                if (xhr.status === 201) {
-                    const res = JSON.parse(xhr.responseText);
-                    progressFill.style.width = '100%';
-                    progressPercent.textContent = '100%';
-                    progressStatus.textContent = "Parsing completed successfully.";
+                // XHR Upload Progress Event Handlers
+                xhr.upload.addEventListener('progress', (ev) => {
+                    if (ev.lengthComputable) {
+                        const percent = Math.round((ev.loaded / ev.total) * 100);
+                        const displayedPercent = Math.min(percent, 95);
+                        if (progressFill) progressFill.style.width = `${displayedPercent}%`;
+                        if (progressPercent) progressPercent.textContent = `${displayedPercent}%`;
+                        
+                        if (percent >= 100 && progressStatus) {
+                            progressStatus.textContent = "Extracting text structure and content elements...";
+                        }
+                    }
+                });
+
+                // XHR Response Handlers
+                xhr.addEventListener('load', () => {
+                    btnSubmitUpload.disabled = false;
                     
-                    // Show success checkmark animations and redirect to analysis
-                    setTimeout(() => {
-                        selectedFileCard.style.display = 'none';
-                        progressWrapper.style.display = 'none';
+                    if (xhr.status === 200 || xhr.status === 201) {
+                        let res = {};
+                        try { res = JSON.parse(xhr.responseText); } catch (_) {}
+
+                        if (progressFill) progressFill.style.width = '100%';
+                        if (progressPercent) progressPercent.textContent = '100%';
+                        if (progressStatus) progressStatus.textContent = "Parsing completed successfully.";
                         
-                        showToast("Resume successfully uploaded! Redirecting to AI Analysis...", "success");
-                        
+                        showToast("Resume successfully uploaded!", "success");
+
                         setTimeout(() => {
-                            window.location.href = `analysis.html?resume_id=${res.id}&auto_analyze=true`;
-                        }, 1200);
-                    }, 500);
-                    
-                } else {
-                    let errMsg = "Failed to upload or parse resume file.";
-                    try {
-                        const errObj = JSON.parse(xhr.responseText);
-                        errMsg = errObj.error || errMsg;
-                    } catch (_) {}
-                    
-                    showToast(errMsg, "error");
-                    progressWrapper.style.display = 'none';
-                    actionRow.style.display = 'block';
-                }
-            });
+                            if (selectedFileCard) selectedFileCard.style.display = 'none';
+                            if (progressWrapper) progressWrapper.style.display = 'none';
+                            resetUploadState();
+                            fetchUploadedResumes();
+                        }, 800);
+                        
+                    } else {
+                        let errMsg = "Failed to upload or parse resume file.";
+                        try {
+                            const errObj = JSON.parse(xhr.responseText);
+                            errMsg = errObj.error || errMsg;
+                        } catch (_) {}
+                        
+                        showToast(errMsg, "error");
+                        if (progressWrapper) progressWrapper.style.display = 'none';
+                        if (actionRow) actionRow.style.display = 'block';
+                    }
+                });
 
-            xhr.addEventListener('error', () => {
+                xhr.addEventListener('error', () => {
+                    btnSubmitUpload.disabled = false;
+                    showToast("Network connection error during file upload.", "error");
+                    if (progressWrapper) progressWrapper.style.display = 'none';
+                    if (actionRow) actionRow.style.display = 'block';
+                });
+
+                xhr.open('POST', `${API_BASE_URL}/api/resume/upload`);
+                xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                xhr.send(formData);
+
+            } catch (authErr) {
                 btnSubmitUpload.disabled = false;
-                showToast("Network connection error during file upload.", "error");
-                progressWrapper.style.display = 'none';
-                actionRow.style.display = 'block';
-            });
-
-            xhr.open('POST', `${API_BASE_URL}/api/resume/upload`);
-            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-            xhr.send(formData);
-
-        } catch (authErr) {
-            btnSubmitUpload.disabled = false;
-            showToast("Failed to authenticate session token: " + authErr.message, "error");
-            progressWrapper.style.display = 'none';
-            actionRow.style.display = 'block';
-        }
-    });
+                showToast("Failed to authenticate session token: " + authErr.message, "error");
+                if (progressWrapper) progressWrapper.style.display = 'none';
+                if (actionRow) actionRow.style.display = 'block';
+            }
+        });
     }
 
     // -------------------------------------------------------------
@@ -339,8 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Listing fetch error:", e);
             resumesTbody.innerHTML = `
                 <tr>
-                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                        Failed to load resume database logs. Verify local server backend connection.
+                    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                        Failed to load uploaded resumes. Verify connection.
                     </td>
                 </tr>
             `;
@@ -348,10 +346,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderResumesList = (resumes) => {
-        if (resumes.length === 0) {
+        if (!resumesTbody) return;
+
+        if (!Array.isArray(resumes) || resumes.length === 0) {
             resumesTbody.innerHTML = `
                 <tr>
-                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 3rem;">
                         No uploaded resumes found.
                     </td>
                 </tr>
@@ -360,27 +360,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         resumesTbody.innerHTML = resumes.map(r => {
-            const uploadDate = new Date(r.uploaded_at).toLocaleString();
-            const badgeClass = r.status === 'parsed' ? 'success' : 'info';
+            const uploadDate = r.uploaded_at ? new Date(r.uploaded_at).toLocaleString() : 'N/A';
             const iconSvg = r.file_type === 'pdf' 
-                ? `<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#E53935;" class="pill-svg"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>` 
-                : `<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#1E88E5;" class="pill-svg"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
+                ? `<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#E53935;fill:none;" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>` 
+                : `<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#1E88E5;fill:none;" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
             
+            const fileSizeStr = r.file_size || (r.pages ? `${r.pages} page(s)` : 'PDF');
+
             return `
                 <tr data-id="${r.id}">
                     <td class="activity-col">
                         <span style="display:flex;align-items:center;gap:0.5rem;">
                             ${iconSvg}
-                            <span>${r.filename}</span>
+                            <span style="font-weight: 500; color: var(--text-color);">${r.filename}</span>
                         </span>
                     </td>
-                    <td><span class="dropzone-info-badge">${r.file_type}</span></td>
-                    <td class="mono-figure">${r.pages}</td>
-                    <td class="date-col">${uploadDate}</td>
-                    <td><span class="status-badge ${badgeClass}">${r.status}</span></td>
+                    <td class="date-col" style="color: var(--text-muted);">${uploadDate}</td>
+                    <td class="mono-figure" style="color: var(--text-muted);">${fileSizeStr}</td>
                     <td style="text-align: right;">
                         <button class="action-icon-btn btn-delete-resume" data-id="${r.id}" aria-label="Delete resume ${r.filename}">
-                            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                     </td>
                 </tr>
@@ -392,9 +391,10 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
                 const row = btn.closest('tr');
-                const filename = row.querySelector('.activity-col span span').textContent;
+                const filenameNode = row.querySelector('.activity-col span span');
+                const filename = filenameNode ? filenameNode.textContent : 'resume';
                 
-                if (confirm(`Are you sure you want to permanently delete the resume "${filename}"?`)) {
+                if (confirm(`Are you sure you want to permanently delete "${filename}"?`)) {
                     deleteResume(id, row, filename);
                 }
             });
@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (resumesTbody.children.length === 0) {
                     resumesTbody.innerHTML = `
                         <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 3rem;">
                                 No uploaded resumes found.
                             </td>
                         </tr>
@@ -445,20 +445,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    btnRefreshResumes.addEventListener('click', () => {
-        // Simple spin animations
-        const refreshSvg = btnRefreshResumes.querySelector('svg');
-        if (refreshSvg) {
-            refreshSvg.style.transition = 'transform 0.8s ease';
-            refreshSvg.style.transform = 'rotate(360deg)';
-            setTimeout(() => {
-                refreshSvg.style.transition = 'none';
-                refreshSvg.style.transform = 'rotate(0)';
-            }, 800);
-        }
-        
-        fetchUploadedResumes();
-    });
+    if (btnRefreshResumes) {
+        btnRefreshResumes.addEventListener('click', () => {
+            const refreshSvg = btnRefreshResumes.querySelector('svg');
+            if (refreshSvg) {
+                refreshSvg.style.transition = 'transform 0.8s ease';
+                refreshSvg.style.transform = 'rotate(360deg)';
+                setTimeout(() => {
+                    refreshSvg.style.transition = 'none';
+                    refreshSvg.style.transform = 'rotate(0)';
+                }, 800);
+            }
+            fetchUploadedResumes();
+        });
+    }
 
     // Check Supabase authentication state changes on load to run listing fetch
     supabase.auth.onAuthStateChange((event, session) => {
