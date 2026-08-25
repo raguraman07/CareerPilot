@@ -236,28 +236,21 @@ Resume Text to Analyze:
 {resume_text}
 """
 
-    for attempt in range(1, 3):
-        try:
-            logger.info(f"ATS Service: Invoking Gemini API (Attempt {attempt}/2)...")
-            response = genai_client.models.generate_content(
-                model='gemini-1.5-flash',
-                contents=prompt,
-                config={'response_mime_type': 'application/json'}
-            )
-            raw_text = response.text or ""
-
-            cleaned = clean_json_text(raw_text)
-            parsed = json.loads(cleaned)
-            if validate_ats_json(parsed):
-                logger.info("ATS Service: Gemini response validated successfully.")
-                from backend.services.resume_intelligence import deduplicate_list
-                parsed["overall_recommendations"] = deduplicate_list(parsed.get("overall_recommendations", []))
-                parsed["ats_warnings"] = deduplicate_list(parsed.get("ats_warnings", []))
-                return parsed
-            else:
-                logger.warning(f"ATS Service: Response validation failed on attempt {attempt}.")
-        except Exception as err:
-            logger.error(f"ATS Service: Gemini call error on attempt {attempt}: {err}")
+    from backend.services.resume_intelligence import call_gemini_with_retry, deduplicate_list
+    try:
+        logger.info("ATS Service: Invoking Gemini API with multi-model fallback...")
+        raw_text = call_gemini_with_retry(genai_client, prompt, response_mime_type="application/json")
+        cleaned = clean_json_text(raw_text)
+        parsed = json.loads(cleaned)
+        if validate_ats_json(parsed):
+            logger.info("ATS Service: Gemini response validated successfully.")
+            parsed["overall_recommendations"] = deduplicate_list(parsed.get("overall_recommendations", []))
+            parsed["ats_warnings"] = deduplicate_list(parsed.get("ats_warnings", []))
+            return parsed
+        else:
+            logger.warning("ATS Service: Response validation failed.")
+    except Exception as err:
+        logger.error(f"ATS Service: Gemini call error: {err}")
 
     logger.error("ATS Service: All Gemini API attempts failed or returned invalid JSON.")
     raise RuntimeError("AI analysis is temporarily unavailable. Please try again.")

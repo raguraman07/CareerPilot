@@ -195,29 +195,17 @@ Resume Text to Analyze:
 {resume_text}
 """
 
-    for attempt in range(1, 3):
-        logger.info(f"Gemini Service: Executing Gemini API request (Attempt {attempt}/2)...")
-        try:
-            response = genai_client.models.generate_content(
-                model='gemini-1.5-flash',
-                contents=prompt,
-                config={'response_mime_type': 'application/json'}
-            )
-            raw_text = response.text or ""
+    from backend.services.resume_intelligence import call_gemini_with_retry
+    try:
+        raw_text = call_gemini_with_retry(genai_client, prompt, response_mime_type="application/json")
+        cleaned_text = clean_json_response(raw_text)
+        parsed_data = json.loads(cleaned_text)
 
-            cleaned_text = clean_json_response(raw_text)
-            parsed_data = json.loads(cleaned_text)
-
-            if validate_analysis_json(parsed_data):
-                logger.info("Gemini Service: Response successfully parsed and validated.")
-                return normalize_analysis_payload(parsed_data)
-            else:
-                logger.warning(f"Gemini Service: JSON validation failed on attempt {attempt}.")
-        except Exception as err:
-            logger.error(f"Gemini Service: API call error on attempt {attempt}: {err}")
-
-        if attempt == 1:
-            logger.info("Gemini Service: Retrying Gemini API request...")
+        if validate_analysis_json(parsed_data):
+            logger.info("Gemini Service: Response successfully parsed and validated.")
+            return normalize_analysis_payload(parsed_data)
+    except Exception as err:
+        logger.error(f"Gemini Service: API call error: {err}")
 
     logger.error("Gemini Service: All Gemini API attempts failed or produced invalid JSON.")
     raise RuntimeError("AI resume analysis is temporarily unavailable. Please try again.")

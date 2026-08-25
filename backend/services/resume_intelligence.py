@@ -1,13 +1,14 @@
 """
 CareerPilot AI — Central Resume Intelligence & Quality Layer
 Provides shared normalized resume profiling, evidence extraction, strict anti-hallucination grounding rules,
-prioritization, deduplication, and quality validation across all 7 AI modules.
+prioritization, deduplication, resilient Gemini multi-model fallback retry mechanisms across all 7 AI modules.
 """
 
 import os
 import json
 import logging
 import re
+import time
 from google import genai
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,45 @@ def clean_json_text(raw_text):
     return text.strip()
 
 
+def call_gemini_with_retry(client, prompt, response_mime_type="application/json"):
+    """
+    Executes Gemini API content generation with multi-model fallback and rate-limit backoff.
+    Models attempted: gemini-2.5-flash, gemini-2.0-flash, gemini-1.5-flash, gemini-1.5-pro.
+    """
+    if not client:
+        raise RuntimeError("Gemini API client is not configured.")
+
+    models_to_try = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
+    last_exception = None
+
+    for model_name in models_to_try:
+        for attempt in range(1, 3):
+            try:
+                config = {}
+                if response_mime_type:
+                    config['response_mime_type'] = response_mime_type
+
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=config if config else None
+                )
+                raw_text = (response.text or "").strip()
+                if raw_text:
+                    logger.info(f"Gemini Service: Generation succeeded using model '{model_name}'.")
+                    return raw_text
+            except Exception as err:
+                last_exception = err
+                err_str = str(err)
+                logger.warning(f"Gemini API model '{model_name}' attempt {attempt} failed: {err_str}")
+                if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
+                    time.sleep(2.0)  # Wait for rate limit quota window
+                else:
+                    break  # Try next model for non-quota failures
+
+    raise RuntimeError(f"All Gemini models failed. Last error: {last_exception}")
+
+
 def deduplicate_list(items):
     """Deduplicates strings based on normalized lowercase comparison."""
     if not isinstance(items, list):
@@ -45,9 +85,13 @@ def deduplicate_list(items):
     seen = set()
     result = []
     for item in items:
-        if not item or not isinstance(item, str):
+        if not item:
             continue
-        cleaned = item.strip()
+        if isinstance(item, dict):
+            val = item.get("skill") or item.get("name") or item.get("title") or item.get("item") or str(item)
+        else:
+            val = str(item)
+        cleaned = val.strip()
         normalized = re.sub(r'[^a-zA-Z0-9]', '', cleaned.lower())
         if normalized and normalized not in seen:
             seen.add(normalized)
@@ -56,17 +100,24 @@ def deduplicate_list(items):
 
 
 def deduplicate_dict_list(items, key="skill"):
-    """Deduplicates list of dictionaries by a specific string key."""
+    """Deduplicates list of dictionaries by a primary string key, with fallback keys."""
     if not isinstance(items, list):
         return []
     seen = set()
     result = []
     for item in items:
         if not isinstance(item, dict):
-            continue
-        val = item.get(key)
+            if isinstance(item, str) and item.strip():
+                # Convert standalone string to dict
+                item = {key: item.strip()}
+            else:
+                continue
+
+        val = item.get(key) or item.get("skill") or item.get("name") or item.get("title") or item.get("item") or item.get("topic")
         if not val or not isinstance(val, str):
+            result.append(item)
             continue
+
         normalized = re.sub(r'[^a-zA-Z0-9]', '', val.strip().lower())
         if normalized and normalized not in seen:
             seen.add(normalized)
@@ -89,7 +140,6 @@ def extract_resume_intelligence_profile(resume_text, target_role=None):
             "missing_sections": ["Experience", "Education", "Projects"]
         }
 
-    # If Gemini client is not configured, fall back to basic regex rule-based extraction
     if not is_gemini_configured or not genai_client:
         logger.info("Resume Intelligence: Fallback extraction used (Gemini client unconfigured).")
         return fallback_profile_extraction(resume_text)
@@ -146,15 +196,10 @@ Return ONLY valid JSON matching this structure:
 """
 
     try:
-        response = genai_client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=prompt,
-            config={'response_mime_type': 'application/json'}
-        )
-        cleaned = clean_json_text(response.text)
+        raw_text = call_gemini_with_retry(genai_client, prompt, response_mime_type="application/json")
+        cleaned = clean_json_text(raw_text)
         profile = json.loads(cleaned)
         
-        # Deduplicate skills
         if "extracted_skills" in profile:
             profile["extracted_skills"] = deduplicate_dict_list(profile["extracted_skills"], key="skill")
         
@@ -169,7 +214,6 @@ def fallback_profile_extraction(resume_text):
     lines = [line.strip() for line in resume_text.splitlines() if line.strip()]
     summary = lines[0] if lines else "Resume text extracted."
     
-    # Common tech keywords check
     known_tech = ["python", "javascript", "react", "html", "css", "sql", "java", "c++", "flask", "django", "node", "aws", "docker", "git", "firebase", "mongodb", "postgresql", "figma"]
     found_skills = []
     text_lower = resume_text.lower()
