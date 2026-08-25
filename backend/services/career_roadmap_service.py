@@ -187,17 +187,19 @@ Constraints:
     except (ValueError, TypeError):
         score = 60
 
+    from backend.services.resume_intelligence import deduplicate_list
+
     parsed["readiness_score"] = score
     parsed["readiness_label"] = get_readiness_label(score)
     parsed["career_goal"] = str(parsed.get("career_goal") or inferred_goal).strip()
     parsed["current_profile_summary"] = str(parsed.get("current_profile_summary") or "").strip()
-    parsed["current_strengths"] = list(parsed.get("current_strengths") or [])
-    parsed["priority_gaps"] = list(parsed.get("priority_gaps") or [])
-    parsed["recommended_projects"] = list(parsed.get("recommended_projects") or [])
-    parsed["interview_preparation"] = list(parsed.get("interview_preparation") or [])
-    parsed["job_readiness_checklist"] = list(parsed.get("job_readiness_checklist") or [])
+    parsed["current_strengths"] = deduplicate_list(parsed.get("current_strengths") or [])
+    parsed["priority_gaps"] = deduplicate_list(parsed.get("priority_gaps") or [])
+    parsed["recommended_projects"] = deduplicate_list(parsed.get("recommended_projects") or [])
+    parsed["interview_preparation"] = deduplicate_list(parsed.get("interview_preparation") or [])
+    parsed["job_readiness_checklist"] = deduplicate_list(parsed.get("job_readiness_checklist") or [])
     parsed["estimated_timeline"] = str(parsed.get("estimated_timeline") or "4–8 weeks").strip()
-    parsed["final_recommendations"] = list(parsed.get("final_recommendations") or [])
+    parsed["final_recommendations"] = deduplicate_list(parsed.get("final_recommendations") or [])
 
     # Validate roadmap phases
     phases = parsed.get("roadmap") or []

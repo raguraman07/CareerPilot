@@ -250,6 +250,9 @@ Resume Text to Analyze:
             parsed = json.loads(cleaned)
             if validate_ats_json(parsed):
                 logger.info("ATS Service: Gemini response validated successfully.")
+                from backend.services.resume_intelligence import deduplicate_list
+                parsed["overall_recommendations"] = deduplicate_list(parsed.get("overall_recommendations", []))
+                parsed["ats_warnings"] = deduplicate_list(parsed.get("ats_warnings", []))
                 return parsed
             else:
                 logger.warning(f"ATS Service: Response validation failed on attempt {attempt}.")

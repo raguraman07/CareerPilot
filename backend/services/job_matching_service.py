@@ -206,10 +206,14 @@ Constraints:
         qual["strengths"] = list(qual.get("strengths") or [])
         qual["gaps"] = list(qual.get("gaps") or [])
 
-    parsed["candidate_strengths"] = list(parsed.get("candidate_strengths") or [])
-    parsed["candidate_weaknesses"] = list(parsed.get("candidate_weaknesses") or [])
-    parsed["skill_gaps"] = list(parsed.get("skill_gaps") or [])
-    parsed["recommendations"] = list(parsed.get("recommendations") or [])
+    from backend.services.resume_intelligence import deduplicate_list, deduplicate_dict_list
+
+    parsed["matching_skills"] = deduplicate_list(parsed.get("matching_skills") or [])
+    parsed["missing_skills"] = deduplicate_list(parsed.get("missing_skills") or [])
+    parsed["candidate_strengths"] = deduplicate_list(parsed.get("candidate_strengths") or [])
+    parsed["candidate_weaknesses"] = deduplicate_list(parsed.get("candidate_weaknesses") or [])
+    parsed["skill_gaps"] = deduplicate_dict_list(parsed.get("skill_gaps") or [], key="skill")
+    parsed["recommendations"] = deduplicate_list(parsed.get("recommendations") or [])
     parsed["summary"] = str(parsed.get("summary") or "").strip()
 
     return parsed

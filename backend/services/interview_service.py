@@ -152,11 +152,13 @@ Constraints:
                 "follow_up_questions": list(q.get("follow_up_questions") or [])
             })
 
+    from backend.services.resume_intelligence import deduplicate_list
+
     parsed["questions"] = sanitized_q
     parsed["interview_title"] = str(parsed.get("interview_title") or f"{interview_type} Interview ({difficulty})").strip()
-    parsed["overall_preparation_tips"] = list(parsed.get("overall_preparation_tips") or [])
-    parsed["areas_to_prepare"] = list(parsed.get("areas_to_prepare") or [])
-    parsed["potential_weaknesses"] = list(parsed.get("potential_weaknesses") or [])
+    parsed["overall_preparation_tips"] = deduplicate_list(parsed.get("overall_preparation_tips") or [])
+    parsed["areas_to_prepare"] = deduplicate_list(parsed.get("areas_to_prepare") or [])
+    parsed["potential_weaknesses"] = deduplicate_list(parsed.get("potential_weaknesses") or [])
     parsed["summary"] = str(parsed.get("summary") or "").strip()
 
     return parsed

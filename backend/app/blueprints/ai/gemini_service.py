@@ -93,17 +93,26 @@ def clean_json_response(raw_text):
     return text.strip()
 
 
+from backend.services.resume_intelligence import deduplicate_list
+
 def normalize_analysis_payload(data):
     """
     Normalizes keys to support both new dynamic structure and legacy field aliases
     (technical_skills, soft_skills, improvements, career_recommendations).
+    Enforces deduplication on array fields.
     """
     normalized = dict(data)
     
-    normalized["technical_skills"] = data.get("technical_skills_found", [])
-    normalized["soft_skills"] = data.get("soft_skills_found", [])
-    normalized["improvements"] = data.get("actionable_recommendations", [])
-    normalized["career_recommendations"] = data.get("actionable_recommendations", [])
+    normalized["technical_skills_found"] = deduplicate_list(data.get("technical_skills_found", []))
+    normalized["soft_skills_found"] = deduplicate_list(data.get("soft_skills_found", []))
+    normalized["strengths"] = deduplicate_list(data.get("strengths", []))
+    normalized["weaknesses"] = deduplicate_list(data.get("weaknesses", []))
+    normalized["actionable_recommendations"] = deduplicate_list(data.get("actionable_recommendations", []))
+
+    normalized["technical_skills"] = normalized["technical_skills_found"]
+    normalized["soft_skills"] = normalized["soft_skills_found"]
+    normalized["improvements"] = normalized["actionable_recommendations"]
+    normalized["career_recommendations"] = normalized["actionable_recommendations"]
     
     if "experience_analysis" not in normalized or not isinstance(normalized["experience_analysis"], dict):
         normalized["experience_analysis"] = {"strengths": [], "weaknesses": [], "recommendations": []}
