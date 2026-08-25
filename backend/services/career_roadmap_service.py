@@ -51,7 +51,7 @@ def generate_career_roadmap(uid, career_goal=""):
     Generates a dynamic personalized career roadmap and learning plan
     based on the candidate's actual CareerPilot profile data (resumes, ATS, job matches, skill gaps, interview feedback).
     """
-    if not is_gemini_configured or (not genai_client and not genai_legacy_model):
+    if not is_gemini_configured or not genai_client:
         raise ValueError("Gemini API key is not configured.")
 
     # 1. Retrieve all user career context

@@ -52,7 +52,7 @@ def analyze_job_match(resume_text, job_description, job_title=""):
     
     Returns structured JSON matching the specified schema or raises an exception.
     """
-    if not is_gemini_configured or (not genai_client and not genai_legacy_model):
+    if not is_gemini_configured or not genai_client:
         raise ValueError("Gemini API key is not configured.")
 
     if not resume_text or not resume_text.strip():

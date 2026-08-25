@@ -71,7 +71,7 @@ def analyze_resume():
     if not resume_id or not resume_text or not resume_text.strip():
         return jsonify({"error": "Missing resume_id or resume_text in request body."}), 400
 
-    if not is_gemini_configured or (not genai_client and not genai_legacy_model):
+    if not is_gemini_configured or not genai_client:
         logger.error("Gemini API key is unconfigured or invalid. Returning AI service error.")
         return jsonify({"error": "AI analysis is temporarily unavailable. Please try again."}), 502
 

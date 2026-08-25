@@ -108,7 +108,7 @@ def generate_rag_answer(uid, user_message, chat_history=None):
     3. Prompts Gemini AI with System Prompt + Retrieved Context + Conversation History + User Message.
     4. Returns (ai_response_text, sources_used_list).
     """
-    if not is_gemini_configured or (not genai_client and not genai_legacy_model):
+    if not is_gemini_configured or not genai_client:
         raise ValueError("Gemini API key is not configured.")
 
     if not user_message or not user_message.strip():

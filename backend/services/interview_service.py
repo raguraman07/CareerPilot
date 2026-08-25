@@ -36,7 +36,7 @@ def generate_interview_session(resume_text, job_description="", job_title="", in
     Generates dynamic personalized interview questions, preparation tips, and weaknesses 
     using Gemini AI based on the candidate's resume and job requirements.
     """
-    if not is_gemini_configured or (not genai_client and not genai_legacy_model):
+    if not is_gemini_configured or not genai_client:
         raise ValueError("Gemini API key is not configured.")
 
     if not resume_text or not resume_text.strip():
@@ -167,7 +167,7 @@ def evaluate_interview_answer(question_text, candidate_answer, why_this_question
     Evaluates candidate's typed practice answer semantically using Gemini AI.
     Returns structured feedback with numerical score (0-100), strengths, weaknesses, and improvement guidance.
     """
-    if not is_gemini_configured or (not genai_client and not genai_legacy_model):
+    if not is_gemini_configured or not genai_client:
         raise ValueError("Gemini API key is not configured.")
 
     if not candidate_answer or not candidate_answer.strip():

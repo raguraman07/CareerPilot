@@ -167,7 +167,7 @@ def run_gemini_ats_analysis(resume_text):
     No hardcoded mock responses are returned if Gemini fails.
     Returns structured analysis JSON or raises RuntimeError.
     """
-    if not is_gemini_configured or (not genai_client and not genai_legacy_model):
+    if not is_gemini_configured or not genai_client:
         logger.error("ATS Service: GEMINI_API_KEY is missing or invalid. AI service unavailable.")
         raise RuntimeError("AI analysis is temporarily unavailable. Please try again.")
 
