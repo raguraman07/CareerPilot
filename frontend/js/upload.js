@@ -8,18 +8,19 @@ import { supabase } from './supabaseClient.js';
 
 // Configuration: Matches the Flask backend API server base URL
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:5000' : `http://${window.location.hostname}:5000`;
-const ALLOWED_MIME_TYPES = ['.pdf', '.docx'];
+const ALLOWED_MIME_TYPES = ['.pdf', '.doc', '.docx'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const dropzone = document.getElementById('upload-dropzone');
-    const fileInput = document.getElementById('file-input');
+    const fileInput = document.getElementById('resume-file-input') || document.getElementById('file-input');
+    const browseFilesBtn = document.getElementById('browse-files-btn');
     const selectedFileCard = document.getElementById('selected-file-card');
-    const selectedFilename = document.getElementById('selected-filename');
-    const selectedFilesize = document.getElementById('selected-filesize');
-    const fileIconWrapper = document.getElementById('file-icon-wrapper');
-    const removeFileBtn = document.getElementById('remove-file-btn');
+    const selectedFilename = document.getElementById('selected-file-name') || document.getElementById('selected-filename');
+    const selectedFilesize = document.getElementById('selected-file-size') || document.getElementById('selected-filesize');
+    const fileIconWrapper = document.querySelector('.file-icon-box') || document.getElementById('file-icon-wrapper');
+    const removeFileBtn = document.getElementById('btn-cancel-file') || document.getElementById('remove-file-btn');
     
     const progressWrapper = document.getElementById('upload-progress-wrapper');
     const progressFill = document.getElementById('progress-bar-fill');
@@ -92,57 +93,74 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
     };
 
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, preventDefaults, false);
-    });
+    if (dropzone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
 
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropzone.addEventListener(eventName, () => {
-            dropzone.classList.add('dragover');
-        }, false);
-    });
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => {
+                dropzone.classList.add('dragover');
+            }, false);
+        });
 
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, () => {
-            dropzone.classList.remove('dragover');
-        }, false);
-    });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => {
+                dropzone.classList.remove('dragover');
+            }, false);
+        });
 
-    dropzone.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        if (files.length > 0) {
-            handleFileSelection(files[0]);
-        }
-    });
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt ? dt.files : null;
+            if (files && files.length > 0) {
+                handleFileSelection(files[0]);
+            }
+        });
 
-    dropzone.addEventListener('click', () => {
-        fileInput.click();
-    });
+        dropzone.addEventListener('click', (e) => {
+            if (e.target && (e.target.id === 'browse-files-btn' || e.target.closest('#browse-files-btn'))) {
+                return;
+            }
+            if (fileInput) fileInput.click();
+        });
 
-    dropzone.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        dropzone.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (fileInput) fileInput.click();
+            }
+        });
+    }
+
+    if (browseFilesBtn) {
+        browseFilesBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            fileInput.click();
-        }
-    });
+            e.stopPropagation();
+            if (fileInput) fileInput.click();
+        });
+    }
 
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            handleFileSelection(e.target.files[0]);
-        }
-    });
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
+    }
 
     // -------------------------------------------------------------
     // 3. Client Side File Validation
     // -------------------------------------------------------------
     const handleFileSelection = (file) => {
+        if (!file) return;
+
         // Reset state
         resetUploadState();
 
         const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
         if (!ALLOWED_MIME_TYPES.includes(ext)) {
-            showToast("Only PDF and DOCX documents are allowed.", "error");
+            showToast("Only PDF, DOC, and DOCX documents are allowed.", "error");
             return;
         }
 
@@ -154,45 +172,60 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedFile = file;
 
         // Customise PDF / DOCX type icon colors
-        if (ext === '.pdf') {
-            fileIconWrapper.style.color = '#E53935'; // PDF Red
-            fileIconWrapper.style.backgroundColor = 'rgba(229, 57, 53, 0.08)';
-        } else {
-            fileIconWrapper.style.color = '#1E88E5'; // Word Blue
-            fileIconWrapper.style.backgroundColor = 'rgba(30, 136, 229, 0.08)';
+        if (fileIconWrapper) {
+            if (ext === '.pdf') {
+                fileIconWrapper.textContent = 'PDF';
+                fileIconWrapper.style.color = '#E53935'; // PDF Red
+                fileIconWrapper.style.backgroundColor = 'rgba(229, 57, 53, 0.08)';
+            } else {
+                fileIconWrapper.textContent = 'DOC';
+                fileIconWrapper.style.color = '#1E88E5'; // Word Blue
+                fileIconWrapper.style.backgroundColor = 'rgba(30, 136, 229, 0.08)';
+            }
         }
 
         // Display selection visual elements
-        selectedFilename.textContent = file.name;
-        selectedFilesize.textContent = formatBytes(file.size);
-        selectedFileCard.style.display = 'flex';
-        actionRow.style.display = 'block';
+        if (selectedFilename) selectedFilename.textContent = file.name;
+        if (selectedFilesize) selectedFilesize.textContent = formatBytes(file.size);
+        if (selectedFileCard) selectedFileCard.style.display = 'flex';
+        if (actionRow) actionRow.style.display = 'block';
+        if (btnSubmitUpload) btnSubmitUpload.disabled = false;
         
         showToast(`Selected file: ${file.name}`, "info");
     };
 
-    removeFileBtn.addEventListener('click', () => {
-        resetUploadState();
-    });
+    if (removeFileBtn) {
+        removeFileBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            resetUploadState();
+        });
+    }
 
     const resetUploadState = () => {
         selectedFile = null;
-        fileInput.value = '';
-        selectedFileCard.style.display = 'none';
-        progressWrapper.style.display = 'none';
-        actionRow.style.display = 'none';
-        successParseBanner.style.display = 'none';
+        if (fileInput) fileInput.value = '';
+        if (selectedFileCard) selectedFileCard.style.display = 'none';
+        if (progressWrapper) progressWrapper.style.display = 'none';
+        if (actionRow) actionRow.style.display = 'none';
+        if (successParseBanner) successParseBanner.style.display = 'none';
         
         // Reset progress bar trackers
-        progressFill.style.width = '0%';
-        progressPercent.textContent = '0%';
+        if (progressFill) progressFill.style.width = '0%';
+        if (progressPercent) progressPercent.textContent = '0%';
     };
 
-    // -------------------------------------------------------------
-    // 4. File Upload & Server-side Parsing via XHR
-    // -------------------------------------------------------------
-    btnSubmitUpload.addEventListener('click', async () => {
-        if (!selectedFile) return;
+    const uploadForm = document.getElementById('resume-upload-form');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (btnSubmitUpload) btnSubmitUpload.click();
+        });
+    }
+
+    if (btnSubmitUpload) {
+        btnSubmitUpload.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (!selectedFile) return;
 
         // Initialize progress view states
         progressWrapper.style.display = 'block';
@@ -278,6 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
             actionRow.style.display = 'block';
         }
     });
+    }
 
     // -------------------------------------------------------------
     // 5. Database listing fetch and render table logs
