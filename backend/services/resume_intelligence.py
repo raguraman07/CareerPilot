@@ -13,6 +13,15 @@ from google import genai
 
 logger = logging.getLogger(__name__)
 
+from dotenv import load_dotenv
+
+# Ensure environment variables are loaded from backend/.env or root .env
+_backend_env = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+if os.path.exists(_backend_env):
+    load_dotenv(_backend_env)
+else:
+    load_dotenv()
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 is_gemini_configured = bool(
     GEMINI_API_KEY 
@@ -42,38 +51,46 @@ def clean_json_text(raw_text):
 def call_gemini_with_retry(client, prompt, response_mime_type="application/json"):
     """
     Executes Gemini API content generation with multi-model fallback and rate-limit backoff.
-    Models attempted: gemini-2.5-flash, gemini-2.0-flash, gemini-1.5-flash, gemini-1.5-pro.
+    Models attempted in order: gemini-flash-latest, gemini-3.7-flash, gemini-3.6-flash, gemini-3.5-flash-lite, gemini-3.1-flash-lite, gemini-pro-latest, gemini-3.1-pro-preview.
     """
     if not client:
         raise RuntimeError("Gemini API client is not configured.")
 
-    models_to_try = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
+    models_to_try = [
+        'gemini-3.5-flash-lite',
+        'gemini-3.1-flash-lite',
+        'gemini-flash-lite-latest',
+        'gemini-3.1-flash-lite-preview',
+        'gemini-3-flash-preview',
+        'gemini-flash-latest',
+        'gemini-3.7-flash',
+        'gemini-3.6-flash',
+        'gemini-3.1-pro-preview',
+        'gemini-pro-latest'
+    ]
     last_exception = None
 
     for model_name in models_to_try:
-        for attempt in range(1, 3):
-            try:
-                config = {}
-                if response_mime_type:
-                    config['response_mime_type'] = response_mime_type
+        try:
+            config = {}
+            if response_mime_type:
+                config['response_mime_type'] = response_mime_type
 
-                response = client.models.generate_content(
-                    model=model_name,
-                    contents=prompt,
-                    config=config if config else None
-                )
-                raw_text = (response.text or "").strip()
-                if raw_text:
-                    logger.info(f"Gemini Service: Generation succeeded using model '{model_name}'.")
-                    return raw_text
-            except Exception as err:
-                last_exception = err
-                err_str = str(err)
-                logger.warning(f"Gemini API model '{model_name}' attempt {attempt} failed: {err_str}")
-                if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
-                    time.sleep(2.0)  # Wait for rate limit quota window
-                else:
-                    break  # Try next model for non-quota failures
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=config if config else None
+            )
+            raw_text = (response.text or "").strip()
+            if raw_text:
+                logger.info(f"Gemini Service: Generation succeeded using model '{model_name}'.")
+                return raw_text
+        except Exception as err:
+            last_exception = err
+            err_str = str(err)
+            logger.warning(f"Gemini API model '{model_name}' failed: {err_str[:120]}")
+            # Try next model immediately without blocking long on rate-limit / unavailable / not found
+            continue
 
     raise RuntimeError(f"All Gemini models failed. Last error: {last_exception}")
 

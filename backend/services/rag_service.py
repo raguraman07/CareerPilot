@@ -8,6 +8,17 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+from dotenv import load_dotenv
+
+# Ensure environment variables are loaded from backend/.env or root .env
+_backend_env = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+if os.path.exists(_backend_env):
+    load_dotenv(_backend_env)
+else:
+    load_dotenv()
+
+from services.resume_intelligence import call_gemini_with_retry
+
 # Official Google GenAI SDK (google-genai)
 try:
     from google import genai
@@ -152,11 +163,7 @@ Instructions:
 
     bot_reply = ""
     try:
-        response = genai_client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=system_prompt
-        )
-        bot_reply = (response.text or "").strip()
+        bot_reply = call_gemini_with_retry(genai_client, system_prompt, response_mime_type=None)
     except Exception as api_err:
         logger.error(f"Gemini API call failed during RAG career assistant chat: {api_err}")
         raise RuntimeError("AI Career Assistant is temporarily unavailable. Please try again.")

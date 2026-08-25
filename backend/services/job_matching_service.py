@@ -13,6 +13,15 @@ from services.resume_intelligence import call_gemini_with_retry, clean_json_text
 
 logger = logging.getLogger(__name__)
 
+from dotenv import load_dotenv
+
+# Ensure environment variables are loaded from backend/.env or root .env
+_backend_env = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+if os.path.exists(_backend_env):
+    load_dotenv(_backend_env)
+else:
+    load_dotenv()
+
 # Official Google GenAI SDK (google-genai)
 try:
     from google import genai

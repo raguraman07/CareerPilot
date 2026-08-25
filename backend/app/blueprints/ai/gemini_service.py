@@ -195,7 +195,10 @@ Resume Text to Analyze:
 {resume_text}
 """
 
-    from backend.services.resume_intelligence import call_gemini_with_retry
+    try:
+        from services.resume_intelligence import call_gemini_with_retry
+    except ImportError:
+        from backend.services.resume_intelligence import call_gemini_with_retry
     try:
         raw_text = call_gemini_with_retry(genai_client, prompt, response_mime_type="application/json")
         cleaned_text = clean_json_response(raw_text)

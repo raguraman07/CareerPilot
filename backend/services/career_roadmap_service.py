@@ -9,6 +9,17 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+from dotenv import load_dotenv
+
+# Ensure environment variables are loaded from backend/.env or root .env
+_backend_env = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+if os.path.exists(_backend_env):
+    load_dotenv(_backend_env)
+else:
+    load_dotenv()
+
+from services.resume_intelligence import call_gemini_with_retry, clean_json_text
+
 # Official Google GenAI SDK (google-genai)
 try:
     from google import genai
@@ -159,12 +170,7 @@ Constraints:
 """
     raw_text = ""
     try:
-        response = genai_client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=prompt,
-            config={'response_mime_type': 'application/json'}
-        )
-        raw_text = response.text or ""
+        raw_text = call_gemini_with_retry(genai_client, prompt, response_mime_type="application/json")
     except Exception as api_err:
         logger.error(f"Gemini API call failed during career roadmap generation: {api_err}")
         raise RuntimeError("Career roadmap generation is temporarily unavailable. Please try again.")
@@ -172,11 +178,7 @@ Constraints:
     if not raw_text or not raw_text.strip():
         raise RuntimeError("Empty response from Gemini AI.")
 
-    cleaned = raw_text.strip()
-    if cleaned.startswith("```"):
-        cleaned = re.sub(r"^```(?:json)?\n?", "", cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\n?```$", "", cleaned)
-    cleaned = cleaned.strip()
+    cleaned = clean_json_text(raw_text)
 
     try:
         parsed = json.loads(cleaned)
