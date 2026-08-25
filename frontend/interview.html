@@ -229,14 +229,15 @@
                 <div class="card" style="margin-bottom: 2rem;">
                     <form id="interview-setup-form">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
-                            <div class="form-group">
+                            <div class="form-group" style="grid-column: span 2;">
                                 <label for="interview-resume-select" class="form-label">Select Your Resume</label>
-                                <select id="interview-resume-select" class="form-select" required>
+                                <div id="interview-resume-select-container"></div>
+                                <select id="interview-resume-select" class="form-select" style="display: none;" required>
                                     <option value="" disabled selected>-- Loading resumes... --</option>
                                 </select>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group" style="grid-column: span 2;">
                                 <label for="interview-role-input" class="form-label">Target Role Title</label>
                                 <input type="text" id="interview-role-input" class="form-input" placeholder="e.g. Software Engineer, Data Scientist" required>
                             </div>

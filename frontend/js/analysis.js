@@ -3,8 +3,8 @@
  * Handles loading list of resumes, triggering AI review, progress animations,
  * updating the UI card elements, loading history, and firing success/error toast notifications.
  */
-
 import { supabase } from './supabaseClient.js';
+import { renderResumeCards, renderSelectionSkeleton, renderSelectionError } from './selection.js';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:5000' : `http://${window.location.hostname}:5000`;
 
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (type === 'error') {
             iconSvg = `<svg class="toast-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
         } else {
-            iconSvg = `<svg class="toast-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="8"></line></svg>`;
+            iconSvg = `<svg class="toast-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12.01" y2="16"></line><line x1="12" y1="8" x2="12" y2="8"></line></svg>`;
         }
         
         toast.innerHTML = `${iconSvg}<span>${message}</span>`;
@@ -56,10 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return session.access_token;
     };
 
-    // Load available resumes to populate the dropdown
+    // Load available resumes to populate interactive selection cards
     const loadResumes = async () => {
         const selectContainer = document.getElementById('resume-select-container');
         if (btnRunAnalysis) btnRunAnalysis.disabled = true;
+        if (selectContainer) renderSelectionSkeleton(selectContainer, 2, "Loading options...");
 
         try {
             const token = await getAuthToken();
@@ -75,76 +76,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             
-            if (!Array.isArray(data) || data.length === 0) {
-                if (selectContainer) {
-                    selectContainer.innerHTML = `
-                        <div class="resume-selector-card">
-                            <div class="resume-selector-left">
-                                <div class="resume-selector-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                        <polyline points="14 2 14 8 20 8"></polyline>
-                                    </svg>
-                                </div>
-                                <div class="resume-selector-text">
-                                    <div class="resume-selector-title">No resumes uploaded yet</div>
-                                    <div class="resume-selector-subtitle">Please upload a resume first to run AI analysis.</div>
-                                </div>
-                            </div>
-                            <div class="resume-selector-right">
-                                <a href="upload.html" class="btn btn-primary btn-sm">Upload Resume</a>
-                            </div>
-                        </div>
-                    `;
-                }
-                if (resumeSelect) resumeSelect.style.display = 'none';
-                if (btnRunAnalysis) btnRunAnalysis.disabled = true;
-                return;
-            }
-
-            resumeSelect.innerHTML = '<option value="" disabled selected>-- Select an Uploaded Resume --</option>';
-            data.forEach(res => {
-                const opt = document.createElement('option');
-                opt.value = res.id;
-                opt.textContent = `${res.filename} ${res.uploaded_at ? `(Uploaded: ${new Date(res.uploaded_at).toLocaleDateString()})` : ''}`;
-                resumeSelect.appendChild(opt);
+            renderResumeCards(selectContainer, resumeSelect, data, (selectedId) => {
+                if (btnRunAnalysis) btnRunAnalysis.disabled = !selectedId;
             });
 
-            // Resumes Loaded: Hide loading container & show custom select box
-            if (selectContainer) selectContainer.style.display = 'none';
-            if (resumeSelect) resumeSelect.style.display = 'block';
-
-            // Enable submit button when a valid resume is selected
-            const checkSelection = () => {
-                if (btnRunAnalysis) btnRunAnalysis.disabled = !resumeSelect.value;
-            };
-            resumeSelect.addEventListener('change', checkSelection);
-            checkSelection();
-
-            // After loading resumes, check if resume_id URL query parameter exists
             checkUrlQueryParams();
 
         } catch (err) {
             console.error(err);
             showToast(err.message, 'error');
             if (selectContainer) {
-                selectContainer.innerHTML = `
-                    <div class="resume-selector-card">
-                        <div class="resume-selector-left">
-                            <div class="resume-selector-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                </svg>
-                            </div>
-                            <div class="resume-selector-text">
-                                <div class="resume-selector-title">Error loading resumes</div>
-                                <div class="resume-selector-subtitle">Please check your connection and reload the page.</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                renderSelectionError(selectContainer, "Couldn't load options", loadResumes);
             }
             if (btnRunAnalysis) btnRunAnalysis.disabled = true;
         }

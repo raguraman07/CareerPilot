@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js';
+import { renderResumeCards, renderSelectionSkeleton, renderSelectionError } from './selection.js';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://127.0.0.1:5000' 
@@ -16,21 +17,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyList = document.getElementById('history-list');
 
     const getAuthToken = async () => {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error || !session) throw new Error("Authentication required. Please log in.");
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error("No user is logged in.");
         return session.access_token;
     };
 
-    const showAlert = (message, isError = true) => {
+    const showAlert = (message, type = 'danger') => {
         alertBox.style.display = 'block';
-        if (isError) {
-            alertBox.style.background = 'rgba(220, 38, 38, 0.1)';
-            alertBox.style.color = '#dc2626';
-            alertBox.style.border = '1px solid rgba(220, 38, 38, 0.2)';
+        if (type === 'danger') {
+            alertBox.style.background = 'rgba(211, 47, 47, 0.15)';
+            alertBox.style.color = '#e57373';
+            alertBox.style.border = '1px solid rgba(211, 47, 47, 0.3)';
+        } else if (type === 'success') {
+            alertBox.style.background = 'rgba(56, 142, 60, 0.15)';
+            alertBox.style.color = '#81c784';
+            alertBox.style.border = '1px solid rgba(56, 142, 60, 0.3)';
         } else {
-            alertBox.style.background = 'rgba(22, 163, 74, 0.1)';
-            alertBox.style.color = '#16a34a';
-            alertBox.style.border = '1px solid rgba(22, 163, 74, 0.2)';
+            alertBox.style.background = 'rgba(99, 102, 241, 0.15)';
+            alertBox.style.color = '#818cf8';
+            alertBox.style.border = '1px solid rgba(99, 102, 241, 0.3)';
         }
         alertBox.textContent = message;
     };
@@ -44,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const populateResumes = async () => {
         const selectContainer = document.getElementById('jobmatch-resume-select-container');
         if (btnRunMatch) btnRunMatch.disabled = true;
+        if (selectContainer) renderSelectionSkeleton(selectContainer, 2, "Loading options...");
 
         try {
             const token = await getAuthToken();
@@ -53,71 +59,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error("Failed to load resumes.");
             const data = await res.json();
 
-            if (!Array.isArray(data) || data.length === 0) {
-                if (selectContainer) {
-                    selectContainer.innerHTML = `
-                        <div class="resume-selector-card">
-                            <div class="resume-selector-left">
-                                <div class="resume-selector-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                        <polyline points="14 2 14 8 20 8"></polyline>
-                                    </svg>
-                                </div>
-                                <div class="resume-selector-text">
-                                    <div class="resume-selector-title">No resumes uploaded yet</div>
-                                    <div class="resume-selector-subtitle">Please upload a resume first to run job matching.</div>
-                                </div>
-                            </div>
-                            <div class="resume-selector-right">
-                                <a href="upload.html" class="btn btn-primary btn-sm">Upload Resume</a>
-                            </div>
-                        </div>
-                    `;
-                }
-                if (resumeSelect) resumeSelect.style.display = 'none';
-                if (btnRunMatch) btnRunMatch.disabled = true;
-                return;
-            }
-
-            resumeSelect.innerHTML = '<option value="" disabled selected>-- Select an Uploaded Resume --</option>';
-            data.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.id;
-                const uploadedDate = item.uploaded_at ? new Date(item.uploaded_at).toLocaleDateString() : '';
-                opt.textContent = `${item.filename}${uploadedDate ? ' (Uploaded: ' + uploadedDate + ')' : ''}`;
-                resumeSelect.appendChild(opt);
+            renderResumeCards(selectContainer, resumeSelect, data, (selectedId) => {
+                if (btnRunMatch) btnRunMatch.disabled = !selectedId;
             });
-
-            if (selectContainer) selectContainer.style.display = 'none';
-            if (resumeSelect) resumeSelect.style.display = 'block';
-
-            const checkSelection = () => {
-                if (btnRunMatch) btnRunMatch.disabled = !resumeSelect.value;
-            };
-            resumeSelect.addEventListener('change', checkSelection);
-            checkSelection();
 
         } catch (err) {
             console.error("Resume dropdown error:", err);
             if (selectContainer) {
-                selectContainer.innerHTML = `
-                    <div class="resume-selector-card">
-                        <div class="resume-selector-left">
-                            <div class="resume-selector-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                </svg>
-                            </div>
-                            <div class="resume-selector-text">
-                                <div class="resume-selector-title">Error loading resumes</div>
-                                <div class="resume-selector-subtitle">Please check connection and reload.</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                renderSelectionError(selectContainer, "Couldn't load options", populateResumes);
             }
             if (btnRunMatch) btnRunMatch.disabled = true;
         }

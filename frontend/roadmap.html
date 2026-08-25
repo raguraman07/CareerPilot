@@ -228,7 +228,7 @@
                 <!-- Roadmap Generator Form Card -->
                 <div class="card" style="margin-bottom: 2rem;">
                     <form id="roadmap-setup-form">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+                        <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 1.25rem;">
                             <div class="form-group">
                                 <label for="roadmap-target-role" class="form-label">Target Career Goal / Role Title</label>
                                 <input type="text" id="roadmap-target-role" class="form-input" placeholder="e.g. Senior Full-Stack Engineer, AI Specialist" required>
@@ -236,7 +236,8 @@
 
                             <div class="form-group">
                                 <label for="roadmap-resume-select" class="form-label">Select Base Resume (Optional)</label>
-                                <select id="roadmap-resume-select" class="form-select">
+                                <div id="roadmap-resume-select-container"></div>
+                                <select id="roadmap-resume-select" class="form-select" style="display: none;">
                                     <option value="" selected>-- Use latest active profile --</option>
                                 </select>
                             </div>

@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js';
+import { renderResumeCards, renderSelectionSkeleton, renderSelectionError } from './selection.js';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://127.0.0.1:5000' 
@@ -6,10 +7,33 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
 
 document.addEventListener('DOMContentLoaded', () => {
     const setupForm = document.getElementById('roadmap-setup-form');
-    const careerGoalInput = document.getElementById('career-goal-input');
+    const careerGoalInput = document.getElementById('roadmap-target-role') || document.getElementById('career-goal-input');
+    const resumeSelect = document.getElementById('roadmap-resume-select');
     const btnGenerateRoadmap = document.getElementById('btn-generate-roadmap');
-    const genStatusMsg = document.getElementById('gen-status-msg');
+    const genStatusMsg = document.getElementById('roadmap-status-msg') || document.getElementById('gen-status-msg');
     const alertBox = document.getElementById('roadmap-alert-box');
+
+    const loadResumes = async () => {
+        const selectContainer = document.getElementById('roadmap-resume-select-container');
+        if (selectContainer) renderSelectionSkeleton(selectContainer, 2, "Loading options...");
+
+        try {
+            const token = await getAuthToken();
+            const res = await fetch(`${API_BASE_URL}/api/resume/list`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error("Failed to load resumes.");
+            const data = await res.json();
+
+            renderResumeCards(selectContainer, resumeSelect, data);
+
+        } catch (err) {
+            console.error("Roadmap resume load error:", err);
+            if (selectContainer) {
+                renderSelectionError(selectContainer, "Couldn't load options", loadResumes);
+            }
+        }
+    };
 
     const resultsWrapper = document.getElementById('roadmap-results-wrapper');
     const resGoalTitle = document.getElementById('res-goal-title');
@@ -333,5 +357,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initial load
+    loadResumes();
     loadHistory();
 });

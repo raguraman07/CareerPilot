@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js';
+import { renderResumeCards, renderSelectionSkeleton, renderSelectionError } from './selection.js';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://127.0.0.1:5000' 
@@ -6,20 +7,20 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
 
 document.addEventListener('DOMContentLoaded', () => {
     // Form & Controls
-    const resumeSelect = document.getElementById('resume-select');
+    const resumeSelect = document.getElementById('interview-resume-select') || document.getElementById('resume-select');
     const jobmatchSelect = document.getElementById('jobmatch-select');
-    const jobTitleInput = document.getElementById('job-title-input');
+    const jobTitleInput = document.getElementById('interview-role-input') || document.getElementById('job-title-input');
     const jobDescInput = document.getElementById('job-desc-input');
     const interviewTypeSelect = document.getElementById('interview-type-select');
     const difficultySelect = document.getElementById('difficulty-select');
     const numQuestionsSelect = document.getElementById('num-questions-select');
-    const btnGenerateInterview = document.getElementById('btn-generate-interview');
-    const genStatusMsg = document.getElementById('gen-status-msg');
+    const btnGenerateInterview = document.getElementById('btn-generate-questions') || document.getElementById('btn-generate-interview');
+    const genStatusMsg = document.getElementById('interview-status-msg') || document.getElementById('gen-status-msg');
     const setupForm = document.getElementById('interview-setup-form');
     const alertBox = document.getElementById('interview-alert-box');
 
     // Active Session Workspace
-    const activeWorkspace = document.getElementById('active-interview-wrapper');
+    const activeWorkspace = document.getElementById('interview-workspace') || document.getElementById('active-interview-wrapper');
     const sessTitle = document.getElementById('sess-title');
     const sessSubtitle = document.getElementById('sess-subtitle');
     const sessDiffBadge = document.getElementById('sess-diff-badge');
@@ -89,6 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1. Populate Resumes and Job Matches
     const populateDropdowns = async () => {
+        const selectContainer = document.getElementById('interview-resume-select-container');
+        if (btnGenerateInterview) btnGenerateInterview.disabled = true;
+        if (selectContainer) renderSelectionSkeleton(selectContainer, 2, "Loading options...");
+
         try {
             const token = await getAuthToken();
 
@@ -98,53 +103,50 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (resResp.ok) {
                 const resumes = await resResp.json();
-                resumeSelect.innerHTML = '<option value="" disabled selected>-- Select an Uploaded Resume --</option>';
-                if (Array.isArray(resumes) && resumes.length > 0) {
-                    resumes.forEach(r => {
-                        const opt = document.createElement('option');
-                        opt.value = r.id;
-                        const dStr = r.uploaded_at ? new Date(r.uploaded_at).toLocaleDateString() : '';
-                        opt.textContent = `${r.filename}${dStr ? ' (Uploaded: ' + dStr + ')' : ''}`;
-                        resumeSelect.appendChild(opt);
-                    });
-                    btnGenerateInterview.disabled = false;
-                } else {
-                    resumeSelect.innerHTML = '<option value="" disabled>No uploaded resumes found. Upload a resume first.</option>';
-                }
+                renderResumeCards(selectContainer, resumeSelect, resumes, (selectedId) => {
+                    if (btnGenerateInterview) btnGenerateInterview.disabled = !selectedId;
+                });
+            } else {
+                if (selectContainer) renderSelectionError(selectContainer, "Couldn't load options", populateDropdowns);
             }
 
-            // Job Matches
-            const jmResp = await fetch(`${API_BASE_URL}/api/job-matching/history`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (jmResp.ok) {
-                const matches = await jmResp.json();
-                jobmatchSelect.innerHTML = '<option value="" selected>-- Select a previous job match analysis --</option>';
-                if (Array.isArray(matches)) {
-                    matches.forEach(m => {
-                        jobMatchCache[m.id] = m;
-                        const opt = document.createElement('option');
-                        opt.value = m.id;
-                        const scoreStr = m.match_score ? ` (${m.match_score}% Match)` : '';
-                        opt.textContent = `${m.job_title || 'Position'}${scoreStr}`;
-                        jobmatchSelect.appendChild(opt);
-                    });
+            // Job Matches if present
+            if (jobmatchSelect) {
+                const jmResp = await fetch(`${API_BASE_URL}/api/job-matching/history`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (jmResp.ok) {
+                    const matches = await jmResp.json();
+                    jobmatchSelect.innerHTML = '<option value="" selected>-- Select a previous job match analysis --</option>';
+                    if (Array.isArray(matches)) {
+                        matches.forEach(m => {
+                            jobMatchCache[m.id] = m;
+                            const opt = document.createElement('option');
+                            opt.value = m.id;
+                            const scoreStr = m.match_score ? ` (${m.match_score}% Match)` : '';
+                            opt.textContent = `${m.job_title || 'Position'}${scoreStr}`;
+                            jobmatchSelect.appendChild(opt);
+                        });
+                    }
                 }
             }
         } catch (err) {
             console.error("Error populating interview setup dropdowns:", err);
+            if (selectContainer) renderSelectionError(selectContainer, "Couldn't load options", populateDropdowns);
         }
     };
 
     // Auto-fill Job Description when previous job match is selected
-    jobmatchSelect.addEventListener('change', (e) => {
-        const selectedId = e.target.value;
-        if (selectedId && jobMatchCache[selectedId]) {
-            const m = jobMatchCache[selectedId];
-            jobTitleInput.value = m.job_title || '';
-            jobDescInput.value = m.job_description || '';
-        }
-    });
+    if (jobmatchSelect) {
+        jobmatchSelect.addEventListener('change', (e) => {
+            const selectedId = e.target.value;
+            if (selectedId && jobMatchCache[selectedId]) {
+                const m = jobMatchCache[selectedId];
+                if (jobTitleInput) jobTitleInput.value = m.job_title || '';
+                if (jobDescInput) jobDescInput.value = m.job_description || '';
+            }
+        });
+    }
 
     // 2. Render Active Question
     const renderActiveQuestion = () => {
