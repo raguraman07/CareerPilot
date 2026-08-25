@@ -1,5 +1,8 @@
 import logging
-from firebase_client import db
+try:
+    from backend.firebase_client import db
+except ImportError:
+    from firebase_client import db
 
 logger = logging.getLogger(__name__)
 
@@ -115,9 +118,14 @@ def fetch_user_career_data(uid):
 
 def _fetch_mock_career_data(uid):
     """Fallback fetcher for mock DB environment."""
-    from resume_routes import MOCK_RESUMES_DB
-    from jobmatch_routes import MOCK_JOBMATCH_DB
-    from interview_routes import MOCK_INTERVIEW_DB
+    try:
+        from backend.resume_routes import MOCK_RESUMES_DB
+        from backend.jobmatch_routes import MOCK_JOBMATCH_DB
+        from backend.interview_routes import MOCK_INTERVIEW_DB
+    except ImportError:
+        from resume_routes import MOCK_RESUMES_DB
+        from jobmatch_routes import MOCK_JOBMATCH_DB
+        from interview_routes import MOCK_INTERVIEW_DB
 
     context_data = {
         "resumes": [],

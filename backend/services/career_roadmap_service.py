@@ -2,7 +2,10 @@ import os
 import json
 import re
 import logging
-from services.career_context_service import fetch_user_career_data
+try:
+    from backend.services.career_context_service import fetch_user_career_data
+except ImportError:
+    from services.career_context_service import fetch_user_career_data
 
 logger = logging.getLogger(__name__)
 

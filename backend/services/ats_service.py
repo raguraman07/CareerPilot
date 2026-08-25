@@ -236,7 +236,7 @@ Resume Text to Analyze:
 {resume_text}
 """
 
-    from backend.services.resume_intelligence import call_gemini_with_retry, deduplicate_list
+    from services.resume_intelligence import call_gemini_with_retry, deduplicate_list
     try:
         logger.info("ATS Service: Invoking Gemini API with multi-model fallback...")
         raw_text = call_gemini_with_retry(genai_client, prompt, response_mime_type="application/json")

@@ -10,7 +10,7 @@ os.environ["GEMINI_API_KEY"] = "dummy-key-for-testing"
 
 import importlib.util
 backend_dir = os.path.dirname(os.path.abspath(__file__))
-app_path = os.path.join(backend_dir, "app.py")
+app_path = os.path.join(backend_dir, "server.py") if os.path.exists(os.path.join(backend_dir, "server.py")) else os.path.join(backend_dir, "app.py")
 spec = importlib.util.spec_from_file_location("app_module", app_path)
 app_module = importlib.util.module_from_spec(spec)
 sys.modules["app_module"] = app_module

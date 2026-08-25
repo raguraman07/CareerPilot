@@ -9,7 +9,7 @@ import os
 import json
 import re
 import logging
-from backend.services.resume_intelligence import call_gemini_with_retry, clean_json_text, deduplicate_list, deduplicate_dict_list
+from services.resume_intelligence import call_gemini_with_retry, clean_json_text, deduplicate_list, deduplicate_dict_list
 
 logger = logging.getLogger(__name__)
 
