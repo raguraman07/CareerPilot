@@ -25,10 +25,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const formatMarkdown = (text) => {
         if (!text) return '';
         let escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        
+        // Code blocks
+        escaped = escaped.replace(/```([\s\S]*?)```/g, '<pre class="chat-code-block"><code>$1</code></pre>');
+        // Inline code
+        escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        // Headers
+        escaped = escaped.replace(/^### (.*$)/gim, '<h5 class="chat-h3">$1</h5>');
+        escaped = escaped.replace(/^## (.*$)/gim, '<h4 class="chat-h2">$1</h4>');
+        escaped = escaped.replace(/^# (.*$)/gim, '<h3 class="chat-h1">$1</h3>');
+        
+        // Bold & Italic
         escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        // Unordered lists (- or *)
+        escaped = escaped.replace(/^\s*[-*]\s+(.*$)/gim, '<li class="chat-list-item">$1</li>');
+        escaped = escaped.replace(/(<li class="chat-list-item">.*<\/li>\s*)+/gim, '<ul class="chat-ul">$&</ul>');
+        
+        // Numbered lists (1., 2., etc.)
+        escaped = escaped.replace(/^\s*(\d+)\.\s+(.*$)/gim, '<li class="chat-num-item"><span class="chat-num">$1.</span> $2</li>');
+        escaped = escaped.replace(/(<li class="chat-num-item">.*<\/li>\s*)+/gim, '<ol class="chat-ol">$&</ol>');
+        
+        // Double newlines to paragraph spacers, single to linebreaks
+        escaped = escaped.replace(/\n\n+/g, '<div class="chat-spacer"></div>');
         escaped = escaped.replace(/\n/g, '<br>');
+        
         return escaped;
     };
 
