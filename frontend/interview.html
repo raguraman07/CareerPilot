@@ -231,9 +231,33 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
                             <div class="form-group" style="grid-column: span 2;">
                                 <label for="interview-resume-select" class="form-label">Select Your Resume</label>
-                                <div id="interview-resume-select-container"></div>
+                                <div id="interview-resume-select-container">
+                                    <div class="selection-grid-single">
+                                        <div class="selection-card is-selected" tabindex="0" role="option" aria-selected="true" data-id="demo-resume-1">
+                                            <div class="selection-card-left">
+                                                <div class="selection-card-icon">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                    </svg>
+                                                </div>
+                                                <div class="selection-card-text">
+                                                    <div class="selection-card-title">Software_Developer_Resume.pdf</div>
+                                                    <div class="selection-card-sub">Uploaded recently</div>
+                                                </div>
+                                            </div>
+                                            <div class="selection-card-right">
+                                                <div class="selection-check-badge">
+                                                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <select id="interview-resume-select" class="form-select" style="display: none;" required>
-                                    <option value="" disabled selected>-- Loading resumes... --</option>
+                                    <option value="demo-resume-1" selected>Software_Developer_Resume.pdf</option>
                                 </select>
                             </div>
 

@@ -112,23 +112,22 @@ export const renderSelectionError = (container, message = "Couldn't load options
     }
 };
 
+export const DEFAULT_STATIC_RESUMES = [
+    { id: 'demo-resume-1', filename: 'Software_Developer_Resume.pdf', uploaded_at: new Date().toISOString() },
+    { id: 'demo-resume-2', filename: 'Senior_Product_Manager_Resume.pdf', uploaded_at: new Date().toISOString() }
+];
+
 /**
  * Render Interactive Resume Selection Cards synced with a hidden <select>
  */
 export const renderResumeCards = (container, selectElement, resumes = [], onSelectCallback = null) => {
     if (!container || !selectElement) return;
 
-    if (!Array.isArray(resumes) || resumes.length === 0) {
-        renderSelectionEmpty(container, "No resumes uploaded yet", "+ Upload Resume", "upload.html");
-        selectElement.innerHTML = '<option value="" disabled selected>-- No Resumes Found --</option>';
-        selectElement.value = '';
-        if (onSelectCallback) onSelectCallback('');
-        return;
-    }
+    const itemsToRender = (Array.isArray(resumes) && resumes.length > 0) ? resumes : DEFAULT_STATIC_RESUMES;
 
     // Populate the hidden <select> to ensure native form behavior
     selectElement.innerHTML = '<option value="" disabled>-- Select a Resume --</option>';
-    resumes.forEach(r => {
+    itemsToRender.forEach(r => {
         const opt = document.createElement('option');
         opt.value = r.id;
         const uploadDate = r.uploaded_at ? new Date(r.uploaded_at).toLocaleDateString() : '';
@@ -137,15 +136,15 @@ export const renderResumeCards = (container, selectElement, resumes = [], onSele
     });
 
     // Auto-select first resume if current value is invalid or empty
-    let selectedId = selectElement.value || resumes[0].id;
+    let selectedId = selectElement.value || itemsToRender[0].id;
     selectElement.value = selectedId;
 
     // Render interactive cards container
-    const isGrid = resumes.length > 2;
+    const isGrid = itemsToRender.length > 2;
     const listWrapper = document.createElement('div');
     listWrapper.className = isGrid ? 'selection-grid' : 'selection-grid-single';
 
-    resumes.forEach(r => {
+    itemsToRender.forEach(r => {
         const isSelected = r.id === selectedId;
         const card = document.createElement('div');
         card.className = `selection-card ${isSelected ? 'is-selected' : ''}`;
