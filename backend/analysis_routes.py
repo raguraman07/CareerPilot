@@ -13,21 +13,11 @@ logger = logging.getLogger(__name__)
 
 analysis_bp = Blueprint('analysis', __name__)
 
-# Safely import Google GenAI SDKs
-genai_module = None
-genai_legacy_module = None
-
+# Official Google GenAI SDK (google-genai)
 try:
     from google import genai
-    genai_module = genai
 except ImportError:
-    pass
-
-try:
-    import google.generativeai as genai_legacy
-    genai_legacy_module = genai_legacy
-except ImportError:
-    pass
+    genai = None
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 is_gemini_configured = bool(
@@ -38,25 +28,14 @@ is_gemini_configured = bool(
 )
 
 genai_client = None
-genai_legacy_model = None
 
-if is_gemini_configured:
-    if genai_module is not None:
-        try:
-            genai_client = genai_module.Client(api_key=GEMINI_API_KEY)
-            logger.info("analysis_routes: Official google.genai client initialized.")
-        except Exception as e:
-            logger.warning(f"analysis_routes: official genai client init failed: {e}")
-
-    if genai_client is None and genai_legacy_module is not None:
-        try:
-            genai_legacy_module.configure(api_key=GEMINI_API_KEY)
-            genai_legacy_model = genai_legacy_module.GenerativeModel("gemini-1.5-flash")
-            logger.info("analysis_routes: Legacy google.generativeai model initialized.")
-        except Exception as e:
-            logger.error(f"analysis_routes: Legacy model init failed: {e}")
-            is_gemini_configured = False
-else:
+if is_gemini_configured and genai is not None:
+    try:
+        genai_client = genai.Client(api_key=GEMINI_API_KEY)
+        logger.info("analysis_routes: Official google.genai client initialized.")
+    except Exception as e:
+        logger.warning(f"analysis_routes: official genai client init failed: {e}")
+elif not is_gemini_configured:
     logger.warning("analysis_routes: GEMINI_API_KEY is missing or placeholder.")
 
 # In-memory fallback DB for local development/offline database operations
@@ -170,20 +149,12 @@ Resume Text to Analyze:
 
     try:
         logger.info(f"Analyzing resume {resume_id} using dynamic Gemini API...")
-        raw_text = ""
-        if genai_client:
-            response = genai_client.models.generate_content(
-                model='gemini-1.5-flash',
-                contents=prompt,
-                config={'response_mime_type': 'application/json'}
-            )
-            raw_text = response.text or ""
-        elif genai_legacy_model:
-            response = genai_legacy_model.generate_content(
-                prompt,
-                generation_config={"response_mime_type": "application/json"}
-            )
-            raw_text = response.text or ""
+        response = genai_client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt,
+            config={'response_mime_type': 'application/json'}
+        )
+        raw_text = response.text or ""
 
         cleaned = clean_json(raw_text)
         analysis_results = json.loads(cleaned)

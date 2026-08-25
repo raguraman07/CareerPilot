@@ -5,21 +5,11 @@ import re
 
 logger = logging.getLogger(__name__)
 
-# Safely import Google GenAI SDKs (official google.genai and legacy google.generativeai)
-genai_module = None
-genai_legacy_module = None
-
+# Official Google GenAI SDK (google-genai)
 try:
     from google import genai
-    genai_module = genai
 except ImportError:
-    pass
-
-try:
-    import google.generativeai as genai_legacy
-    genai_legacy_module = genai_legacy
-except ImportError:
-    pass
+    genai = None
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 is_gemini_configured = bool(
@@ -30,25 +20,14 @@ is_gemini_configured = bool(
 )
 
 genai_client = None
-genai_legacy_model = None
 
-if is_gemini_configured:
-    if genai_module is not None:
-        try:
-            genai_client = genai_module.Client(api_key=GEMINI_API_KEY)
-            logger.info("Gemini Service: Official google.genai SDK client initialized successfully.")
-        except Exception as client_err:
-            logger.warning(f"Gemini Service: google.genai client initialization failed: {client_err}")
-    
-    if genai_client is None and genai_legacy_module is not None:
-        try:
-            genai_legacy_module.configure(api_key=GEMINI_API_KEY)
-            genai_legacy_model = genai_legacy_module.GenerativeModel("gemini-1.5-flash")
-            logger.info("Gemini Service: Legacy google.generativeai SDK configured successfully.")
-        except Exception as legacy_err:
-            logger.error(f"Gemini Service: Failed to configure Google Gemini legacy SDK: {legacy_err}")
-            is_gemini_configured = False
-else:
+if is_gemini_configured and genai is not None:
+    try:
+        genai_client = genai.Client(api_key=GEMINI_API_KEY)
+        logger.info("Gemini Service: Official google.genai SDK client initialized successfully.")
+    except Exception as client_err:
+        logger.warning(f"Gemini Service: google.genai client initialization failed: {client_err}")
+elif not is_gemini_configured:
     logger.warning("Gemini Service: GEMINI_API_KEY is not configured or is placeholder in environment.")
 
 REQUIRED_KEYS = [
@@ -145,7 +124,7 @@ def analyze_resume_text(resume_text):
     NO fake mock responses are returned if Gemini fails.
     Returns validated, normalized dictionary or raises RuntimeError.
     """
-    if not is_gemini_configured or (not genai_client and not genai_legacy_model):
+    if not is_gemini_configured or not genai_client:
         logger.error("Gemini Service: GEMINI_API_KEY is missing or invalid. AI service unavailable.")
         raise RuntimeError("AI resume analysis is temporarily unavailable. Please try again.")
 
@@ -210,20 +189,12 @@ Resume Text to Analyze:
     for attempt in range(1, 3):
         logger.info(f"Gemini Service: Executing Gemini API request (Attempt {attempt}/2)...")
         try:
-            raw_text = ""
-            if genai_client:
-                response = genai_client.models.generate_content(
-                    model='gemini-1.5-flash',
-                    contents=prompt,
-                    config={'response_mime_type': 'application/json'}
-                )
-                raw_text = response.text or ""
-            elif genai_legacy_model:
-                response = genai_legacy_model.generate_content(
-                    prompt,
-                    generation_config={"response_mime_type": "application/json"}
-                )
-                raw_text = response.text or ""
+            response = genai_client.models.generate_content(
+                model='gemini-1.5-flash',
+                contents=prompt,
+                config={'response_mime_type': 'application/json'}
+            )
+            raw_text = response.text or ""
 
             cleaned_text = clean_json_response(raw_text)
             parsed_data = json.loads(cleaned_text)

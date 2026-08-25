@@ -5,21 +5,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Safely import Google GenAI SDKs (official google.genai and legacy google.generativeai)
-genai_module = None
-genai_legacy_module = None
-
+# Official Google GenAI SDK (google-genai)
 try:
     from google import genai
-    genai_module = genai
 except ImportError:
-    pass
-
-try:
-    import google.generativeai as genai_legacy
-    genai_legacy_module = genai_legacy
-except ImportError:
-    pass
+    genai = None
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 is_gemini_configured = bool(
@@ -30,25 +20,14 @@ is_gemini_configured = bool(
 )
 
 genai_client = None
-genai_legacy_model = None
 
-if is_gemini_configured:
-    if genai_module is not None:
-        try:
-            genai_client = genai_module.Client(api_key=GEMINI_API_KEY)
-            logger.info("Job Matching Service: Official google.genai client initialized.")
-        except Exception as client_err:
-            logger.warning(f"Job Matching Service: google.genai client initialization failed: {client_err}")
-    
-    if genai_client is None and genai_legacy_module is not None:
-        try:
-            genai_legacy_module.configure(api_key=GEMINI_API_KEY)
-            genai_legacy_model = genai_legacy_module.GenerativeModel("gemini-1.5-flash")
-            logger.info("Job Matching Service: Legacy google.generativeai SDK configured.")
-        except Exception as legacy_err:
-            logger.error(f"Job Matching Service: Failed to configure Google Gemini legacy SDK: {legacy_err}")
-            is_gemini_configured = False
-else:
+if is_gemini_configured and genai is not None:
+    try:
+        genai_client = genai.Client(api_key=GEMINI_API_KEY)
+        logger.info("Job Matching Service: Official google.genai client initialized.")
+    except Exception as client_err:
+        logger.warning(f"Job Matching Service: google.genai client initialization failed: {client_err}")
+elif not is_gemini_configured:
     logger.warning("Job Matching Service: GEMINI_API_KEY is not configured or is placeholder.")
 
 
@@ -161,19 +140,12 @@ Constraints:
 
     raw_text = ""
     try:
-        if genai_client:
-            response = genai_client.models.generate_content(
-                model='gemini-1.5-flash',
-                contents=prompt,
-                config={'response_mime_type': 'application/json'}
-            )
-            raw_text = response.text or ""
-        elif genai_legacy_model:
-            response = genai_legacy_model.generate_content(
-                prompt,
-                generation_config={"response_mime_type": "application/json"}
-            )
-            raw_text = response.text or ""
+        response = genai_client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt,
+            config={'response_mime_type': 'application/json'}
+        )
+        raw_text = response.text or ""
     except Exception as api_err:
         logger.error(f"Gemini API call failed during job matching analysis: {api_err}")
         raise RuntimeError("AI analysis is temporarily unavailable. Please try again.")
