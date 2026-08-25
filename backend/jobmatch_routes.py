@@ -58,7 +58,39 @@ def _run_analyze_handler():
     resume_filename = resume_doc.get("filename") or "Resume.pdf"
 
     if not resume_text.strip():
-        return jsonify({"error": "Selected resume does not contain any readable text."}), 400
+        return jsonify({"error": "Selected resume does not contain any readable text. Please upload a readable PDF or DOCX file."}), 422
+
+    # Check Firestore cache for identical request
+    def db_select_cache():
+        docs = db.collection("job_matches").where("user_id", "==", uid).where("resume_id", "==", resume_id).stream()
+        for doc in docs:
+            d = doc.to_dict()
+            if d.get("job_title") == (job_title or "Target Role") and d.get("job_description") == job_description:
+                return d
+        return None
+
+    def mock_select_cache():
+        for r in MOCK_JOBMATCH_DB.values():
+            if r.get("user_id") == uid and r.get("resume_id") == resume_id and r.get("job_description") == job_description:
+                return r
+        return None
+
+    try:
+        cached_record = handle_db_op(db_select_cache, mock_select_cache)
+        if cached_record:
+            logger.info(f"Returning cached job match analysis for resume_id {resume_id}")
+            return jsonify({
+                "success": True,
+                "match_id": cached_record.get("id"),
+                "analysis": cached_record,
+                "job_match": cached_record.get("analysis_result", cached_record),
+                "match_percentage": cached_record.get("match_score"),
+                "matching_skills": cached_record.get("matching_skills"),
+                "missing_skills": cached_record.get("missing_skills"),
+                "recommendations": cached_record.get("recommendations")
+            }), 200
+    except Exception as cache_err:
+        logger.warning(f"Job match cache lookup failed: {cache_err}")
 
     # Execute dynamic AI Job Matching analysis using Gemini
     try:
@@ -67,12 +99,15 @@ def _run_analyze_handler():
             job_description=job_description,
             job_title=job_title
         )
-    except (ValueError, RuntimeError) as ai_err:
-        logger.error(f"AI Job Match analysis failed: {ai_err}")
-        return jsonify({"error": "AI job matching is temporarily unavailable. Please try again."}), 502
+    except ValueError as val_err:
+        logger.error(f"AI Job Match validation error: {val_err}")
+        return jsonify({"error": str(val_err)}), 422
+    except RuntimeError as run_err:
+        logger.error(f"AI Job Match runtime error: {run_err}")
+        return jsonify({"error": f"AI service temporarily unavailable: {run_err}"}), 503
     except Exception as exc:
         logger.error(f"Unexpected error during job match: {exc}")
-        return jsonify({"error": "AI job matching is temporarily unavailable. Please try again."}), 502
+        return jsonify({"error": f"AI job matching failed: {exc}"}), 500
 
     match_id = str(uuid.uuid4())
     now_iso = datetime.datetime.utcnow().isoformat() + "Z"
@@ -82,20 +117,28 @@ def _run_analyze_handler():
         "user_id": uid,
         "resume_id": resume_id,
         "resume_filename": resume_filename,
-        "job_title": analysis_result.get("job_title") or job_title or "Position",
+        "job_title": analysis_result.get("job_title") or job_title or "Target Role",
         "job_description": job_description,
         "match_score": analysis_result.get("match_score", 0),
-        "match_level": analysis_result.get("match_level", "Moderate Match"),
-        "matching_skills": analysis_result.get("matching_skills", []),
+        "match_level": analysis_result.get("qualification_level") or analysis_result.get("match_level", "Good Match"),
+        "qualification_level": analysis_result.get("qualification_level", "Good Match"),
+        "matching_skills": analysis_result.get("matched_skills", []),
+        "matched_skills": analysis_result.get("matched_skills", []),
+        "partial_skills": analysis_result.get("partial_skills", []),
         "missing_skills": analysis_result.get("missing_skills", []),
-        "experience_match": analysis_result.get("experience_match", {}),
-        "education_match": analysis_result.get("education_match", {}),
-        "qualification_match": analysis_result.get("qualification_match", {}),
-        "candidate_strengths": analysis_result.get("candidate_strengths", []),
-        "candidate_weaknesses": analysis_result.get("candidate_weaknesses", []),
-        "skill_gaps": analysis_result.get("skill_gaps", []),
+        "recommended_skills": analysis_result.get("recommended_skills", []),
+        "skill_gap_analysis": analysis_result.get("skill_gap_analysis", []),
+        "skill_gaps": analysis_result.get("skill_gap_analysis", []),
+        "certifications": analysis_result.get("certifications", []),
+        "programming_languages": analysis_result.get("programming_languages", []),
+        "technologies_to_learn": analysis_result.get("technologies_to_learn", []),
+        "experience_gaps": analysis_result.get("experience_gaps", []),
+        "project_recommendations": analysis_result.get("project_recommendations", []),
+        "improvement_plan": analysis_result.get("improvement_plan", []),
         "recommendations": analysis_result.get("recommendations", []),
         "summary": analysis_result.get("summary", ""),
+        "final_recommendation": analysis_result.get("final_recommendation", ""),
+        "analysis_result": analysis_result,
         "created_at": now_iso
     }
 
@@ -113,6 +156,7 @@ def _run_analyze_handler():
             "success": True,
             "match_id": saved_record.get("id"),
             "analysis": saved_record,
+            "job_match": analysis_result,
             # Backward compatibility fields
             "match_percentage": saved_record.get("match_score"),
             "matching_skills": saved_record.get("matching_skills"),

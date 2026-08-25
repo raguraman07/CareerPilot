@@ -100,10 +100,10 @@ document.addEventListener('DOMContentLoaded', () => {
         hideAlert();
         if (resultsWrapper) resultsWrapper.style.display = 'grid';
 
-        const data = payload.job_match || payload;
+        const data = payload.job_match || payload.analysis || payload;
 
         const score = typeof data.match_score === 'number' ? data.match_score : 75;
-        const level = data.match_level || (score >= 90 ? "Excellent Fit" : (score >= 75 ? "Strong Fit" : "Moderate Fit"));
+        const level = data.qualification_level || data.match_level || (score >= 90 ? "Excellent Fit" : (score >= 75 ? "Good Match" : "Moderate Fit"));
 
         const scoreEl = document.getElementById('res-match-score') || document.getElementById('res-score-val');
         if (scoreEl) scoreEl.textContent = `${score}%`;
@@ -116,28 +116,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Render matching & missing skills badges
         const matched = data.matched_skills || data.matching_skills || [];
-        const missing = (data.missing_skills || data.skill_gaps || []).map(s => typeof s === 'string' ? s : s.skill);
+        const missing = (data.missing_skills || []).map(s => typeof s === 'string' ? s : s.skill);
         renderBadges('res-matching-skills', matched, 'technical');
         renderBadges('res-missing-skills', missing, 'missing');
+
+        // Render AI-Inferred Recommended Skills for short job descriptions
+        renderBadges('res-recommended-skills', data.recommended_skills || [], 'soft');
+
+        // Render Programming Languages Status
+        const langContainer = document.getElementById('res-languages-list');
+        if (langContainer) {
+            langContainer.innerHTML = '';
+            const langs = data.programming_languages || [];
+            if (langs.length > 0) {
+                langs.forEach(l => {
+                    const name = typeof l === 'string' ? l : l.name;
+                    const status = typeof l === 'object' ? (l.status || 'Moderate') : 'Moderate';
+                    const badgeType = status.toLowerCase().includes('strong') ? 'technical' : (status.toLowerCase().includes('missing') ? 'missing' : 'soft');
+
+                    const span = document.createElement('span');
+                    span.className = `badge badge--${badgeType}`;
+                    span.textContent = `${name} (${status})`;
+                    langContainer.appendChild(span);
+                });
+            } else {
+                langContainer.innerHTML = '<span style="font-size:0.85rem; color:var(--text-muted);">None specified</span>';
+            }
+        }
 
         // Render Skill Gap Analysis Table
         const tbody = document.getElementById('res-skill-gap-tbody');
         if (tbody) {
             tbody.innerHTML = '';
-            const skillGaps = data.missing_skills || data.skill_gaps || [];
+            const skillGaps = data.skill_gap_analysis || data.missing_skills || data.skill_gaps || [];
             if (skillGaps.length > 0) {
                 skillGaps.forEach(g => {
                     const skillName = typeof g === 'string' ? g : (g.skill || 'Skill');
-                    const priority = typeof g === 'object' ? (g.priority || g.importance || 'HIGH') : 'HIGH';
-                    const reason = typeof g === 'object' ? (g.reason || '') : '';
-                    const learnList = typeof g === 'object' && Array.isArray(g.what_to_learn) ? g.what_to_learn.join(', ') : '';
-                    const task = typeof g === 'object' ? (g.practical_task || g.recommendation || '') : '';
+                    const priority = typeof g === 'object' ? (g.priority || g.importance || 'High') : 'High';
+                    const whyNeeded = typeof g === 'object' ? (g.why_needed || g.reason || '') : '';
+                    const learnList = typeof g === 'object' && Array.isArray(g.what_to_learn) ? g.what_to_learn.join(', ') : (g.what_to_learn || '');
+                    const task = typeof g === 'object' ? (g.practice_project || g.practical_task || g.recommendation || '') : '';
 
                     const prioClass = priority.toUpperCase() === 'HIGH' ? 'danger' : (priority.toUpperCase() === 'MEDIUM' ? 'warning' : 'info');
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td><strong>${skillName}</strong><br><span style="font-size:0.82rem; color:var(--text-muted);">${reason}</span></td>
+                        <td><strong>${skillName}</strong><br><span style="font-size:0.82rem; color:var(--text-muted);">${whyNeeded}</span></td>
                         <td><span class="badge badge-${prioClass}">${priority.toUpperCase()}</span></td>
                         <td>
                             ${learnList ? `<div><strong>Learn:</strong> ${learnList}</div>` : ''}
@@ -151,16 +175,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Render Top 5 Priority Improvements
+        // Render Top 5 Priority Improvements / Improvement Plan
         const topImpList = document.getElementById('res-top-improvements');
         if (topImpList) {
             topImpList.innerHTML = '';
-            const top5 = data.top_5_improvements || [];
+            const top5 = data.improvement_plan || data.top_5_improvements || [];
             if (top5.length > 0) {
                 top5.forEach((imp, idx) => {
                     const li = document.createElement('li');
                     li.className = 'rec-item';
-                    const itemText = typeof imp === 'string' ? imp : `${imp.item || ''} (${imp.priority || 'HIGH'} Priority) — ${imp.reason || ''}`;
+                    const itemText = typeof imp === 'string' ? imp : `${imp.action || imp.item || ''} (${imp.priority || 'High'}) — ${imp.reason || ''}`;
                     li.innerHTML = `<div class="rec-counter-num">${idx + 1}</div><div class="rec-text">${itemText}</div>`;
                     topImpList.appendChild(li);
                 });
@@ -191,17 +215,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const certsList = document.getElementById('res-certifications-list');
         if (certsList) {
             certsList.innerHTML = '';
-            const certs = data.certification_requirements || [];
+            const certs = data.certifications || data.certification_requirements || [];
             if (certs.length > 0) {
                 certs.forEach((c, idx) => {
                     const li = document.createElement('li');
                     li.className = 'rec-item';
-                    const certText = typeof c === 'string' ? c : `<strong>${c.name}</strong> (${c.provider || 'Provider'}) — ${c.required_by_job ? 'REQUIRED BY JOB' : (c.priority || 'RECOMMENDED')} — ${c.reason || ''}`;
+                    const certText = typeof c === 'string' ? c : `<strong>${c.name}</strong> (${c.provider || 'Provider'}) — Level: ${c.level || 'Recommended'} — ${c.reason || ''}`;
                     li.innerHTML = `<div class="rec-counter-num">${idx + 1}</div><div class="rec-text">${certText}</div>`;
                     certsList.appendChild(li);
                 });
             } else {
-                certsList.innerHTML = '<li style="color:var(--text-muted); list-style:none;">Certification not required; practical project experience will provide more value.</li>';
+                certsList.innerHTML = '<li style="color:var(--text-muted); list-style:none;">Certification not necessary; practical project experience would provide more value.</li>';
             }
         }
 
@@ -209,12 +233,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const projectsList = document.getElementById('res-projects-list');
         if (projectsList) {
             projectsList.innerHTML = '';
-            const projects = data.projects_to_build || [];
+            const projects = data.project_recommendations || data.projects_to_build || [];
             if (projects.length > 0) {
                 projects.forEach((proj, idx) => {
                     const li = document.createElement('li');
                     li.className = 'rec-item';
-                    const projText = typeof proj === 'string' ? proj : `<strong>${proj.title}</strong> — ${proj.description || ''} (Target: ${proj.target_skill || 'Skill'})`;
+                    const projText = typeof proj === 'string' ? proj : `<strong>${proj.title}</strong> — ${proj.what_to_build || proj.description || ''} (Target Skills: ${proj.skills_gained || proj.target_skill || 'Core Skills'})`;
                     li.innerHTML = `<div class="rec-counter-num">${idx + 1}</div><div class="rec-text">${projText}</div>`;
                     projectsList.appendChild(li);
                 });
@@ -223,7 +247,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Render Recommendations
+        // Render Final Recommendation Paragraph
+        const finalAdvEl = document.getElementById('res-final-advice');
+        if (finalAdvEl) {
+            finalAdvEl.textContent = data.final_recommendation || data.summary || 'Focus on building practical projects for your missing skill gaps to improve recruiter interest.';
+        }
+
+        // Render Recommendations List
         const recsList = document.getElementById('res-match-recommendations');
         if (recsList) {
             recsList.innerHTML = '';
@@ -251,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         if (!jobDesc) {
-            showAlert("Please paste the target job description or required qualifications.", 'danger');
+            showAlert("Please enter target job description or role requirements.", 'danger');
             return;
         }
 

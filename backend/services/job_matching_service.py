@@ -1,15 +1,15 @@
 """
 CareerPilot AI — Job Matching & Skill Gap Analysis Service
 Performs personalized, evidence-grounded comparison between candidate resume text and target job descriptions.
-Produces structured career gap report, technology gaps, certification recommendations, project ideas,
-prioritized top 5 improvements, and an ordered learning plan.
+Intelligently handles short job descriptions by inferring industry expectations while strictly distinguishing
+user-provided requirements from AI-inferred recommendations.
 """
 
 import os
 import json
 import re
 import logging
-from backend.services.resume_intelligence import deduplicate_list, deduplicate_dict_list
+from backend.services.resume_intelligence import call_gemini_with_retry, clean_json_text, deduplicate_list, deduplicate_dict_list
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ elif not is_gemini_configured:
 
 
 def get_match_level(score):
-    """Returns the score interpretation level string based on match_score."""
+    """Returns the qualification match level string based on match_score."""
     if score >= 90:
         return "Excellent Match"
     elif score >= 75:
@@ -57,169 +57,162 @@ def analyze_job_match(resume_text, job_description, job_title=""):
     Performs dynamic AI job matching & skill gap analysis comparing candidate resume text
     against target job description using Google Gemini API.
     
-    Returns structured JSON matching the detailed Career Gap Report schema.
+    Returns structured JSON matching the comprehensive Career Pilot Job Match schema.
     """
     if not is_gemini_configured or not genai_client:
         raise ValueError("Gemini API key is not configured.")
 
     if not resume_text or not resume_text.strip():
-        raise ValueError("Resume text is empty.")
+        raise ValueError("Resume text is empty or unreadable.")
 
     if not job_description or not job_description.strip():
-        raise ValueError("Job description is required for job matching & skill gap analysis.")
+        raise ValueError("Job description or target role details are required.")
 
-    prompt = f"""You are an expert technical recruiter, career advisor, resume evaluator, and job-matching specialist.
+    clean_title = job_title.strip() if job_title else "Target Role"
+    clean_desc = job_description.strip()
+    is_short_desc = len(clean_desc.split()) < 25
 
-Analyze the candidate's resume against the supplied target job description.
+    prompt = f"""You are an expert career advisor, technical recruiter, resume evaluator, and skills-gap analyst.
 
-CRITICAL GROUNDING & HALLUCINATION RULES:
-1. Compare ONLY the supplied resume text against the supplied job description.
-2. Identify skills, technologies, experience, and tools present in the resume vs required by the job.
-3. Do NOT invent candidate skills, projects, experience, or certifications not in the resume.
-4. Do NOT mark a certification as "required_by_job: true" unless explicitly required by the job text.
-5. Explain skill gaps in clear, simple language (What is missing, Why it matters, What to learn, How to practice).
-6. Prioritize gaps using HIGH (explicit job requirement), MEDIUM (strongly useful), LOW (nice-to-have).
+Analyze ONLY the information provided in the candidate's resume and target job information.
 
-Target Job Title: {job_title if job_title else "Target Role"}
+CRITICAL INSTRUCTIONS & GROUNDING RULES:
+1. Do NOT invent candidate resume experience, projects, or credentials.
+2. Separate explicit employer requirements from AI-inferred industry recommendations for the role '{clean_title}'.
+3. For short job descriptions (e.g. user interest statements), infer standard industry role expectations for '{clean_title}', but mark them as "recommended_skills" rather than "required by employer".
+4. Give practical, evidence-based recommendations suitable for a student or fresh graduate.
+5. Recommend certifications ONLY when relevant to the target role level. Clearly label whether required vs recommended.
+6. Recommend programming languages, cloud tools, databases, and frameworks ONLY if relevant to the selected role.
+7. Return clean structured JSON only.
 
-Target Job Description:
+Target Job Title / Role: {clean_title}
+Input Job Description / Goal:
 \"\"\"
-{job_description.strip()}
+{clean_desc}
 \"\"\"
 
 Candidate Resume Text:
 \"\"\"
-{resume_text.strip()}
+{resume_text.strip()[:6000]}
 \"\"\"
 
-Return ONLY a single valid JSON object matching this exact schema:
+Return ONLY a single valid raw JSON object matching this exact schema:
 
 {{
-  "job_title": "{job_title if job_title else "Target Role"}",
-  "match_score": 78,
-  "match_level": "Strong Match",
+  "job_title": "{clean_title}",
+  "match_score": 72,
+  "qualification_level": "Good Match",
+  "summary": "2-3 sentence executive summary of candidate readiness for this role.",
+  "strengths": ["Candidate strength 1 based on resume", "Candidate strength 2"],
   "matched_skills": ["Skill 1", "Skill 2"],
-  "partial_matches": [
+  "partial_skills": [
     {{
       "skill": "Skill Name",
-      "user_has": "What candidate currently has in resume",
-      "gap_explanation": "Why this is a partial fit vs job requirement"
+      "user_has": "What user currently has in resume",
+      "gap_explanation": "Why this is a partial match for target role"
     }}
   ],
-  "missing_skills": [
+  "missing_skills": ["Missing Skill 1", "Missing Skill 2"],
+  "recommended_skills": ["Inferred Industry Recommended Skill 1"],
+  "skill_gap_analysis": [
     {{
-      "skill": "Missing Skill Name",
-      "priority": "HIGH",
-      "reason": "Detailed explanation why this skill is missing and why it matters for the target job.",
+      "skill": "Skill Name",
+      "category": "Cloud / DevOps / Database / Backend",
+      "status": "Missing",
+      "priority": "High",
+      "why_needed": "Clear explanation of why this skill is needed for this role",
       "what_to_learn": ["Concept 1", "Concept 2"],
-      "practical_task": "Actionable task or project to practice this skill",
-      "certification": null
+      "practice_project": "Hands-on task to build and demonstrate this skill",
+      "certification": "Relevant certification name if applicable, or 'Not necessary; practical project preferred'"
     }}
   ],
-  "experience_gaps": ["Experience gap detail 1"],
-  "education_gaps": ["Education gap detail 1 or 'None'"],
-  "certification_requirements": [
+  "certifications": [
     {{
-      "name": "Certification Name",
-      "provider": "Provider Name (e.g. AWS, Microsoft)",
-      "relevance": "Why relevant",
-      "priority": "HIGH",
-      "reason": "Clear justification",
-      "required_by_job": false
+      "name": "Certification Title",
+      "provider": "AWS / Microsoft / GCP / CompTIA",
+      "level": "Beginner / Intermediate",
+      "priority": "Recommended",
+      "reason": "Why useful for candidate level and target role"
     }}
   ],
-  "technology_gaps": ["Tech 1", "Tech 2"],
-  "projects_to_build": [
+  "programming_languages": [
+    {{
+      "name": "Language Name",
+      "status": "Strong / Moderate / Missing"
+    }}
+  ],
+  "technologies_to_learn": ["Tech 1", "Tech 2"],
+  "experience_gaps": ["Experience gap 1"],
+  "project_recommendations": [
     {{
       "title": "Project Title",
-      "description": "How building this project solves a skill gap",
-      "target_skill": "Target Skill"
+      "technologies": ["Tech 1", "Tech 2"],
+      "difficulty": "Intermediate",
+      "what_to_build": "Specific project build instructions",
+      "skills_gained": "Target skills demonstrated",
+      "why_improves_employability": "Why this project impresses recruiters"
     }}
   ],
-  "top_5_improvements": [
+  "improvement_plan": [
     {{
-      "rank": 1,
-      "item": "Improvement Item",
-      "priority": "HIGH",
-      "reason": "Why this is top priority"
+      "priority": 1,
+      "action": "Actionable step to take",
+      "reason": "Justification for priority"
     }}
   ],
-  "recommended_learning_order": [
-    {{
-      "step": 1,
-      "title": "Prerequisite / Core",
-      "focus": "Topic to master first"
-    }}
-  ],
-  "recommendations": ["Actionable tip 1", "Actionable tip 2"],
-  "summary": "2-3 sentence overview of candidate match and career gap findings."
+  "final_recommendation": "Encouraging, realistic final advice sentence for candidate."
 }}
 
 Constraints:
 1. "match_score" MUST be an integer between 0 and 100.
-2. "match_level" MUST correspond to score thresholds.
-3. Return ONLY raw valid JSON with no markdown block wrappers.
+2. "qualification_level" MUST be "Excellent Match", "Good Match", "Moderate Match", or "Needs Improvement".
+3. Return ONLY raw valid JSON with no markdown syntax.
 """
 
-    from backend.services.resume_intelligence import call_gemini_with_retry, clean_json_text
-
-    raw_text = ""
     try:
         raw_text = call_gemini_with_retry(genai_client, prompt, response_mime_type="application/json")
-    except Exception as api_err:
-        logger.error(f"Gemini API call failed during job matching analysis: {api_err}")
-        raise RuntimeError("AI analysis is temporarily unavailable. Please try again.")
-
-    if not raw_text or not raw_text.strip():
-        raise RuntimeError("Empty response from Gemini AI.")
-
-    cleaned = raw_text.strip()
-    if cleaned.startswith("```"):
-        cleaned = re.sub(r"^```(?:json)?\n?", "", cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\n?```$", "", cleaned)
-    cleaned = cleaned.strip()
-
-    try:
+        cleaned = clean_json_text(raw_text)
         parsed = json.loads(cleaned)
-    except json.JSONDecodeError as json_err:
-        logger.error(f"Failed to parse Gemini JSON output for job matching: {json_err}")
-        raise ValueError("Invalid JSON response from Gemini AI.")
+    except Exception as err:
+        logger.error(f"Gemini API call failed during job matching analysis: {err}")
+        raise RuntimeError(f"AI job matching analysis failed: {err}")
 
     try:
         raw_score = int(parsed.get("match_score", 0))
         match_score = max(0, min(100, raw_score))
     except (ValueError, TypeError):
-        match_score = 50
+        match_score = 70
 
     parsed["match_score"] = match_score
-    parsed["match_level"] = get_match_level(match_score)
-    parsed["job_title"] = str(parsed.get("job_title") or job_title or "Target Role").strip()
+    parsed["qualification_level"] = str(parsed.get("qualification_level") or get_match_level(match_score)).strip()
+    parsed["match_level"] = parsed["qualification_level"]  # Backward compatibility
+    parsed["job_title"] = str(parsed.get("job_title") or clean_title).strip()
 
-    # Deduplicate and format arrays (support both string elements and dict elements)
-    raw_matched = parsed.get("matched_skills") or parsed.get("matching_skills") or []
-    if raw_matched and isinstance(raw_matched[0], dict):
-        parsed["matched_skills"] = deduplicate_dict_list(raw_matched, key="skill")
-    else:
-        parsed["matched_skills"] = deduplicate_list(raw_matched)
-    parsed["matching_skills"] = parsed["matched_skills"]  # Alias for backward compatibility
+    # Deduplicate arrays and normalize fields
+    parsed["strengths"] = deduplicate_list(parsed.get("strengths") or [])
+    parsed["matched_skills"] = deduplicate_list(parsed.get("matched_skills") or parsed.get("matching_skills") or [])
+    parsed["matching_skills"] = parsed["matched_skills"]
     
-    parsed["partial_matches"] = deduplicate_dict_list(parsed.get("partial_matches") or [], key="skill")
+    parsed["partial_skills"] = deduplicate_dict_list(parsed.get("partial_skills") or [], key="skill")
     
-    raw_missing = parsed.get("missing_skills") or parsed.get("skill_gaps") or []
+    raw_missing = parsed.get("missing_skills") or []
     if raw_missing and isinstance(raw_missing[0], dict):
         parsed["missing_skills"] = deduplicate_dict_list(raw_missing, key="skill")
     else:
         parsed["missing_skills"] = deduplicate_list(raw_missing)
-    parsed["skill_gaps"] = parsed["missing_skills"]  # Alias for backward compatibility
 
+    parsed["recommended_skills"] = deduplicate_list(parsed.get("recommended_skills") or [])
+    parsed["skill_gap_analysis"] = deduplicate_dict_list(parsed.get("skill_gap_analysis") or parsed.get("skill_gaps") or [], key="skill")
+    parsed["skill_gaps"] = parsed["skill_gap_analysis"]
+
+    parsed["certifications"] = deduplicate_dict_list(parsed.get("certifications") or parsed.get("certification_requirements") or [], key="name")
+    parsed["programming_languages"] = deduplicate_dict_list(parsed.get("programming_languages") or [], key="name")
+    parsed["technologies_to_learn"] = deduplicate_list(parsed.get("technologies_to_learn") or parsed.get("technology_gaps") or [])
     parsed["experience_gaps"] = deduplicate_list(parsed.get("experience_gaps") or [])
-    parsed["education_gaps"] = deduplicate_list(parsed.get("education_gaps") or [])
-    parsed["certification_requirements"] = deduplicate_dict_list(parsed.get("certification_requirements") or [], key="name")
-    parsed["technology_gaps"] = deduplicate_list(parsed.get("technology_gaps") or [])
-    parsed["projects_to_build"] = deduplicate_dict_list(parsed.get("projects_to_build") or [], key="title")
-    parsed["top_5_improvements"] = deduplicate_dict_list(parsed.get("top_5_improvements") or [], key="item")
-    parsed["recommended_learning_order"] = deduplicate_dict_list(parsed.get("recommended_learning_order") or [], key="title")
-    parsed["recommendations"] = deduplicate_list(parsed.get("recommendations") or [])
+    parsed["project_recommendations"] = deduplicate_dict_list(parsed.get("project_recommendations") or parsed.get("projects_to_build") or [], key="title")
+    parsed["improvement_plan"] = deduplicate_dict_list(parsed.get("improvement_plan") or parsed.get("top_5_improvements") or [], key="action")
+    parsed["recommendations"] = deduplicate_list(parsed.get("recommendations") or [p.get("action") for p in parsed["improvement_plan"] if isinstance(p, dict)])
     parsed["summary"] = str(parsed.get("summary") or "").strip()
+    parsed["final_recommendation"] = str(parsed.get("final_recommendation") or "").strip()
 
     return parsed
