@@ -14,32 +14,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const alertBox = document.getElementById('roadmap-alert-box');
 
     const getAuthToken = async () => {
-        try {
-            const { data } = await supabase.auth.getSession();
-            if (data && data.session && data.session.access_token) {
-                return data.session.access_token;
-            }
-        } catch (e) {
-            // fallback
-        }
-        return "mock-guest-token-123";
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return null;
+        return session.access_token;
     };
 
     const loadResumes = async () => {
         const selectContainer = document.getElementById('roadmap-resume-select-container');
+        if (selectContainer) renderSelectionSkeleton(selectContainer, 1, "Loading options...");
 
         try {
             const token = await getAuthToken();
+            if (!token) {
+                renderResumeCards(selectContainer, resumeSelect, []);
+                return;
+            }
+
             const res = await fetch(`${API_BASE_URL}/api/resume/list`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const data = res.ok ? await res.json() : [];
+            if (!res.ok) throw new Error("Failed to load resumes.");
+            const data = await res.json();
 
             renderResumeCards(selectContainer, resumeSelect, data);
 
         } catch (err) {
-            console.error("Roadmap resume load notice:", err);
-            renderResumeCards(selectContainer, resumeSelect, []);
+            console.error("Roadmap resume load error:", err);
+            if (selectContainer) {
+                renderSelectionError(selectContainer, "Couldn't load your resumes", loadResumes);
+            }
         }
     };
 

@@ -64,15 +64,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let jobMatchCache = {};
 
     const getAuthToken = async () => {
-        try {
-            const { data } = await supabase.auth.getSession();
-            if (data && data.session && data.session.access_token) {
-                return data.session.access_token;
-            }
-        } catch (e) {
-            // fallback
-        }
-        return "mock-guest-token-123";
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return null;
+        return session.access_token;
     };
 
     const showAlert = (message, isError = true) => {
@@ -97,16 +91,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Populate Resumes and Job Matches
     const populateDropdowns = async () => {
         const selectContainer = document.getElementById('interview-resume-select-container');
-        if (btnGenerateInterview) btnGenerateInterview.disabled = false;
+        if (btnGenerateInterview) btnGenerateInterview.disabled = true;
+        if (selectContainer) renderSelectionSkeleton(selectContainer, 1, "Loading options...");
 
         try {
             const token = await getAuthToken();
+            if (!token) {
+                renderResumeCards(selectContainer, resumeSelect, [], (selectedId) => {
+                    if (btnGenerateInterview) btnGenerateInterview.disabled = !selectedId;
+                });
+                return;
+            }
 
             // Resumes
             const resResp = await fetch(`${API_BASE_URL}/api/resume/list`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const resumes = resResp.ok ? await resResp.json() : [];
+            if (!resResp.ok) throw new Error("Failed to load resumes.");
+            const resumes = await resResp.json();
+
             renderResumeCards(selectContainer, resumeSelect, resumes, (selectedId) => {
                 if (btnGenerateInterview) btnGenerateInterview.disabled = !selectedId;
             });
@@ -133,9 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) {
             console.error("Error populating interview setup dropdowns:", err);
-            renderResumeCards(selectContainer, resumeSelect, [], (selectedId) => {
-                if (btnGenerateInterview) btnGenerateInterview.disabled = !selectedId;
-            });
+            if (selectContainer) {
+                renderSelectionError(selectContainer, "Couldn't load your resumes", populateDropdowns);
+            }
+            if (btnGenerateInterview) btnGenerateInterview.disabled = true;
         }
     };
 

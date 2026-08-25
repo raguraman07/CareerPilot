@@ -78,17 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     };
 
-    // Helper: Fetches auth header token asynchronously with guest fallback resilience
     const getAuthToken = async () => {
-        try {
-            const { data } = await supabase.auth.getSession();
-            if (data && data.session && data.session.access_token) {
-                return data.session.access_token;
-            }
-        } catch (err) {
-            console.warn("[Upload] Could not retrieve active session token:", err);
-        }
-        return "mock-guest-token-123";
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return null;
+        return session.access_token;
     };
 
     // -------------------------------------------------------------

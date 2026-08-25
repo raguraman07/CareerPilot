@@ -49,33 +49,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
     };
 
-    // Helper: Fetch authorization bearer token with guest fallback resilience
+    // Helper: Fetch authorization bearer token for authenticated user
     const getAuthToken = async () => {
-        try {
-            const { data } = await supabase.auth.getSession();
-            if (data && data.session && data.session.access_token) {
-                return data.session.access_token;
-            }
-        } catch (e) {
-            // fallback
-        }
-        return "mock-guest-token-123";
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return null;
+        return session.access_token;
     };
 
     // Load available resumes to populate interactive selection cards
     const loadResumes = async () => {
         const selectContainer = document.getElementById('resume-select-container');
-        if (btnRunAnalysis) btnRunAnalysis.disabled = false;
+        if (btnRunAnalysis) btnRunAnalysis.disabled = true;
+        if (selectContainer) renderSelectionSkeleton(selectContainer, 1, "Loading options...");
 
         try {
             const token = await getAuthToken();
+            if (!token) {
+                renderResumeCards(selectContainer, resumeSelect, [], (selectedId) => {
+                    if (btnRunAnalysis) btnRunAnalysis.disabled = !selectedId;
+                });
+                return;
+            }
+
             const response = await fetch(`${API_BASE_URL}/api/resume/list`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
-            const data = response.ok ? await response.json() : [];
+            if (!response.ok) {
+                throw new Error("Failed to load your resumes list.");
+            }
+
+            const data = await response.json();
             
             renderResumeCards(selectContainer, resumeSelect, data, (selectedId) => {
                 if (btnRunAnalysis) btnRunAnalysis.disabled = !selectedId;
@@ -84,10 +90,11 @@ document.addEventListener('DOMContentLoaded', () => {
             checkUrlQueryParams();
 
         } catch (err) {
-            console.error("Resume list load notice:", err);
-            renderResumeCards(selectContainer, resumeSelect, [], (selectedId) => {
-                if (btnRunAnalysis) btnRunAnalysis.disabled = !selectedId;
-            });
+            console.error("Resume list load error:", err);
+            if (selectContainer) {
+                renderSelectionError(selectContainer, "Couldn't load your resumes", loadResumes);
+            }
+            if (btnRunAnalysis) btnRunAnalysis.disabled = true;
         }
     };
 

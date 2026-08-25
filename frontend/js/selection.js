@@ -60,7 +60,7 @@ export const renderSelectionSkeleton = (container, count = 1, text = "Loading op
 /**
  * Render Empty State Card
  */
-export const renderSelectionEmpty = (container, message = "No options available", actionText = "+ Upload Resume", actionHref = "upload.html") => {
+export const renderSelectionEmpty = (container, message = "No resumes uploaded yet", actionText = "+ Upload Resume", actionHref = "upload.html") => {
     if (!container) return;
     container.innerHTML = `
         <div class="selection-empty">
@@ -70,7 +70,7 @@ export const renderSelectionEmpty = (container, message = "No options available"
                 </div>
                 <div class="selection-card-text">
                     <div class="selection-card-title">${message}</div>
-                    <div class="selection-card-sub">Please add or upload options to continue.</div>
+                    <div class="selection-card-sub">Upload a resume to get started with AI analysis.</div>
                 </div>
             </div>
             ${actionText ? `
@@ -85,7 +85,7 @@ export const renderSelectionEmpty = (container, message = "No options available"
 /**
  * Render Error State Card with Retry Action
  */
-export const renderSelectionError = (container, message = "Couldn't load options", onRetry = null) => {
+export const renderSelectionError = (container, message = "Couldn't load your options", onRetry = null) => {
     if (!container) return;
     const errorId = `retry-btn-${Math.random().toString(36).substr(2, 9)}`;
     container.innerHTML = `
@@ -112,22 +112,25 @@ export const renderSelectionError = (container, message = "Couldn't load options
     }
 };
 
-export const DEFAULT_STATIC_RESUMES = [
-    { id: 'demo-resume-1', filename: 'Software_Developer_Resume.pdf', uploaded_at: new Date().toISOString() },
-    { id: 'demo-resume-2', filename: 'Senior_Product_Manager_Resume.pdf', uploaded_at: new Date().toISOString() }
-];
-
 /**
  * Render Interactive Resume Selection Cards synced with a hidden <select>
+ * STRICT DATA SOURCE RULE: Only renders real uploaded user resumes.
+ * If zero resumes exist, displays a clean Empty State and disables action buttons.
  */
 export const renderResumeCards = (container, selectElement, resumes = [], onSelectCallback = null) => {
     if (!container || !selectElement) return;
 
-    const itemsToRender = (Array.isArray(resumes) && resumes.length > 0) ? resumes : DEFAULT_STATIC_RESUMES;
+    if (!Array.isArray(resumes) || resumes.length === 0) {
+        renderSelectionEmpty(container, "No resumes uploaded yet", "+ Upload Resume", "upload.html");
+        selectElement.innerHTML = '<option value="" disabled selected>-- No Resumes Uploaded --</option>';
+        selectElement.value = '';
+        if (onSelectCallback) onSelectCallback('');
+        return;
+    }
 
     // Populate the hidden <select> to ensure native form behavior
-    selectElement.innerHTML = '<option value="" disabled>-- Select a Resume --</option>';
-    itemsToRender.forEach(r => {
+    selectElement.innerHTML = '<option value="" disabled selected>-- Choose a resume --</option>';
+    resumes.forEach(r => {
         const opt = document.createElement('option');
         opt.value = r.id;
         const uploadDate = r.uploaded_at ? new Date(r.uploaded_at).toLocaleDateString() : '';
@@ -135,16 +138,16 @@ export const renderResumeCards = (container, selectElement, resumes = [], onSele
         selectElement.appendChild(opt);
     });
 
-    // Auto-select first resume if current value is invalid or empty
-    let selectedId = selectElement.value || itemsToRender[0].id;
+    // Check if select element already has a valid selection or start unselected
+    let selectedId = (selectElement.value && resumes.some(r => r.id === selectElement.value)) ? selectElement.value : '';
     selectElement.value = selectedId;
 
     // Render interactive cards container
-    const isGrid = itemsToRender.length > 2;
+    const isGrid = resumes.length > 2;
     const listWrapper = document.createElement('div');
     listWrapper.className = isGrid ? 'selection-grid' : 'selection-grid-single';
 
-    itemsToRender.forEach(r => {
+    resumes.forEach(r => {
         const isSelected = r.id === selectedId;
         const card = document.createElement('div');
         card.className = `selection-card ${isSelected ? 'is-selected' : ''}`;
