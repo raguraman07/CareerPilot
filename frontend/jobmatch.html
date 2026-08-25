@@ -299,9 +299,9 @@
                             <table class="resumes-table">
                                 <thead>
                                     <tr>
-                                        <th>Skill Name</th>
-                                        <th>Importance</th>
-                                        <th>Recommendation</th>
+                                        <th>Missing Skill</th>
+                                        <th>Priority</th>
+                                        <th>What to Learn & Practice Task</th>
                                     </tr>
                                 </thead>
                                 <tbody id="res-skill-gap-tbody"></tbody>
@@ -309,9 +309,35 @@
                         </div>
                     </div>
 
+                    <!-- Top 5 Priority Improvements & Learning Order Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--primary);">Top 5 Priority Improvements</h3>
+                            <ul class="analysis-list" id="res-top-improvements"></ul>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--text-primary);">Recommended Learning Sequence</h3>
+                            <ul class="analysis-list" id="res-learning-order"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Recommended Certifications & Practical Projects Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--warning);">Certifications to Consider</h3>
+                            <ul class="analysis-list" id="res-certifications-list"></ul>
+                        </div>
+
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--success);">Portfolio Projects to Build</h3>
+                            <ul class="analysis-list" id="res-projects-list"></ul>
+                        </div>
+                    </div>
+
                     <!-- Match Recommendations -->
                     <div class="analysis-card">
-                        <h3 class="analysis-card-title" style="color: var(--primary);">Improvement Recommendations</h3>
+                        <h3 class="analysis-card-title" style="color: var(--primary);">Actionable Career Recommendations</h3>
                         <ul class="analysis-list" id="res-match-recommendations"></ul>
                     </div>
 
