@@ -43,7 +43,7 @@ if is_gemini_configured:
     if genai_client is None and genai_legacy_module is not None:
         try:
             genai_legacy_module.configure(api_key=GEMINI_API_KEY)
-            genai_legacy_model = genai_legacy_module.GenerativeModel("gemini-3.6-flash")
+            genai_legacy_model = genai_legacy_module.GenerativeModel("gemini-1.5-flash")
             logger.info("RAG Service: Legacy google.generativeai SDK configured.")
         except Exception as legacy_err:
             logger.error(f"RAG Service: Failed to configure Google Gemini legacy SDK: {legacy_err}")
@@ -172,7 +172,7 @@ Instructions:
     try:
         if genai_client:
             response = genai_client.models.generate_content(
-                model='gemini-3.6-flash',
+                model='gemini-1.5-flash',
                 contents=system_prompt
             )
             bot_reply = (response.text or "").strip()

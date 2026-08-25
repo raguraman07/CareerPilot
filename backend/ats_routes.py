@@ -100,6 +100,7 @@ def save_ats_record(resume_id, user_id, scores, ats_results):
     return handle_db_op(db_insert, mock_insert)
 
 
+@ats_bp.route('/api/ats/analyze', methods=['POST'])
 @ats_bp.route('/api/ats/analyze/<resume_id>', methods=['POST'])
 @ats_bp.route('/api/ats/score', methods=['POST'])
 def analyze_ats(resume_id=None):

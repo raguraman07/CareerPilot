@@ -275,5 +275,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    populateDropdown().then(loadLatestScore);
+    loadResumes().then(loadLatestScore);
 });
