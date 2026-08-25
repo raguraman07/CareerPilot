@@ -5,26 +5,23 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
     : `http://${window.location.hostname}:5000`;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const chatMessagesContainer = document.getElementById('chat-messages');
-    const chatInputForm = document.getElementById('chat-input-form');
-    const chatUserInput = document.getElementById('chat-user-input');
-    const btnSendMsg = document.getElementById('btn-send-msg');
-    const chatStatusMsg = document.getElementById('chat-status-msg');
+    const chatMessagesContainer = document.getElementById('chat-messages-container') || document.getElementById('chat-messages');
+    const chatInputForm = document.getElementById('chat-form') || document.getElementById('chat-input-form');
+    const chatUserInput = document.getElementById('chat-input') || document.getElementById('chat-user-input');
+    const btnSendMsg = document.getElementById('btn-send-message') || document.getElementById('btn-send-msg');
+    const statusMsg = document.getElementById('chat-status-msg');
     const btnNewChat = document.getElementById('btn-new-chat');
-    const btnClearChat = document.getElementById('btn-clear-chat');
-    const btnDeleteChat = document.getElementById('btn-delete-chat');
     const currentChatTitle = document.getElementById('current-chat-title');
-    const chatsHistoryList = document.getElementById('chats-history-list');
+    const chatsHistoryList = document.getElementById('chat-history-list') || document.getElementById('chats-history-list');
 
     let activeChatId = null;
 
     const getAuthToken = async () => {
         const { data: { session }, error } = await supabase.auth.getSession();
-        if (error || !session) throw new Error("Authentication required. Please log in.");
+        if (error || !session) return null;
         return session.access_token;
     };
 
-    // Format simple text formatting (bold, newlines, code) into basic HTML
     const formatMarkdown = (text) => {
         if (!text) return '';
         let escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -35,15 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return escaped;
     };
 
-    // Append Message to Thread
     const appendMessage = (role, content, sourcesUsed = []) => {
+        if (!chatMessagesContainer) return;
         const bubble = document.createElement('div');
-        bubble.className = `message-bubble ${role === 'user' ? 'user' : 'assistant'}`;
+        bubble.className = `chat-bubble ${role === 'user' ? 'user' : 'assistant'}`;
         
         let htmlContent = formatMarkdown(content);
         if (role === 'assistant' && sourcesUsed && sourcesUsed.length > 0) {
             const sourcesStr = sourcesUsed.join(', ');
-            htmlContent += `<br><span class="sources-tag">📄 Context: ${sourcesStr}</span>`;
+            htmlContent += `<br><span class="sources-tag" style="font-size:0.8rem; color:var(--text-muted);">📄 Context: ${sourcesStr}</span>`;
         }
         
         bubble.innerHTML = htmlContent;
@@ -51,43 +48,26 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
     };
 
-    // Render Full Chat Session
-    const renderChatSession = (chatData) => {
-        activeChatId = chatData.id;
-        currentChatTitle.textContent = chatData.title || "Conversation";
-
-        // Keep starter pills and welcome message, clear past messages
-        const pillsBlock = chatMessagesContainer.querySelector('.starter-pills')?.parentElement;
-        const welcomeBlock = chatMessagesContainer.querySelector('.message-bubble.assistant');
-        
-        chatMessagesContainer.innerHTML = '';
-        if (welcomeBlock) chatMessagesContainer.appendChild(welcomeBlock);
-        if (pillsBlock) chatMessagesContainer.appendChild(pillsBlock);
-
-        const messages = chatData.messages || [];
-        messages.forEach(m => {
-            appendMessage(m.role, m.content, m.sources_used || []);
-        });
-    };
-
-    // Reset to New Conversation View
     const startNewChat = () => {
         activeChatId = null;
-        currentChatTitle.textContent = "New Conversation";
-        chatUserInput.value = '';
+        if (currentChatTitle) currentChatTitle.textContent = "New Conversation";
+        if (chatUserInput) chatUserInput.value = '';
         
-        const pillsBlock = chatMessagesContainer.querySelector('.starter-pills')?.parentElement;
-        const welcomeBlock = chatMessagesContainer.querySelector('.message-bubble.assistant');
-        
-        chatMessagesContainer.innerHTML = '';
-        if (welcomeBlock) chatMessagesContainer.appendChild(welcomeBlock);
-        if (pillsBlock) chatMessagesContainer.appendChild(pillsBlock);
+        if (chatMessagesContainer) {
+            chatMessagesContainer.innerHTML = `
+                <div class="chat-bubble assistant">
+                    Hello! I'm your AI Career Coach. How can I help you optimize your resume, prepare for target roles, or close your skill gaps today?
+                </div>
+            `;
+        }
     };
 
-    // 1. Fetch & Render Conversation History Sidebar
     const loadChatHistory = async () => {
+        if (!chatsHistoryList) return;
         try {
             const token = await getAuthToken();
+            if (!token) return;
+
             const res = await fetch(`${API_BASE_URL}/api/career-assistant/chats`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -96,59 +76,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
             chatsHistoryList.innerHTML = '';
             if (!Array.isArray(chats) || chats.length === 0) {
-                chatsHistoryList.innerHTML = '<p style="font-size:0.85rem; color:var(--text-muted);">No saved conversations.</p>';
+                chatsHistoryList.innerHTML = '<p style="font-size:0.85rem; color:var(--text-muted); padding:0.5rem;">No saved conversations.</p>';
                 return;
             }
 
-            chats.forEach(c => {
-                const btn = document.createElement('button');
-                btn.className = `btn btn-secondary ${c.id === activeChatId ? 'active-chat-btn' : ''}`;
-                btn.style.width = '100%';
-                btn.style.justify = 'flex-start';
-                btn.style.fontSize = '0.85rem';
-                btn.style.padding = '0.45rem 0.75rem';
-                btn.style.overflow = 'hidden';
-                btn.style.textOverflow = 'ellipsis';
-                btn.style.whiteSpace = 'nowrap';
-                btn.textContent = c.title || 'Conversation';
-                btn.setAttribute('data-id', c.id);
-
-                btn.addEventListener('click', async () => {
+            chats.forEach(chat => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.style.padding = '0.5rem';
+                item.style.cursor = 'pointer';
+                item.style.borderRadius = 'var(--radius-sm)';
+                item.innerHTML = `<span style="font-size:0.85rem; font-weight:500;">${chat.title || 'Conversation'}</span>`;
+                
+                item.addEventListener('click', async () => {
+                    activeChatId = chat.id;
+                    if (currentChatTitle) currentChatTitle.textContent = chat.title || 'Conversation';
+                    
                     try {
-                        const t = await getAuthToken();
-                        const r = await fetch(`${API_BASE_URL}/api/career-assistant/chats/${c.id}`, {
-                            headers: { 'Authorization': `Bearer ${t}` }
+                        const chatRes = await fetch(`${API_BASE_URL}/api/career-assistant/chat/${chat.id}`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
                         });
-                        if (r.ok) {
-                            const chatObj = await r.json();
-                            renderChatSession(chatObj);
+                        if (chatRes.ok) {
+                            const chatData = await chatRes.json();
+                            if (chatMessagesContainer) {
+                                chatMessagesContainer.innerHTML = '';
+                                (chatData.messages || []).forEach(m => {
+                                    appendMessage(m.role, m.content, m.sources_used || []);
+                                });
+                            }
                         }
-                    } catch (err) {
-                        console.error("Error loading chat:", err);
+                    } catch (e) {
+                        console.error("Failed to load conversation details:", e);
                     }
                 });
 
-                chatsHistoryList.appendChild(btn);
+                chatsHistoryList.appendChild(item);
             });
-        } catch (err) {
-            console.error("Error loading chats sidebar:", err);
-            chatsHistoryList.innerHTML = '<p style="font-size:0.85rem; color:var(--text-muted);">Unable to load history.</p>';
+
+        } catch (e) {
+            console.error("Chat history load error:", e);
         }
     };
 
-    // 2. Submit Chat Message
-    const sendMessage = async (messageText) => {
-        if (!messageText.trim()) return;
+    const sendMessage = async () => {
+        const message = chatUserInput ? chatUserInput.value.trim() : '';
+        if (!message) return;
 
-        appendMessage('user', messageText);
-        chatUserInput.value = '';
+        appendMessage('user', message);
+        if (chatUserInput) chatUserInput.value = '';
 
-        btnSendMsg.disabled = true;
-        btnSendMsg.querySelector('span').textContent = 'Thinking...';
-        chatStatusMsg.style.display = 'block';
+        if (btnSendMsg) btnSendMsg.disabled = true;
+        if (statusMsg) {
+            statusMsg.style.display = 'inline';
+            statusMsg.textContent = 'AI Coach is thinking...';
+        }
 
         try {
             const token = await getAuthToken();
+            if (!token) throw new Error("Please log in to chat.");
+
             const res = await fetch(`${API_BASE_URL}/api/career-assistant/chat`, {
                 method: 'POST',
                 headers: {
@@ -156,89 +142,62 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    chat_id: activeChatId || undefined,
-                    message: messageText
+                    chat_id: activeChatId,
+                    message: message
                 })
             });
 
             const data = await res.json();
-            if (!res.ok) {
-                appendMessage('assistant', data.error || "AI Career Assistant is temporarily unavailable. Please try again.");
-                return;
+
+            if (!res.ok || data.success === false) {
+                throw new Error(data.error || "Failed to receive response from AI Coach.");
             }
 
-            activeChatId = data.chat_id;
-            currentChatTitle.textContent = messageText.length > 35 ? messageText.substring(0, 35) + '...' : messageText;
-            appendMessage('assistant', data.reply, data.sources_used || []);
+            if (data.chat_id) activeChatId = data.chat_id;
+
+            if (statusMsg) statusMsg.style.display = 'none';
+            appendMessage('assistant', data.response, data.sources_used || []);
             loadChatHistory();
 
         } catch (err) {
-            console.error("Chat send error:", err);
-            appendMessage('assistant', "AI Career Assistant is temporarily unavailable. Please try again.");
+            if (statusMsg) statusMsg.style.display = 'none';
+            appendMessage('assistant', `Sorry, I encountered an error: ${err.message || "Unable to send message."}`);
         } finally {
-            btnSendMsg.disabled = false;
-            btnSendMsg.querySelector('span').textContent = 'Send';
-            chatStatusMsg.style.display = 'none';
+            if (btnSendMsg) btnSendMsg.disabled = false;
         }
     };
 
-    // Form Submit Event
-    chatInputForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        sendMessage(chatUserInput.value.trim());
-    });
-
-    // Starter Question Pills Click Event
-    document.querySelectorAll('.pill-btn').forEach(pill => {
-        pill.addEventListener('click', () => {
-            const q = pill.getAttribute('data-q');
-            if (q) sendMessage(q);
+    if (chatInputForm) {
+        chatInputForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            sendMessage();
         });
-    });
+    }
 
-    // New Chat Button
-    btnNewChat.addEventListener('click', startNewChat);
+    if (btnSendMsg) {
+        btnSendMsg.addEventListener('click', (e) => {
+            sendMessage();
+        });
+    }
 
-    // Clear Chat Button
-    btnClearChat.addEventListener('click', async () => {
-        if (!activeChatId) {
+    if (btnNewChat) {
+        btnNewChat.addEventListener('click', () => {
             startNewChat();
-            return;
-        }
-        if (!confirm("Clear message history for this conversation?")) return;
-        try {
-            const token = await getAuthToken();
-            const res = await fetch(`${API_BASE_URL}/api/career-assistant/chats/${activeChatId}/clear`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                startNewChat();
-            }
-        } catch (err) {
-            console.error("Clear chat error:", err);
-        }
-    });
+        });
+    }
 
-    // Delete Chat Button
-    btnDeleteChat.addEventListener('click', async () => {
-        if (!activeChatId) return;
-        if (!confirm("Delete this conversation completely?")) return;
-        try {
-            const token = await getAuthToken();
-            const res = await fetch(`${API_BASE_URL}/api/career-assistant/chats/${activeChatId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                startNewChat();
+    const init = async () => {
+        const token = await getAuthToken();
+        if (token) {
+            loadChatHistory();
+        }
+
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
                 loadChatHistory();
             }
-        } catch (err) {
-            console.error("Delete chat error:", err);
-        }
-    });
+        });
+    };
 
-    // Initial load
-    loadChatHistory();
+    init();
 });

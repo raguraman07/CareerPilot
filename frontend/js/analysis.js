@@ -12,14 +12,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const resumeSelect = document.getElementById('resume-select');
     const btnRunAnalysis = document.getElementById('btn-run-analysis');
     const btnRetryAnalysis = document.getElementById('btn-retry-analysis');
+    const form = document.getElementById('analysis-setup-form');
     
     const loadingSection = document.getElementById('analysis-loading');
     const errorSection = document.getElementById('analysis-error');
     const progressFill = document.getElementById('progress-fill');
     const progressStatus = document.getElementById('progress-status');
     const estimatedWait = document.getElementById('estimated-wait');
+    const statusMsg = document.getElementById('analysis-status-msg');
     
-    const resultsSection = document.getElementById('analysis-results');
+    const resultsSection = document.getElementById('analysis-results-wrapper') || document.getElementById('analysis-results');
+    const alertBox = document.getElementById('analysis-alert-box');
     const historyList = document.getElementById('history-list');
     const toastContainer = document.getElementById('toast-container');
 
@@ -47,6 +50,18 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             toast.remove();
         }, 5000);
+    };
+
+    const showAlert = (message, type = 'danger') => {
+        if (!alertBox) return;
+        alertBox.style.display = 'block';
+        alertBox.textContent = message;
+    };
+
+    const hideAlert = () => {
+        if (!alertBox) return;
+        alertBox.style.display = 'none';
+        alertBox.textContent = '';
     };
 
     // Helper: Fetch authorization bearer token for authenticated user
@@ -119,11 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (err) {
             console.error(err);
-            historyList.innerHTML = `<li style="padding: 1rem; text-align: center; color: var(--error-color); font-size: 0.82rem;">Failed to load history list</li>`;
+            if (historyList) {
+                historyList.innerHTML = `<li style="padding: 1rem; text-align: center; color: var(--error-color); font-size: 0.82rem;">Failed to load history list</li>`;
+            }
         }
     };
 
     const renderHistoryList = (list) => {
+        if (!historyList) return;
         if (list.length === 0) {
             historyList.innerHTML = `
                 <li style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
@@ -145,10 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
 
-        // Add click listener to select a historical record
         historyList.querySelectorAll('.history-item').forEach(el => {
             el.addEventListener('click', () => {
-                // Clear active status on all list elements
                 historyList.querySelectorAll('.history-item').forEach(x => x.classList.remove('active'));
                 el.classList.add('active');
 
@@ -156,17 +172,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const matched = list.find(x => x.id === analysisId);
                 
                 if (matched && matched.analysis_results) {
-                    // Update dropdown selection if possible
-                    if (matched.resume_id) {
+                    if (matched.resume_id && resumeSelect) {
                         resumeSelect.value = matched.resume_id;
-                        btnRunAnalysis.disabled = false;
+                        if (btnRunAnalysis) btnRunAnalysis.disabled = false;
                     }
                     
-                    // Render historical insights instantly
-                    errorSection.style.display = 'none';
-                    loadingSection.style.display = 'none';
+                    if (errorSection) errorSection.style.display = 'none';
+                    if (loadingSection) loadingSection.style.display = 'none';
                     renderAnalysisResults(matched.analysis_results);
-                    resultsSection.style.display = 'block';
+                    if (resultsSection) resultsSection.style.display = 'grid';
                     
                     showToast("Loaded analysis from history cache.", "info");
                 }
@@ -174,19 +188,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // Check if the URL has parameter inputs to trigger automatic run
     const checkUrlQueryParams = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const resumeId = urlParams.get('resume_id');
         const autoAnalyze = urlParams.get('auto_analyze') === 'true';
 
-        if (resumeId) {
-            // Select in dropdown
+        if (resumeId && resumeSelect) {
             resumeSelect.value = resumeId;
-            btnRunAnalysis.disabled = false;
+            if (btnRunAnalysis) btnRunAnalysis.disabled = false;
             
             if (autoAnalyze) {
-                // Automatically run
                 runResumeAnalysis(resumeId);
             }
         }
@@ -196,46 +207,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const runResumeAnalysis = async (resumeId) => {
         if (isProcessing) return;
         isProcessing = true;
+        hideAlert();
 
-        // Visual State Transitions
-        resultsSection.style.display = 'none';
-        errorSection.style.display = 'none';
-        loadingSection.style.display = 'flex';
-        estimatedWait.style.display = 'block';
+        if (resultsSection) resultsSection.style.display = 'none';
+        if (errorSection) errorSection.style.display = 'none';
+        if (loadingSection) loadingSection.style.display = 'flex';
+        if (estimatedWait) estimatedWait.style.display = 'block';
+        if (statusMsg) {
+            statusMsg.style.display = 'inline';
+            statusMsg.textContent = 'Analyzing resume...';
+        }
         
-        btnRunAnalysis.disabled = true;
-        btnRetryAnalysis.disabled = true;
-        resumeSelect.disabled = true;
+        if (btnRunAnalysis) btnRunAnalysis.disabled = true;
+        if (btnRetryAnalysis) btnRetryAnalysis.disabled = true;
+        if (resumeSelect) resumeSelect.disabled = true;
 
-        // Estimated wait countdown timer (starts around 5 seconds)
         let secondsLeft = 5;
-        estimatedWait.textContent = `Estimated wait time: ~${secondsLeft} seconds...`;
+        if (estimatedWait) estimatedWait.textContent = `Estimated wait time: ~${secondsLeft} seconds...`;
         const countdownTimer = setInterval(() => {
             if (secondsLeft > 1) {
                 secondsLeft--;
-                estimatedWait.textContent = `Estimated wait time: ~${secondsLeft} seconds...`;
+                if (estimatedWait) estimatedWait.textContent = `Estimated wait time: ~${secondsLeft} seconds...`;
             } else {
-                estimatedWait.textContent = `Wrapping up analysis details...`;
+                if (estimatedWait) estimatedWait.textContent = `Wrapping up analysis details...`;
                 clearInterval(countdownTimer);
             }
         }, 1000);
 
-        // Progress bar simulation updates
         let progress = 0;
         const progressInterval = setInterval(() => {
             if (progress < 90) {
                 progress += Math.floor(Math.random() * 15) + 5;
                 if (progress > 90) progress = 90;
-                progressFill.style.width = `${progress}%`;
+                if (progressFill) progressFill.style.width = `${progress}%`;
                 
-                if (progress < 25) {
-                    progressStatus.textContent = "Analyzing your resume with AI...";
-                } else if (progress < 55) {
-                    progressStatus.textContent = "Extracting skills and evaluating experience...";
-                } else if (progress < 80) {
-                    progressStatus.textContent = "Formulating career recommendations...";
-                } else {
-                    progressStatus.textContent = "Finalizing AI analysis report...";
+                if (progressStatus) {
+                    if (progress < 25) {
+                        progressStatus.textContent = "Analyzing your resume with AI...";
+                    } else if (progress < 55) {
+                        progressStatus.textContent = "Extracting skills and evaluating experience...";
+                    } else if (progress < 80) {
+                        progressStatus.textContent = "Formulating career recommendations...";
+                    } else {
+                        progressStatus.textContent = "Finalizing AI analysis report...";
+                    }
                 }
             }
         }, 400);
@@ -243,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const token = await getAuthToken();
             
-            // Post to analysis API endpoint
             const analyzeRes = await fetch(`${API_BASE_URL}/api/ai/analyze-resume`, {
                 method: 'POST',
                 headers: {
@@ -266,25 +280,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const responseData = await analyzeRes.json();
             const results = responseData.analysis?.analysis_results || responseData.analysis_results || (responseData.analysis ? responseData.analysis : responseData);
 
-            progressFill.style.width = '100%';
-            progressStatus.textContent = "Resume analysis completed successfully.";
-            estimatedWait.style.display = 'none';
+            if (progressFill) progressFill.style.width = '100%';
+            if (progressStatus) progressStatus.textContent = "Resume analysis completed successfully.";
+            if (estimatedWait) estimatedWait.style.display = 'none';
 
-            // Show results
-            setTimeout(() => {
-                loadingSection.style.display = 'none';
-                renderAnalysisResults(results);
-                resultsSection.style.display = 'block';
-                
-                // Refresh list history log
-                fetchHistory();
+            if (loadingSection) loadingSection.style.display = 'none';
+            if (statusMsg) statusMsg.style.display = 'none';
+            renderAnalysisResults(results);
+            if (resultsSection) resultsSection.style.display = 'grid';
+            
+            fetchHistory();
 
-                isProcessing = false;
-                btnRunAnalysis.disabled = false;
-                resumeSelect.disabled = false;
-                
-                showToast("Resume analysis completed successfully.", "success");
-            }, 600);
+            isProcessing = false;
+            if (btnRunAnalysis) btnRunAnalysis.disabled = false;
+            if (resumeSelect) resumeSelect.disabled = false;
+            
+            showToast("Resume analysis completed successfully.", "success");
 
         } catch (err) {
             clearInterval(countdownTimer);
@@ -292,26 +303,31 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(err);
 
             isProcessing = false;
-            loadingSection.style.display = 'none';
-            errorSection.style.display = 'flex';
+            if (loadingSection) loadingSection.style.display = 'none';
+            if (errorSection) errorSection.style.display = 'flex';
+            if (statusMsg) statusMsg.style.display = 'none';
             
-            btnRunAnalysis.disabled = false;
-            btnRetryAnalysis.disabled = false;
-            resumeSelect.disabled = false;
+            if (btnRunAnalysis) btnRunAnalysis.disabled = false;
+            if (btnRetryAnalysis) btnRetryAnalysis.disabled = false;
+            if (resumeSelect) resumeSelect.disabled = false;
 
+            showAlert(err.message || "Unable to analyze resume.", 'danger');
             showToast(err.message || "Unable to analyze resume.", 'error');
-            showToast("Analysis failed to complete.", 'error');
         }
     };
 
     // Populate analysis view fields dynamically
     const renderAnalysisResults = (data) => {
+        if (!data) return;
+
         // 1. Resume Summary
-        document.getElementById('resume-summary').textContent = data.resume_summary || 'N/A';
+        const summaryEl = document.getElementById('res-summary') || document.getElementById('resume-summary');
+        if (summaryEl) summaryEl.textContent = data.resume_summary || data.summary || 'N/A';
 
         // Badges helper
-        const renderBadges = (containerId, list, typeClass) => {
-            const container = document.getElementById(containerId);
+        const renderBadges = (elementId, list, typeClass) => {
+            const container = document.getElementById(elementId);
+            if (!container) return;
             container.innerHTML = '';
             if (list && list.length > 0) {
                 list.forEach(item => {
@@ -326,19 +342,22 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // 2. Technical Skills
-        renderBadges('technical-skills', data.technical_skills, 'technical');
+        renderBadges('res-tech-skills', data.technical_skills || data.technical_skills_found, 'technical');
+        renderBadges('technical-skills', data.technical_skills || data.technical_skills_found, 'technical');
 
         // 3. Soft Skills
-        renderBadges('soft-skills', data.soft_skills, 'soft');
+        renderBadges('res-soft-skills', data.soft_skills || data.soft_skills_found, 'soft');
+        renderBadges('soft-skills', data.soft_skills || data.soft_skills_found, 'soft');
 
         // Lists helper
-        const renderListItems = (containerId, itemsList, prefixClass = '') => {
-            const container = document.getElementById(containerId);
+        const renderListItems = (elementId, itemsList, prefixClass = '') => {
+            const container = document.getElementById(elementId);
+            if (!container) return;
             container.innerHTML = '';
             if (itemsList && itemsList.length > 0) {
                 itemsList.forEach((text, idx) => {
                     const li = document.createElement('li');
-                    if (containerId === 'improvements' || containerId === 'career-recommendations') {
+                    if (elementId.includes('recommend') || elementId.includes('improvement')) {
                         li.className = 'rec-item';
                         li.innerHTML = `
                             <div class="rec-counter-num">${idx + 1}</div>
@@ -356,25 +375,35 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // 4. Strengths
+        renderListItems('res-strengths', data.strengths, 'strength');
         renderListItems('strengths', data.strengths, 'strength');
 
         // 5. Weaknesses
+        renderListItems('res-weaknesses', data.weaknesses, 'weakness');
         renderListItems('weaknesses', data.weaknesses, 'weakness');
 
-        // 6. Missing Skills
-        renderBadges('missing-skills', data.missing_skills, 'missing');
+        // 6. Actionable Recommendations
+        const recs = data.improvements || data.actionable_recommendations || data.career_recommendations || [];
+        renderListItems('res-recommendations', recs);
+        renderListItems('improvements', recs);
+        renderListItems('career-recommendations', recs);
 
-        // 7. Recommended Roles
-        renderBadges('recommended-roles', data.recommended_roles, 'technical');
-
-        // 8. Improvement Suggestions
-        renderListItems('improvements', data.improvements);
-
-        // 9. Career Recommendations
-        renderListItems('career-recommendations', data.career_recommendations);
+        // Render Results Grid
+        if (resultsSection) resultsSection.style.display = 'grid';
     };
 
-    // Selection changes listener
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const resumeId = resumeSelect ? resumeSelect.value : null;
+            if (resumeId) {
+                runResumeAnalysis(resumeId);
+            } else {
+                showAlert("Please select a resume to analyze.", "danger");
+            }
+        });
+    }
+
     if (resumeSelect) {
         resumeSelect.addEventListener('change', () => {
             if (resumeSelect.value && btnRunAnalysis) {
@@ -383,9 +412,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Run AI analysis manually
     if (btnRunAnalysis) {
-        btnRunAnalysis.addEventListener('click', () => {
+        btnRunAnalysis.addEventListener('click', (e) => {
             const resumeId = resumeSelect ? resumeSelect.value : null;
             if (resumeId) {
                 runResumeAnalysis(resumeId);
@@ -393,7 +421,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Retry button click listener
     if (btnRetryAnalysis) {
         btnRetryAnalysis.addEventListener('click', () => {
             const resumeId = resumeSelect ? resumeSelect.value : null;
@@ -403,8 +430,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Initialize list load once auth is completed
-    const init = () => {
+    const init = async () => {
+        const token = await getAuthToken();
+        if (token) {
+            loadResumes();
+            fetchHistory();
+        }
+
         supabase.auth.onAuthStateChange((event, session) => {
             if (session) {
                 loadResumes();
