@@ -164,15 +164,61 @@ export async function getAuthToken() {
 }
 
 /**
- * Redirects authenticated users from auth pages (e.g. login.html) to dashboard.html.
+ * Helper to determine redirect destination based on Career Goal existence
  */
+export async function determinePostAuthDestination(user, explicitRedirect = null) {
+    if (explicitRedirect) {
+        if (/^[a-zA-Z0-9_\-]+\.html$/.test(explicitRedirect)) {
+            return explicitRedirect;
+        } else if (/^[a-zA-Z0-9_\-]+$/.test(explicitRedirect)) {
+            return `${explicitRedirect}.html`;
+        }
+    }
 
+    try {
+        const token = await user.getIdToken();
+        
+        // 1. Check Career Goal
+        const resGoal = await fetch(`${API_BASE_URL}/api/career-goals/current`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (resGoal.ok) {
+            const goalData = await resGoal.json();
+            if (!goalData.career_goal) {
+                logAuth('No active career goal found for user. Directing to career-goal.html');
+                return 'career-goal.html';
+            }
+        }
+
+        // 2. Check Profile Completeness
+        const resProf = await fetch(`${API_BASE_URL}/api/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (resProf.ok) {
+            const profData = await resProf.json();
+            if (profData.profile && (profData.profile.completeness || 0) < 30) {
+                logAuth('Candidate profile incomplete. Directing to candidate-profile.html');
+                return 'candidate-profile.html';
+            }
+        }
+    } catch (checkErr) {
+        logAuth('Post-auth onboarding check offline or errored, defaulting to dashboard.html:', checkErr.message);
+    }
+
+    return 'dashboard.html';
+}
+
+/**
+ * Redirects authenticated users from auth pages (e.g. login.html) to career-goal.html or dashboard.html.
+ */
 export async function redirectIfAuthenticated() {
     try {
         const user = await getCurrentFirebaseUser();
         if (user) {
-            logAuth('Redirect reason: Authenticated user detected on auth page. Redirecting to dashboard.html');
-            window.location.href = 'dashboard.html';
+            const params = new URLSearchParams(window.location.search);
+            const target = await determinePostAuthDestination(user, params.get('redirect'));
+            logAuth(`Redirect reason: Authenticated user detected on auth page. Redirecting to ${target}`);
+            window.location.href = target;
             return true;
         }
     } catch (e) {
@@ -213,7 +259,7 @@ export async function signInWithGoogle() {
 }
 
 // Setup Global Auth State Listener
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     logAuth(`Auth state event triggered:`, user ? user.email : 'No user');
     const path = window.location.pathname.toLowerCase();
     const isAuthPage = path.endsWith('login.html') || path.endsWith('register.html') || path.endsWith('forgot-password.html') || path.endsWith('reset-password.html');
@@ -221,8 +267,10 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         logAuth('Login success: Valid Firebase session created for user:', user.email);
         if (isAuthPage) {
-            logAuth('Redirect reason: Active session detected on auth page. Redirecting to dashboard.html');
-            window.location.href = 'dashboard.html';
+            const params = new URLSearchParams(window.location.search);
+            const target = await determinePostAuthDestination(user, params.get('redirect'));
+            logAuth(`Redirect reason: Active session detected on auth page. Redirecting to ${target}`);
+            window.location.href = target;
         }
     } else {
         logAuth('User signed out or no active session.');
@@ -408,15 +456,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 logAuth('Login success: Firebase authentication succeeded for user:', user.email);
 
-                // Handle optional ?redirect= param
+                // Handle redirection based on Career Goal existence or explicit ?redirect=
                 const params = new URLSearchParams(window.location.search);
-                const targetRedirect = params.get('redirect');
-                let targetUrl = 'dashboard.html';
-                if (targetRedirect && /^[a-zA-Z0-9_\-]+\.html$/.test(targetRedirect)) {
-                    targetUrl = targetRedirect;
-                } else if (targetRedirect && /^[a-zA-Z0-9_\-]+$/.test(targetRedirect)) {
-                    targetUrl = `${targetRedirect}.html`;
-                }
+                const targetUrl = await determinePostAuthDestination(user, params.get('redirect'));
 
                 logAuth(`Redirecting to target page: ${targetUrl}`);
                 window.location.href = targetUrl;
@@ -446,7 +488,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-
 
     // -------------------------------------------------------------
     // Register Form Handler
@@ -547,14 +588,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     logAuth('Backend sync unreachable, proceeding with Firebase authentication:', backendErr.message);
                 }
 
-                showFormBanner(registerForm, "Account created! Redirecting to dashboard...", 'success');
+                showFormBanner(registerForm, "Account created! Setting up your career goal...", 'success');
                 registerForm.reset();
                 if (strengthFill) strengthFill.className = 'password-strength-fill';
                 if (strengthText) strengthText.textContent = '';
                 
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1500);
+                setTimeout(async () => {
+                    const target = await determinePostAuthDestination(user);
+                    window.location.href = target;
+                }, 1200);
 
             } catch (err) {
                 const friendlyMsg = mapFirebaseError(err);

@@ -5,10 +5,11 @@
 /* Main Dashboard Shell */
 .dashboard-shell {
     display: flex;
-    min-height: 100vh;
+    height: 100vh;
+    max-height: 100vh;
     background-color: var(--background); /* #FCF2E5 Cream */
     position: relative;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 /* ==========================================
@@ -20,12 +21,12 @@
     border-right: 1px solid rgba(168, 164, 146, 0.25);
     display: flex;
     flex-direction: column;
-    position: sticky;
-    top: 0;
     height: 100vh;
+    max-height: 100vh;
     z-index: 1000;
     transition: transform var(--transition-normal), width var(--transition-normal);
     flex-shrink: 0;
+    overflow: hidden;
 }
 
 .sidebar-header {
@@ -35,6 +36,7 @@
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid rgba(168, 164, 146, 0.25);
+    flex-shrink: 0;
 }
 
 .sidebar-header .logo {
@@ -99,8 +101,27 @@
     padding: 1.25rem 0.85rem;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(168, 164, 146, 0.3) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    width: 5px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background-color: rgba(168, 164, 146, 0.3);
+    border-radius: 10px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(168, 164, 146, 0.6);
 }
 
 .nav-section {
@@ -180,14 +201,44 @@
 /* ==========================================
    Workspace Area & Top Navbar (#FFFFFF Surface)
    ========================================== */
-.workspace-wrapper {
+.workspace-wrapper,
+.dashboard-main {
     flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
+    height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: var(--background);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(168, 164, 146, 0.4) transparent;
 }
 
-.top-navbar {
+.workspace-wrapper::-webkit-scrollbar,
+.dashboard-main::-webkit-scrollbar {
+    width: 6px;
+}
+
+.workspace-wrapper::-webkit-scrollbar-track,
+.dashboard-main::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.workspace-wrapper::-webkit-scrollbar-thumb,
+.dashboard-main::-webkit-scrollbar-thumb {
+    background-color: rgba(168, 164, 146, 0.4);
+    border-radius: 10px;
+}
+
+.workspace-wrapper::-webkit-scrollbar-thumb:hover,
+.dashboard-main::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(168, 164, 146, 0.7);
+}
+
+.top-navbar,
+.topbar {
     height: var(--navbar-height);
     background-color: #FFFFFF;
     border-bottom: 1px solid var(--border-light);
@@ -198,15 +249,18 @@
     position: sticky;
     top: 0;
     z-index: 900;
+    flex-shrink: 0;
 }
 
-.navbar-left {
+.navbar-left,
+.topbar-left {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-.hamburger-menu-btn {
+.hamburger-menu-btn,
+.mobile-toggle {
     display: none;
     background: none;
     border: none;
@@ -216,20 +270,30 @@
     border-radius: var(--radius-sm);
 }
 
-.hamburger-icon {
+.hamburger-icon,
+.mobile-toggle svg {
     width: 22px;
     height: 22px;
     stroke: currentColor;
     stroke-width: 2;
 }
 
-.navbar-title {
+.navbar-title,
+.page-title {
     font-size: 1.15rem;
     font-weight: 700;
     color: var(--dark); /* #524646 Dark Brown */
+    margin: 0;
 }
 
-.navbar-right {
+.page-title-area {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.navbar-right,
+.topbar-right {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -266,7 +330,8 @@
 .theme-toggle { display: none !important; }
 
 /* User Avatar Profile Button & Dropdown */
-.profile-avatar-btn {
+.profile-avatar-btn,
+.avatar-btn {
     background: none;
     border: none;
     cursor: pointer;
@@ -274,7 +339,8 @@
     align-items: center;
 }
 
-.avatar-circle {
+.avatar-circle,
+.avatar-btn .avatar-initials {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -293,7 +359,8 @@
     font-size: 1.1rem;
 }
 
-.dropdown-container {
+.dropdown-container,
+.profile-dropdown-wrapper {
     position: relative;
 }
 
@@ -317,26 +384,32 @@
     display: flex;
 }
 
+.profile-dropdown-header,
 .profile-info-block {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    flex-direction: column;
+    gap: 0.2rem;
 }
 
-.profile-meta h4 {
+.profile-meta h4,
+.dropdown-profile-name {
     font-size: 0.95rem;
     font-weight: 700;
     color: var(--dark);
+    margin: 0;
 }
 
-.profile-meta p {
+.profile-meta p,
+.dropdown-profile-email {
     font-size: 0.8rem;
     color: var(--secondary);
+    margin: 0;
 }
 
 .dropdown-divider {
     height: 1px;
     background-color: var(--border-light);
+    margin: 0.35rem 0;
 }
 
 .dropdown-list {
@@ -355,6 +428,11 @@
     color: var(--dark);
     border-radius: var(--radius-sm);
     text-decoration: none;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
     transition: all var(--transition-fast);
 }
 
@@ -374,7 +452,8 @@
 /* ==========================================
    Main Workspace Content Area (#FCF2E5 Cream)
    ========================================== */
-.workspace-content {
+.workspace-content,
+.dashboard-content {
     flex: 1;
     width: 100%;
     max-width: var(--container-max-width);
@@ -450,6 +529,16 @@
     font-weight: 700;
     color: var(--primary); /* #EC5B38 Coral metrics */
     margin-top: 0.15rem;
+}
+
+/* Content Cards & Banners */
+.content-card {
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 1.75rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.75rem;
 }
 
 /* Responsive Drawer Styles */

@@ -10,6 +10,13 @@ from interview_routes import interview_bp
 from roadmap_routes import roadmap_bp
 from chat_routes import chat_bp
 from app.blueprints.ai import ai_bp
+from career_goal_routes import career_goal_bp
+from profile_routes import profile_bp
+from assessment_routes import assessment_bp
+from learning_plan_routes import learning_plan_bp
+from knowledge_assessment_routes import knowledge_assessment_bp
+from recommendation_routes import recommendation_bp
+from resume_builder_routes import resume_builder_bp
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -36,6 +43,13 @@ app.register_blueprint(interview_bp)
 app.register_blueprint(roadmap_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(ai_bp)
+app.register_blueprint(career_goal_bp)
+app.register_blueprint(profile_bp)
+app.register_blueprint(assessment_bp)
+app.register_blueprint(learning_plan_bp)
+app.register_blueprint(knowledge_assessment_bp)
+app.register_blueprint(recommendation_bp)
+app.register_blueprint(resume_builder_bp)
 
 # Custom CORS Handlers
 @app.before_request

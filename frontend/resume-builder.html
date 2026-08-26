@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Builder & Target Job Optimizer - CareerPilot</title>
+
+    <!-- Meta Descriptions for SEO -->
+    <meta name="description"
+        content="CareerPilot AI Resume Builder - Auto-compile truthful, role-targeted resumes aligned with your target company, verified skills, and projects with real-time ATS optimization.">
+    <meta name="keywords"
+        content="CareerPilot, AI Resume Builder, Targeted Resume, ATS Optimizer, Resume PDF Export">
+    <meta name="author" content="CareerPilot Team">
+
+    <!-- Fonts Preconnect and Links for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/analysis.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <!-- Light Theme Enforcement -->
+    <script>
+        document.documentElement.classList.remove('dark-mode');
+    </script>
+    <style>
+        .paper-preview {
+            background: #ffffff;
+            color: #2d3748;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2.5rem;
+            min-height: 800px;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+        }
+        .paper-header {
+            border-bottom: 2px solid #524646;
+            padding-bottom: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .paper-section-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #524646;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0.25rem;
+            margin: 1.25rem 0 0.6rem 0;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #paper-resume-content, #paper-resume-content * {
+                visibility: visible;
+            }
+            #paper-resume-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Skip link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to content</a>
+
+    <!-- Page guard and login session checking -->
+    <script type="module">
+        import { requireAuth, logoutUser } from './js/auth.js';
+
+        requireAuth().then(session => {
+            if (session) {
+                const dropdownName = document.querySelector('.dropdown-profile-name');
+                const dropdownEmail = document.querySelector('.dropdown-profile-email');
+                const avatarInitials = document.querySelectorAll('.avatar-initials');
+
+                if (dropdownName && session.user) {
+                    dropdownName.textContent = session.user.full_name;
+                }
+                if (dropdownEmail && session.user) {
+                    dropdownEmail.textContent = session.user.email;
+                }
+                if (avatarInitials.length > 0 && session.user) {
+                    const initials = session.user.full_name ? session.user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : session.user.email.substring(0, 2).toUpperCase();
+                    avatarInitials.forEach(el => el.textContent = initials);
+                }
+
+                const logoutLinks = document.querySelectorAll('.logout-trigger');
+                logoutLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        logoutUser();
+                    });
+                });
+            }
+        });
+    </script>
+
+    <div class="dashboard-shell" id="resume-builder-page-shell">
+
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar-wrapper" id="sidebar-wrapper" aria-label="Dashboard Sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="logo" aria-label="CareerPilot Home">
+                    <img src="assets/careerpilot-logo-light.png" alt="CareerPilot" class="brand-logo-img">
+                </a>
+                <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close sidebar">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Main Navigation">
+                <div class="nav-section">
+                    <span class="nav-section-label">Overview</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="dashboard.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <rect x="3" y="3" width="7" height="9"></rect>
+                                    <rect x="14" y="3" width="7" height="5"></rect>
+                                    <rect x="14" y="12" width="7" height="9"></rect>
+                                    <rect x="3" y="16" width="7" height="5"></rect>
+                                </svg>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-label">1. Target & Profile</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="career-goal.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <circle cx="12" cy="6" r="6"></circle>
+                                    <circle cx="12" cy="2" r="2"></circle>
+                                </svg>
+                                <span>Career Goal</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="candidate-profile.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span>Profile</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-label">2. Analysis & Learning</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="assessment.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                                <span>Career Analysis</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="learning-plan.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                </svg>
+                                <span>Learning Plan</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="roadmap.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                    <polyline points="2 17 12 22 22 17"></polyline>
+                                    <polyline points="2 12 12 17 22 12"></polyline>
+                                </svg>
+                                <span>Career Roadmap</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-label">3. Placement Preparation</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="interview.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                <span>Interview Prep</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="certifications.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="8" r="7"></circle>
+                                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                                </svg>
+                                <span>Certifications & Projects</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="resume-builder.html" class="nav-item active" aria-current="page">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                <span>AI Resume Builder</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="careercoach.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="22"></line>
+                                </svg>
+                                <span>AI Career Coach</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section nav-section--bottom">
+                    <span class="nav-section-label">Account</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="settings.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path
+                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                    </path>
+                                </svg>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <div class="dashboard-main">
+            <!-- Top Navbar -->
+            <header class="topbar" aria-label="Top Bar">
+                <div class="topbar-left">
+                    <button class="mobile-toggle" id="sidebar-open-btn" aria-label="Open sidebar">
+                        <svg viewBox="0 0 24 24">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div class="page-title-area">
+                        <h1 class="page-title">AI Resume Builder & Target Job Optimizer</h1>
+                        <span class="badge badge-primary">Phase 8</span>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="profile-dropdown-wrapper">
+                        <button class="avatar-btn" id="profile-dropdown-btn" aria-label="User profile menu">
+                            <span class="avatar-initials">CP</span>
+                        </button>
+                        <div class="profile-dropdown" id="profile-dropdown">
+                            <div class="profile-dropdown-header">
+                                <strong class="dropdown-profile-name">Candidate User</strong>
+                                <span class="dropdown-profile-email">user@careerpilot.ai</span>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="candidate-profile.html" class="dropdown-item">My Profile</a>
+                            <a href="settings.html" class="dropdown-item">Account Settings</a>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item logout-trigger" style="color: var(--danger);">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="dashboard-content" id="main-content">
+                <!-- Alert Box -->
+                <div id="builder-alert-box" style="display: none; padding: 1rem 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; font-weight: 600;"></div>
+
+                <!-- Target Job & Readiness Status Header -->
+                <div class="content-card" style="background: var(--surface); border: 1px solid var(--border-light); padding: 1.75rem; margin-bottom: 1.75rem;">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem;">
+                        <div>
+                            <span style="font-size: 0.78rem; font-weight: 800; color: var(--primary); text-transform: uppercase;">Target Job Optimization</span>
+                            <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0.2rem 0 0.35rem 0;">
+                                <span id="builder-role-title">Target Role</span> at <span id="builder-company-title" style="color: var(--primary);">Target Company</span>
+                            </h2>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
+                                Truthfully compiled from your verified competencies, real projects, and target role requirements.
+                            </p>
+                        </div>
+
+                        <!-- Readiness Metrics -->
+                        <div style="display: flex; gap: 1.5rem; align-items: center;">
+                            <div style="text-align: center;">
+                                <div id="builder-ats-score" style="font-size: 2rem; font-weight: 900; color: var(--primary); line-height: 1;">88%</div>
+                                <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">ATS Compatibility</span>
+                            </div>
+                            <div style="text-align: center;">
+                                <div id="builder-role-alignment" style="font-size: 2rem; font-weight: 900; color: #2e7d32; line-height: 1;">90%</div>
+                                <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Role Alignment</span>
+                            </div>
+                            <div style="text-align: center;">
+                                <div id="builder-completeness" style="font-size: 2rem; font-weight: 900; color: var(--text-primary); line-height: 1;">95%</div>
+                                <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Completeness</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2-Column Split: Editor & Live Paper Preview -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.75rem; margin-bottom: 2rem;">
+                    
+                    <!-- Left Column: Interactive Section Editor -->
+                    <div>
+                        <div class="content-card" style="background: var(--surface); border: 1px solid var(--border-light); padding: 1.5rem; margin-bottom: 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin: 0;">📝 Resume Sections Editor</h3>
+                                <button id="btn-recompile-targeted" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; font-weight: 700;">
+                                    🤖 AI Re-Optimize
+                                </button>
+                            </div>
+
+                            <!-- 1. Personal Info -->
+                            <div style="margin-bottom: 1.25rem;">
+                                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem;">Full Name</label>
+                                <input type="text" id="inp-full-name" style="width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
+                                <div>
+                                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem;">Email</label>
+                                    <input type="email" id="inp-email" style="width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem;">Phone</label>
+                                    <input type="text" id="inp-phone" style="width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                                </div>
+                            </div>
+
+                            <!-- 2. Professional Summary with AI Rewrite -->
+                            <div style="margin-bottom: 1.25rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin: 0;">Professional Summary</label>
+                                    <button id="btn-rewrite-summary" class="btn btn-sm" style="font-size: 0.72rem; color: var(--primary); text-decoration: underline; background: none; border: none; cursor: pointer;">
+                                        ✨ AI Rewrite
+                                    </button>
+                                </div>
+                                <textarea id="inp-summary" rows="3" style="width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.88rem; line-height: 1.45;"></textarea>
+                            </div>
+
+                            <!-- 3. Technical Skills (Core & Supporting) -->
+                            <div style="margin-bottom: 1.25rem;">
+                                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem;">Core Technical Skills (Comma-separated)</label>
+                                <input type="text" id="inp-core-skills" style="width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.88rem;">
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-light); padding-top: 1rem;">
+                                <button id="btn-save-resume" class="btn btn-primary" style="padding: 0.6rem 1.5rem; font-weight: 700;">
+                                    Save Resume
+                                </button>
+                                <button id="btn-print-resume" class="btn btn-secondary" style="padding: 0.6rem 1.25rem; font-weight: 700;">
+                                    🖨️ Print / Export PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Live Paper Preview -->
+                    <div>
+                        <div id="paper-resume-content" class="paper-preview">
+                            <div class="paper-header" style="text-align: center;">
+                                <h1 id="preview-name" style="font-size: 1.6rem; font-weight: 800; color: #1a202c; margin: 0 0 0.35rem 0;">Bob Candidate</h1>
+                                <div id="preview-contacts" style="font-size: 0.82rem; color: #4a5568;">
+                                    bob@example.com | +1 (555) 019-2834 | Seattle, WA
+                                </div>
+                            </div>
+
+                            <!-- Summary -->
+                            <div>
+                                <div class="paper-section-title">Professional Summary</div>
+                                <p id="preview-summary" style="font-size: 0.85rem; color: #2d3748; line-height: 1.5; margin: 0;">--</p>
+                            </div>
+
+                            <!-- Skills -->
+                            <div>
+                                <div class="paper-section-title">Technical Skills</div>
+                                <div style="font-size: 0.85rem; line-height: 1.6;">
+                                    <strong>Core Skills:</strong> <span id="preview-core-skills">--</span><br>
+                                    <strong>Supporting:</strong> <span id="preview-supporting-skills">--</span>
+                                </div>
+                            </div>
+
+                            <!-- Projects -->
+                            <div>
+                                <div class="paper-section-title">Key Engineering Projects</div>
+                                <div id="preview-projects-list"></div>
+                            </div>
+
+                            <!-- Education -->
+                            <div>
+                                <div class="paper-section-title">Education</div>
+                                <div id="preview-education-list"></div>
+                            </div>
+
+                            <!-- Certifications -->
+                            <div id="preview-certs-section">
+                                <div class="paper-section-title">Certifications</div>
+                                <div id="preview-certs-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/resumeBuilder.js"></script>
+</body>
+
+</html>

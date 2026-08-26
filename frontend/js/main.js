@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dashboard Mobile Drawer & Profile Dropdown
     // -------------------------------------------------------------
     const sidebar = document.getElementById('sidebar-wrapper');
-    const hamburgerBtn = document.getElementById('hamburger-menu-btn');
+    const hamburgerBtn = document.getElementById('hamburger-menu-btn') || document.getElementById('sidebar-open-btn');
     const closeSidebarBtn = document.getElementById('sidebar-close-btn');
     const overlay = document.getElementById('sidebar-overlay');
 

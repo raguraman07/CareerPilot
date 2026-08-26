@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - CareerPilot</title>
+    <title>Define Career Goal - CareerPilot</title>
 
     <!-- Meta Descriptions for SEO -->
     <meta name="description"
-        content="CareerPilot Dashboard - Access your resume reviews, ATS scoring, job match metrics, interview preparation, and career roadmap.">
+        content="CareerPilot Career Goal - Define your target dream company, job role, experience level, and timeline to personalize your AI career preparation journey.">
     <meta name="keywords"
-        content="CareerPilot, Dashboard, Resume Analyzer, ATS Score, Career Assistant, Job Matching, Interview Prep, Career Roadmap">
+        content="CareerPilot, Career Goal, Target Company, Target Job Role, Career Planning, AI Career Guidance">
     <meta name="author" content="CareerPilot Team">
 
     <!-- Fonts Preconnect and Links for Performance -->
@@ -39,12 +39,6 @@
 
         requireAuth().then(session => {
             if (session) {
-                const titleEl = document.getElementById('welcome-user-name');
-                if (titleEl && session.user) {
-                    const userName = session.user.full_name || session.user.email.split('@')[0];
-                    titleEl.textContent = userName;
-                }
-
                 const dropdownName = document.querySelector('.dropdown-profile-name');
                 const dropdownEmail = document.querySelector('.dropdown-profile-email');
                 const avatarInitials = document.querySelectorAll('.avatar-initials');
@@ -92,7 +86,7 @@
                     <span class="nav-section-label">Overview</span>
                     <ul class="nav-list">
                         <li>
-                            <a href="dashboard.html" class="nav-item active" aria-current="page">
+                            <a href="dashboard.html" class="nav-item">
                                 <svg class="nav-icon" viewBox="0 0 24 24">
                                     <rect x="3" y="3" width="7" height="9"></rect>
                                     <rect x="14" y="3" width="7" height="5"></rect>
@@ -109,11 +103,11 @@
                     <span class="nav-section-label">1. Target & Profile</span>
                     <ul class="nav-list">
                         <li>
-                            <a href="career-goal.html" class="nav-item">
+                            <a href="career-goal.html" class="nav-item active" aria-current="page">
                                 <svg class="nav-icon" viewBox="0 0 24 24">
                                     <circle cx="12" cy="12" r="10"></circle>
-                                    <circle cx="12" cy="12" r="6"></circle>
-                                    <circle cx="12" cy="12" r="2"></circle>
+                                    <circle cx="12" cy="6" r="6"></circle>
+                                    <circle cx="12" cy="2" r="2"></circle>
                                 </svg>
                                 <span>Career Goal</span>
                             </a>
@@ -255,26 +249,12 @@
                             <line class="line-3" x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <h1 class="navbar-title">Dashboard Overview</h1>
+                    <h1 class="navbar-title">Career Goal</h1>
                 </div>
 
                 <div class="navbar-right">
-                    <!-- Theme Toggle -->
-                    <button id="theme-toggle" class="theme-toggle" aria-label="Switch theme">
-                        <svg class="moon-icon" viewBox="0 0 24 24">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                        </svg>
-                        <svg class="sun-icon" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="5"></circle>
-                            <line x1="12" y1="1" x2="12" y2="3"></line>
-                            <line x1="12" y1="21" x2="12" y2="23"></line>
-                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                            <line x1="1" y1="12" x2="3" y2="12"></line>
-                            <line x1="21" y1="12" x2="23" y2="12"></line>
-                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                        </svg>
+                    <!-- Theme Toggle (Hidden for warm light theme) -->
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Switch theme" style="display:none;">
                     </button>
 
                     <!-- User Profile Dropdown -->
@@ -316,138 +296,92 @@
             <!-- Main Content Area -->
             <main class="workspace-content" id="main-content">
                 <header class="content-header">
-                    <h2>Welcome back, <span id="welcome-user-name">Candidate</span>!</h2>
-                    <p class="content-subtitle">Track your resume optimizations, ATS scores, job matching metrics, and
-                        AI career roadmap.</p>
+                    <h2 id="goal-page-title">🎯 Define Your Career Goal</h2>
+                    <p class="content-subtitle" id="goal-page-subtitle">Set your target dream company and job role. CareerPilot AI will align your resume analysis, skill gaps, learning roadmap, and interview prep to this goal.</p>
                 </header>
 
-                <!-- Current Career Goal Banner Card -->
-                <section class="career-goal-widget card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary); padding: 1.5rem; background: var(--surface); box-shadow: var(--shadow-sm); border-radius: var(--radius-md);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
-                        <div style="flex: 1; min-width: 250px;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0;">🎯 Current Career Goal</h3>
-                                <span id="goal-status-badge" class="badge-status badge-active" style="display: inline-block; padding: 0.2rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(236, 91, 56, 0.12); color: var(--primary);">ACTIVE</span>
-                            </div>
-                            
-                            <div id="goal-content-loaded" style="display: none; margin-top: 0.75rem;">
-                                <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: 0.92rem;">
-                                    <div>
-                                        <span style="color: var(--text-secondary); display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Target Company</span>
-                                        <strong id="goal-company-val" style="color: var(--text-primary); font-size: 1.05rem;">--</strong>
-                                    </div>
-                                    <div>
-                                        <span style="color: var(--text-secondary); display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Job Role</span>
-                                        <strong id="goal-role-val" style="color: var(--text-primary); font-size: 1.05rem;">--</strong>
-                                    </div>
-                                    <div>
-                                        <span style="color: var(--text-secondary); display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Experience</span>
-                                        <span id="goal-exp-val" style="color: var(--text-primary); font-weight: 600;">--</span>
-                                    </div>
-                                    <div>
-                                        <span style="color: var(--text-secondary); display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Location</span>
-                                        <span id="goal-loc-val" style="color: var(--text-primary); font-weight: 600;">--</span>
-                                    </div>
-                                    <div>
-                                        <span style="color: var(--text-secondary); display: block; font-size: 0.78rem; text-transform: uppercase; font-weight: 600;">Timeline</span>
-                                        <span id="goal-time-val" style="color: var(--text-primary); font-weight: 600;">--</span>
-                                    </div>
-                                </div>
-                            </div>
+                <div id="current-goal-notice" class="badge-status badge-active" style="display:none; margin-bottom: 1.25rem; font-size: 0.95rem; padding: 0.5rem 1rem; border-radius: var(--radius-md); background: rgba(236, 91, 56, 0.12); color: var(--primary); font-weight: 600; border: 1px solid rgba(236, 91, 56, 0.25);">
+                </div>
 
-                            <div id="goal-content-empty" style="display: none; margin-top: 0.5rem;">
-                                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.75rem;">You haven't defined a career goal yet. Set your dream company and role so CareerPilot AI can personalize your roadmap, ATS optimizations, and interview prep.</p>
-                            </div>
+                <!-- Alert box for inline errors / success messages -->
+                <div id="goal-alert-box" class="alert-box" style="display: none; margin-bottom: 1.5rem; padding: 1rem 1.25rem; border-radius: var(--radius-md); font-size: 0.92rem; font-weight: 500;"></div>
 
-                            <div id="goal-content-loading" style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
-                                <span>Loading career goal...</span>
-                            </div>
+                <div class="card" style="max-width: 720px; margin: 0 auto; box-shadow: var(--shadow-md); border-radius: var(--radius-lg); padding: 2rem;">
+                    <form id="career-goal-form" novalidate>
+                        
+                        <!-- Target Company -->
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="company_name" class="form-label" style="display: flex; justify-content: space-between; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">
+                                <span>Target Company <span style="color: var(--primary);">*</span></span>
+                            </label>
+                            <input type="text" id="company_name" name="company_name" class="form-input" placeholder="e.g. Microsoft, Google, Amazon, Deloitte" required style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: #FFFFFF;">
                         </div>
 
-                        <div id="goal-actions" style="display: flex; gap: 0.5rem; align-self: center;">
-                            <a href="career-goal.html" id="btn-edit-goal" class="btn btn-secondary btn-sm" style="display: none; text-decoration: none;">
-                                Edit Goal
-                            </a>
-                            <a href="career-goal.html" id="btn-set-goal" class="btn btn-primary btn-sm" style="display: none; text-decoration: none;">
-                                Set Career Goal
-                            </a>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Candidate Career Profile Widget Card -->
-                <section class="career-profile-widget card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--secondary); padding: 1.5rem; background: var(--surface); box-shadow: var(--shadow-sm); border-radius: var(--radius-md);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                        <div style="flex: 1; min-width: 250px;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
-                                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0;">👤 Your Career Profile</h3>
-                                <span id="dash-profile-completeness-badge" style="display: inline-block; padding: 0.2rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.78rem; font-weight: 700; background: var(--surface-secondary); color: var(--text-primary);">0% COMPLETE</span>
-                            </div>
-                            <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">
-                                <span id="dash-profile-status-desc">Keep your education, technical skills, and projects up to date for precise AI career gap evaluation.</span>
-                            </p>
+                        <!-- Target Job Role -->
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="job_role" class="form-label" style="display: flex; justify-content: space-between; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">
+                                <span>Target Job Role <span style="color: var(--primary);">*</span></span>
+                            </label>
+                            <input type="text" id="job_role" name="job_role" class="form-input" placeholder="e.g. Cloud Engineer, Full Stack Developer, Data Scientist" required style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: #FFFFFF;">
                         </div>
 
-                        <div style="display: flex; gap: 0.5rem;">
-                            <a href="candidate-profile.html" id="btn-view-profile" class="btn btn-secondary btn-sm" style="text-decoration: none;">
-                                View Profile
-                            </a>
-                            <a href="candidate-profile.html" id="btn-complete-profile" class="btn btn-primary btn-sm" style="text-decoration: none;">
-                                Complete Profile
+                        <!-- Experience Level -->
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="experience_level" class="form-label" style="display: flex; justify-content: space-between; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">
+                                <span>Experience Level <span style="color: var(--primary);">*</span></span>
+                            </label>
+                            <select id="experience_level" name="experience_level" class="form-input" required style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: #FFFFFF;">
+                                <option value="">Select your experience level</option>
+                                <option value="Student">Student</option>
+                                <option value="Fresher">Fresher</option>
+                                <option value="Entry Level">Entry Level</option>
+                                <option value="1–2 Years">1–2 Years</option>
+                                <option value="3–5 Years">3–5 Years</option>
+                                <option value="5+ Years">5+ Years</option>
+                            </select>
+                        </div>
+
+                        <!-- Target Location -->
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="target_location" class="form-label" style="display: flex; justify-content: space-between; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">
+                                <span>Target Location <span style="font-weight: 400; color: var(--text-secondary);">(Optional)</span></span>
+                            </label>
+                            <input type="text" id="target_location" name="target_location" class="form-input" placeholder="e.g. India, United States, Remote, London" style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: #FFFFFF;">
+                        </div>
+
+                        <!-- Target Timeline -->
+                        <div class="form-group" style="margin-bottom: 2rem;">
+                            <label for="target_timeline" class="form-label" style="display: flex; justify-content: space-between; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">
+                                <span>Target Timeline <span style="font-weight: 400; color: var(--text-secondary);">(Optional)</span></span>
+                            </label>
+                            <select id="target_timeline" name="target_timeline" class="form-input" style="width: 100%; padding: 0.75rem 1rem; font-size: 0.95rem; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: #FFFFFF;">
+                                <option value="">Select preparation timeline</option>
+                                <option value="1 Month">1 Month</option>
+                                <option value="3 Months">3 Months</option>
+                                <option value="6 Months">6 Months</option>
+                                <option value="1 Year">1 Year</option>
+                                <option value="Flexible">Flexible</option>
+                            </select>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <button type="submit" class="btn btn-primary btn-lg" id="btn-save-goal" style="flex: 1; padding: 0.85rem 1.5rem; font-weight: 600; font-size: 1rem;">
+                                <span class="btn-text">Save Career Goal</span>
+                            </button>
+                            <a href="dashboard.html" class="btn btn-secondary btn-lg" style="padding: 0.85rem 1.5rem; text-decoration: none; text-align: center;">
+                                Cancel
                             </a>
                         </div>
-                    </div>
-                </section>
-
-                <!-- Target Assessment Summary Banner Card -->
-                <section class="career-assessment-widget card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--success); padding: 1.5rem; background: var(--surface); box-shadow: var(--shadow-sm); border-radius: var(--radius-md);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                        <div style="flex: 1; min-width: 250px;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
-                                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0;">🎯 Target Company Career Assessment</h3>
-                                <span id="dash-assessment-badge" style="display: inline-block; padding: 0.2rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.78rem; font-weight: 700; background: rgba(46, 125, 50, 0.12); color: var(--success);">READY TO ANALYZE</span>
-                            </div>
-                            <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">
-                                <span id="dash-assessment-desc">Run deep company intelligence to discover your skills match, ATS score, and prioritized gap roadmap.</span>
-                            </p>
-                        </div>
-
-                        <div>
-                            <a href="assessment.html" id="btn-view-assessment" class="btn btn-secondary btn-sm" style="text-decoration: none;">
-                                View Assessment
-                            </a>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Personalized Learning Plan Widget Card (Phase 4) -->
-                <section class="learning-plan-widget card" style="margin-bottom: 2rem; border-left: 4px solid var(--primary); padding: 1.5rem; background: var(--surface); box-shadow: var(--shadow-sm); border-radius: var(--radius-md);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                        <div style="flex: 1; min-width: 250px;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
-                                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0;">🧭 Personalized Learning Path</h3>
-                                <span id="dash-plan-progress-badge" style="display: inline-block; padding: 0.2rem 0.6rem; border-radius: var(--radius-sm); font-size: 0.78rem; font-weight: 700; background: rgba(236, 91, 56, 0.12); color: var(--primary);">0% PROGRESS</span>
-                            </div>
-                            <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">
-                                <span id="dash-plan-status-desc">Turn identified Phase 3 skill gaps into a structured, phase-by-phase learning plan with practical tasks.</span>
-                            </p>
-                        </div>
-
-                        <div>
-                            <a href="learning-plan.html" id="btn-view-learning-plan" class="btn btn-primary btn-sm" style="text-decoration: none;">
-                                Open Learning Plan ➔
-                            </a>
-                        </div>
-                    </div>
-                </section>
-
+                    </form>
+                </div>
             </main>
         </div>
     </div>
 
     <!-- Scripts -->
     <script type="module" src="js/main.js"></script>
-    <script type="module" src="js/dashboard.js"></script>
+    <script type="module" src="js/careerGoal.js"></script>
 </body>
 
 </html>

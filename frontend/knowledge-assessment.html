@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Assessment & Skill Verification - CareerPilot</title>
+
+    <!-- Meta Descriptions for SEO -->
+    <meta name="description"
+        content="CareerPilot AI Knowledge Assessment - Take targeted, role-grounded skill verification tests with adaptive difficulty, scenario-based questions, and instant feedback.">
+    <meta name="keywords"
+        content="CareerPilot, Knowledge Assessment, Skill Verification, MCQ Test, Technical Evaluation, AI Career Readiness">
+    <meta name="author" content="CareerPilot Team">
+
+    <!-- Fonts Preconnect and Links for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/analysis.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <!-- Light Theme Enforcement -->
+    <script>
+        document.documentElement.classList.remove('dark-mode');
+    </script>
+</head>
+
+<body>
+
+    <!-- Skip link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to content</a>
+
+    <!-- Page guard and login session checking -->
+    <script type="module">
+        import { requireAuth, logoutUser } from './js/auth.js';
+
+        requireAuth().then(session => {
+            if (session) {
+                const dropdownName = document.querySelector('.dropdown-profile-name');
+                const dropdownEmail = document.querySelector('.dropdown-profile-email');
+                const avatarInitials = document.querySelectorAll('.avatar-initials');
+
+                if (dropdownName && session.user) {
+                    dropdownName.textContent = session.user.full_name;
+                }
+                if (dropdownEmail && session.user) {
+                    dropdownEmail.textContent = session.user.email;
+                }
+                if (avatarInitials.length > 0 && session.user) {
+                    const initials = session.user.full_name ? session.user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : session.user.email.substring(0, 2).toUpperCase();
+                    avatarInitials.forEach(el => el.textContent = initials);
+                }
+
+                const logoutLinks = document.querySelectorAll('.logout-trigger');
+                logoutLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        logoutUser();
+                    });
+                });
+            }
+        });
+    </script>
+
+    <div class="dashboard-shell" id="knowledge-assessment-page">
+
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar-wrapper" id="sidebar-wrapper" aria-label="Dashboard Sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="logo" aria-label="CareerPilot Home">
+                    <img src="assets/careerpilot-logo-light.png" alt="CareerPilot" class="brand-logo-img">
+                </a>
+                <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close sidebar">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Main Navigation">
+                <div class="nav-section">
+                    <span class="nav-section-label">General</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="dashboard.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <rect x="3" y="3" width="7" height="9"></rect>
+                                    <rect x="14" y="3" width="7" height="5"></rect>
+                                    <rect x="14" y="12" width="7" height="9"></rect>
+                                    <rect x="3" y="16" width="7" height="5"></rect>
+                                </svg>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="career-goal.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <circle cx="12" cy="12" r="6"></circle>
+                                    <circle cx="12" cy="12" r="2"></circle>
+                                </svg>
+                                <span>Career Goal</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="candidate-profile.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span>Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="assessment.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                                <span>Career Assessment</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="learning-plan.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                </svg>
+                                <span>Learning Plan</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="candidate-profile.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <span>Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="assessment.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                <span>Career Analysis</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="learning-plan.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                                <span>Learning Plan</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-label">AI Modules</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="interview.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                <span>Interview Prep</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="certifications.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                                <span>Certifications & Projects</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="resume-builder.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <span>AI Resume Builder</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="careercoach.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+                                <span>AI Career Coach</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="roadmap.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                                <span>Career Roadmap</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section nav-section--bottom">
+                    <span class="nav-section-label">Account</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="settings.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path
+                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                    </path>
+                                </svg>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <div class="dashboard-main">
+            <!-- Top Navbar -->
+            <header class="topbar" aria-label="Top Bar">
+                <div class="topbar-left">
+                    <button class="mobile-toggle" id="sidebar-open-btn" aria-label="Open sidebar">
+                        <svg viewBox="0 0 24 24">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div class="page-title-area">
+                        <h1 class="page-title">Knowledge Assessment & Skill Verification</h1>
+                        <span class="badge badge-primary">Phase 5</span>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="profile-dropdown-wrapper">
+                        <button class="avatar-btn" id="profile-dropdown-btn" aria-label="User profile menu">
+                            <span class="avatar-initials">CP</span>
+                        </button>
+                        <div class="profile-dropdown" id="profile-dropdown">
+                            <div class="profile-dropdown-header">
+                                <strong class="dropdown-profile-name">Candidate User</strong>
+                                <span class="dropdown-profile-email">user@careerpilot.ai</span>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="candidate-profile.html" class="dropdown-item">My Profile</a>
+                            <a href="settings.html" class="dropdown-item">Account Settings</a>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item logout-trigger" style="color: var(--danger);">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="dashboard-content" id="main-content">
+                <!-- Alert Box -->
+                <div id="test-alert-box" style="display: none; padding: 1rem 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; font-weight: 600;"></div>
+
+                <!-- Test Header Context Card -->
+                <div class="content-card" style="background: var(--surface); border: 1px solid var(--border-light); margin-bottom: 1.5rem; padding: 1.5rem;">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.25rem;">
+                                <span style="font-size: 0.78rem; font-weight: 800; color: var(--primary); text-transform: uppercase;">Skill Verification</span>
+                                <span class="badge" id="test-difficulty-badge" style="background: rgba(236, 91, 56, 0.12); color: var(--primary); font-weight: 700;">MEDIUM</span>
+                            </div>
+                            <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin: 0;">
+                                <span id="test-skill-name">Skill Assessment</span>
+                            </h2>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;" id="test-role-context">
+                                Target Role Evaluation
+                            </p>
+                        </div>
+
+                        <!-- Timer Widget -->
+                        <div style="text-align: right;">
+                            <span style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.2rem;">Time Remaining</span>
+                            <div id="test-timer-display" style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary); font-family: monospace; background: var(--surface-secondary); padding: 0.35rem 0.85rem; border-radius: var(--radius-sm); border: 1.5px solid var(--border-light); display: inline-block;">
+                                15:00
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div style="margin-top: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem;">
+                            <span id="test-question-counter">Question 1 of 5</span>
+                            <span>Target: 75% to Verify</span>
+                        </div>
+                        <div style="width: 100%; height: 6px; background: rgba(168, 164, 146, 0.2); border-radius: var(--radius-full); overflow: hidden;">
+                            <div id="test-progress-bar" style="width: 20%; height: 100%; background: var(--primary); transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Question Box -->
+                <div id="test-question-box" class="content-card" style="background: var(--surface); border: 1px solid var(--border-light); padding: 2rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <span id="test-qtype-badge" class="badge" style="background: rgba(82, 70, 70, 0.08); color: var(--text-primary); font-weight: 700;">
+                            Multiple Choice
+                        </span>
+                        <span id="test-qtopic-badge" style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">
+                            General
+                        </span>
+                    </div>
+
+                    <h3 id="test-qtitle" style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); line-height: 1.5; margin: 0 0 1rem 0;">
+                        Loading question...
+                    </h3>
+
+                    <!-- Dynamic Options / Input Container -->
+                    <div id="test-options-container"></div>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <button id="btn-test-prev" class="btn btn-secondary" style="padding: 0.65rem 1.5rem; font-size: 0.9rem;" disabled>
+                        ➔ Previous
+                    </button>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <a href="learning-plan.html" class="btn btn-secondary" style="padding: 0.65rem 1.25rem; font-size: 0.9rem;">
+                            Exit Test
+                        </a>
+                        <button id="btn-test-next" class="btn btn-primary" style="padding: 0.65rem 1.75rem; font-size: 0.9rem;">
+                            Next Question ➔
+                        </button>
+                        <button id="btn-test-submit" class="btn btn-primary" style="display: none; padding: 0.65rem 2rem; font-size: 0.95rem; font-weight: 700; background: #2e7d32; border-color: #2e7d32;">
+                            <span class="btn-text">Submit Assessment</span>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/knowledgeAssessment.js"></script>
+</body>
+
+</html>

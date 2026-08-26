@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Interview Preparation - CareerPilot</title>
-    
+    <title>Company-Specific Interview Training & Mock Interview - CareerPilot</title>
+
     <!-- Meta Descriptions for SEO -->
-    <meta name="description" content="CareerPilot AI Interview Prep - Practice interactive technical, behavioral, and HR interview questions with real-time AI evaluation feedback.">
-    <meta name="keywords" content="CareerPilot, Interview Preparation, AI Mock Interview, Technical Questions, STAR Method, Gemini AI">
+    <meta name="description"
+        content="CareerPilot AI Interview Training - Personalized interview coaching, real-time AI answer evaluation, company-specific mock interviews, and STAR behavioral training.">
+    <meta name="keywords"
+        content="CareerPilot, AI Mock Interview, Interview Training, Company Specific Interview, Behavioral STAR, Technical Interview">
     <meta name="author" content="CareerPilot Team">
 
     <!-- Fonts Preconnect and Links for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
@@ -24,22 +27,42 @@
     <script>
         document.documentElement.classList.remove('dark-mode');
     </script>
+    <style>
+        .mode-select-card {
+            background: var(--surface);
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            position: relative;
+        }
+        .mode-select-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+        .mode-select-card.active {
+            border-color: var(--primary);
+            background: var(--surface-secondary);
+        }
+    </style>
 </head>
+
 <body>
 
-    <!-- Skip link -->
+    <!-- Skip link for accessibility -->
     <a href="#main-content" class="skip-link">Skip to content</a>
 
-    <!-- Page guard and session initialization -->
+    <!-- Page guard and login session checking -->
     <script type="module">
         import { requireAuth, logoutUser } from './js/auth.js';
-        
+
         requireAuth().then(session => {
             if (session) {
                 const dropdownName = document.querySelector('.dropdown-profile-name');
                 const dropdownEmail = document.querySelector('.dropdown-profile-email');
                 const avatarInitials = document.querySelectorAll('.avatar-initials');
-                
+
                 if (dropdownName && session.user) {
                     dropdownName.textContent = session.user.full_name;
                 }
@@ -62,8 +85,8 @@
         });
     </script>
 
-    <div class="dashboard-shell">
-        
+    <div class="dashboard-shell" id="interview-page-shell">
+
         <!-- Left Sidebar Navigation -->
         <aside class="sidebar-wrapper" id="sidebar-wrapper" aria-label="Dashboard Sidebar">
             <div class="sidebar-header">
@@ -71,17 +94,25 @@
                     <img src="assets/careerpilot-logo-light.png" alt="CareerPilot" class="brand-logo-img">
                 </a>
                 <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Close sidebar">
-                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <svg viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                 </button>
             </div>
 
             <nav class="sidebar-nav" aria-label="Main Navigation">
                 <div class="nav-section">
-                    <span class="nav-section-label">General</span>
+                    <span class="nav-section-label">Overview</span>
                     <ul class="nav-list">
                         <li>
                             <a href="dashboard.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <rect x="3" y="3" width="7" height="9"></rect>
+                                    <rect x="14" y="3" width="7" height="5"></rect>
+                                    <rect x="14" y="12" width="7" height="9"></rect>
+                                    <rect x="3" y="16" width="7" height="5"></rect>
+                                </svg>
                                 <span>Dashboard</span>
                             </a>
                         </li>
@@ -89,48 +120,105 @@
                 </div>
 
                 <div class="nav-section">
-                    <span class="nav-section-label">AI Modules</span>
+                    <span class="nav-section-label">1. Target & Profile</span>
                     <ul class="nav-list">
                         <li>
-                            <a href="upload.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                <span>Resume Upload</span>
+                            <a href="career-goal.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <circle cx="12" cy="6" r="6"></circle>
+                                    <circle cx="12" cy="2" r="2"></circle>
+                                </svg>
+                                <span>Career Goal</span>
                             </a>
                         </li>
                         <li>
-                            <a href="analysis.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="6" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
-                                <span>AI Resume Analysis</span>
+                            <a href="candidate-profile.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span>Profile</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-label">2. Analysis & Learning</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="assessment.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                                <span>Career Analysis</span>
                             </a>
                         </li>
                         <li>
-                            <a href="ats.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                <span>ATS Score</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="jobmatch.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72"></path><path d="M2 12h20"></path></svg>
-                                <span>Job Match</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="interview.html" class="nav-item active" aria-current="page">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                                <span>Interview Preparation</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="careercoach.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
-                                <span>AI Career Coach</span>
+                            <a href="learning-plan.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                </svg>
+                                <span>Learning Plan</span>
                             </a>
                         </li>
                         <li>
                             <a href="roadmap.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                    <polyline points="2 17 12 22 22 17"></polyline>
+                                    <polyline points="2 12 12 17 22 12"></polyline>
+                                </svg>
                                 <span>Career Roadmap</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-label">3. Placement Preparation</span>
+                    <ul class="nav-list">
+                        <li>
+                            <a href="interview.html" class="nav-item active" aria-current="page">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                <span>Interview Prep</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="certifications.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="8" r="7"></circle>
+                                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                                </svg>
+                                <span>Certifications & Projects</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="resume-builder.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                <span>AI Resume Builder</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="careercoach.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="22"></line>
+                                </svg>
+                                <span>AI Career Coach</span>
                             </a>
                         </li>
                     </ul>
@@ -141,14 +229,13 @@
                     <ul class="nav-list">
                         <li>
                             <a href="settings.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path
+                                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                    </path>
+                                </svg>
                                 <span>Settings</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="nav-item logout-trigger">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                                <span>Logout</span>
                             </a>
                         </li>
                     </ul>
@@ -156,169 +243,259 @@
             </nav>
         </aside>
 
-        <!-- Sidebar Overlay -->
-        <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
-
         <!-- Main Workspace Area -->
-        <div class="workspace-wrapper">
-            <!-- Top Navbar Header -->
-            <header class="top-navbar" aria-label="Top Navigation Header">
-                <div class="navbar-left">
-                    <button class="hamburger-menu-btn" id="hamburger-menu-btn" aria-label="Toggle Navigation Sidebar" aria-expanded="false" aria-controls="sidebar-wrapper">
-                        <svg class="hamburger-icon" viewBox="0 0 24 24">
-                            <line class="line-1" x1="3" y1="6" x2="21" y2="6"></line>
-                            <line class="line-2" x1="3" y1="12" x2="21" y2="12"></line>
-                            <line class="line-3" x1="3" y1="18" x2="21" y2="18"></line>
+        <div class="dashboard-main">
+            <!-- Top Navbar -->
+            <header class="topbar" aria-label="Top Bar">
+                <div class="topbar-left">
+                    <button class="mobile-toggle" id="sidebar-open-btn" aria-label="Open sidebar">
+                        <svg viewBox="0 0 24 24">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <h1 class="navbar-title">AI Interview Preparation</h1>
+                    <div class="page-title-area">
+                        <h1 class="page-title">Company-Specific Interview Training</h1>
+                        <span class="badge badge-primary">Phase 6</span>
+                    </div>
                 </div>
 
-                <div class="navbar-right">
-                    <!-- Theme Toggle -->
-                    <button id="theme-toggle" class="theme-toggle" aria-label="Switch theme">
-                        <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                        <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                    </button>
-
-                    <!-- Profile Dropdown -->
-                    <div class="navbar-action-wrapper dropdown-container">
-                        <button class="profile-avatar-btn" id="profile-dropdown-btn" aria-label="Open profile menu" aria-expanded="false" aria-haspopup="true">
-                            <span class="avatar-circle">
-                                <span class="avatar-initials">U</span>
-                            </span>
+                <div class="topbar-right">
+                    <div class="profile-dropdown-wrapper">
+                        <button class="avatar-btn" id="profile-dropdown-btn" aria-label="User profile menu">
+                            <span class="avatar-initials">CP</span>
                         </button>
-                        
-                        <div class="dropdown-menu profile-dropdown" id="profile-dropdown" role="menu">
-                            <div class="profile-info-block">
-                                <span class="avatar-circle avatar-large">
-                                    <span class="avatar-initials">U</span>
-                                </span>
-                                <div class="profile-meta">
-                                    <h4 class="dropdown-profile-name">User Name</h4>
-                                    <p class="dropdown-profile-email">user@careerpilot.com</p>
-                                </div>
+                        <div class="profile-dropdown" id="profile-dropdown">
+                            <div class="profile-dropdown-header">
+                                <strong class="dropdown-profile-name">Candidate User</strong>
+                                <span class="dropdown-profile-email">user@careerpilot.ai</span>
                             </div>
                             <div class="dropdown-divider"></div>
-                            <ul class="dropdown-list">
-                                <li role="none">
-                                    <a href="settings.html" class="dropdown-item" role="menuitem">
-                                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                        <span>My Profile</span>
-                                    </a>
-                                </li>
-                            </ul>
+                            <a href="candidate-profile.html" class="dropdown-item">My Profile</a>
+                            <a href="settings.html" class="dropdown-item">Account Settings</a>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item logout-trigger" style="color: var(--danger);">Logout</button>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <!-- Main Workspace Area -->
-            <main class="workspace-content" id="main-content">
-                <header class="content-header">
-                    <h2>AI Interview Preparation & Practice</h2>
-                    <p class="content-subtitle">Generate custom technical, behavioral, and HR interview questions. Submit answers for immediate AI scoring, feedback, and suggested responses.</p>
-                </header>
+            <!-- Main Content Area -->
+            <main class="dashboard-content" id="main-content">
+                <!-- Alert Box -->
+                <div id="interview-alert-box" style="display: none; padding: 1rem 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; font-weight: 600;"></div>
 
-                <!-- Interview Setup Card -->
-                <div class="card" style="margin-bottom: 2rem;">
-                    <form id="interview-setup-form">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
-                            <div class="form-group" style="grid-column: span 2;">
-                                <label for="interview-resume-select" class="form-label">Select Your Resume</label>
-                                <div id="interview-resume-select-container">
-                                    <div class="selection-skeleton">
-                                        <div class="skeleton-icon"></div>
-                                        <div class="skeleton-lines">
-                                            <div class="skeleton-line long"></div>
-                                            <div class="skeleton-line short"></div>
-                                        </div>
-                                    </div>
+                <!-- Interview Readiness & Target Header Card -->
+                <div class="content-card" style="background: var(--surface); border: 1px solid var(--border-light); margin-bottom: 1.75rem; padding: 1.75rem;">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.25rem;">
+                                <span style="font-size: 0.78rem; font-weight: 800; color: var(--primary); text-transform: uppercase;">Interview Training Coach</span>
+                                <span class="badge" id="interview-readiness-badge" style="background: rgba(46, 125, 50, 0.12); color: var(--success); font-weight: 700;">
+                                    60% READINESS
+                                </span>
+                            </div>
+                            <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0;">
+                                <span id="int-role-title">Target Role</span> at <span id="int-company-title" style="color: var(--primary);">Target Company</span>
+                            </h2>
+                            <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0.35rem 0 0 0;">
+                                Grounded in your profile projects, resume, Phase 3 gaps, and Phase 5 verified skills.
+                            </p>
+                        </div>
+
+                        <!-- Readiness Stats -->
+                        <div style="display: flex; gap: 1.5rem; align-items: center;">
+                            <div style="text-align: center;">
+                                <div id="stat-readiness-pct" style="font-size: 2.2rem; font-weight: 900; color: var(--primary); line-height: 1;">
+                                    68%
                                 </div>
-                                <select id="interview-resume-select" class="form-select" style="display: none;" required>
-                                    <option value="" disabled selected>-- Choose a resume --</option>
-                                </select>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Readiness Score</span>
                             </div>
-
-                            <div class="form-group" style="grid-column: span 2;">
-                                <label for="interview-role-input" class="form-label">Target Role Title</label>
-                                <input type="text" id="interview-role-input" class="form-input" placeholder="e.g. Software Engineer, Data Scientist" required>
+                            <div style="text-align: center;">
+                                <div id="stat-sessions-count" style="font-size: 2.2rem; font-weight: 900; color: var(--text-primary); line-height: 1;">
+                                    0
+                                </div>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Sessions Completed</span>
                             </div>
                         </div>
-
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <button type="submit" class="btn btn-primary" id="btn-generate-questions" disabled>
-                                <span>Generate Interview Questions</span>
-                            </button>
-                            <span id="interview-status-msg" style="font-size: 0.9rem; color: var(--text-muted); display: none;"></span>
-                        </div>
-                    </form>
-                    <div id="interview-alert-box" class="alert-box" style="display: none; margin-top: 1.25rem;"></div>
+                    </div>
                 </div>
 
-                <!-- Active Interview Practice Workspace -->
-                <div id="interview-workspace" style="display: none; flex-direction: column; gap: 1.75rem;">
+                <!-- Setup & Mode Selection View -->
+                <div id="interview-setup-view">
+                    <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem;">🎯 Choose Training Mode</h3>
                     
-                    <!-- Question Header & Answer Box -->
-                    <div class="card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-                            <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                <span class="badge badge-info" id="q-category-badge">Technical</span>
-                                <span class="badge badge-neutral" id="q-difficulty-badge">Medium</span>
-                            </div>
-                            <span style="font-size: 0.88rem; font-weight: 600; color: var(--text-muted);" id="q-progress-text">Question 1 of 5</span>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.75rem;">
+                        <!-- Mode 1: Mock Interview -->
+                        <div class="mode-select-card active" data-mode="MOCK_INTERVIEW" id="mode-card-mock">
+                            <span style="font-size: 1.8rem; display: block; margin-bottom: 0.5rem;">🎙️</span>
+                            <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.35rem 0;">Full Mock Interview</h4>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.45;">
+                                10 balanced questions across Technical, Project, Scenario, and Behavioral STAR categories with comprehensive final readiness reporting.
+                            </p>
                         </div>
 
-                        <h3 id="q-title-text" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.25rem; line-height: 1.4;"></h3>
+                        <!-- Mode 2: Daily Practice -->
+                        <div class="mode-select-card" data-mode="DAILY_PRACTICE" id="mode-card-daily">
+                            <span style="font-size: 1.8rem; display: block; margin-bottom: 0.5rem;">⚡</span>
+                            <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.35rem 0;">Today's Practice Drill</h4>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.45;">
+                                5 fast-paced targeted questions focused directly on your weakest assessment topics with instant AI answer feedback.
+                            </p>
+                        </div>
 
-                        <!-- Guidance Collapsible -->
-                        <div style="background-color: var(--surface-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem;">
-                            <span style="font-size: 0.85rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">Answering Guidance</span>
-                            <p id="q-guidance-text" style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.25rem;"></p>
+                        <!-- Mode 3: Project Deep-Dive -->
+                        <div class="mode-select-card" data-mode="CATEGORY_DRILL" id="mode-card-project">
+                            <span style="font-size: 1.8rem; display: block; margin-bottom: 0.5rem;">🚀</span>
+                            <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.35rem 0;">Project Deep-Dive Drill</h4>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.45;">
+                                Focus exclusively on explaining project architecture, tech stack trade-offs, security, and scalability bottlenecks.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <div style="text-align: center; margin-bottom: 2.5rem;">
+                        <button id="btn-start-interview-session" class="btn btn-primary" style="padding: 0.85rem 2.5rem; font-size: 1rem; font-weight: 700;">
+                            <span class="btn-text">Start Training Session ➔</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Interview Workspace View (Hidden by default) -->
+                <div id="interview-workspace-view" style="display: none;">
+                    <div class="content-card" style="background: var(--surface); border: 1px solid var(--border-light); padding: 2rem; margin-bottom: 1.5rem;">
+                        <!-- Question Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <span id="ws-q-cat-badge" class="badge" style="background: rgba(236, 91, 56, 0.12); color: var(--primary); font-weight: 700;">Technical</span>
+                                <span id="ws-q-topic-badge" style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);">Docker</span>
+                            </div>
+                            <span id="ws-q-counter" style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);">Question 1 of 10</span>
+                        </div>
+
+                        <!-- Question Title -->
+                        <h3 id="ws-q-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); line-height: 1.5; margin: 0 0 0.75rem 0;">
+                            Loading question...
+                        </h3>
+
+                        <!-- Why this question box -->
+                        <div style="background: var(--surface-secondary); padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; font-size: 0.85rem; color: var(--text-secondary);">
+                            💡 <strong style="color: var(--text-primary);">Why this matters:</strong> <span id="ws-q-why">--</span>
                         </div>
 
                         <!-- Answer Input Form -->
-                        <form id="answer-form">
-                            <div class="form-group" style="margin-bottom: 1.25rem;">
-                                <label for="answer-textarea" class="form-label">Your Response</label>
-                                <textarea id="answer-textarea" class="form-textarea" placeholder="Type your answer using the STAR method (Situation, Task, Action, Result)..." required style="min-height: 140px;"></textarea>
-                            </div>
-
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <button type="submit" class="btn btn-primary" id="btn-submit-answer">
-                                    <span>Submit Answer for AI Evaluation</span>
-                                </button>
-                                <button type="button" class="btn btn-secondary" id="btn-next-question" style="display: none;">Next Question →</button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- AI Answer Evaluation Feedback Card -->
-                    <div id="answer-feedback-card" class="card" style="display: none;">
-                        <h3 class="analysis-card-title">AI Evaluation Feedback</h3>
-                        
-                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
-                            <span style="font-size: 0.88rem; font-weight: 600; color: var(--text-muted);">Answer Score:</span>
-                            <span id="feedback-score-val" style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">8/10</span>
+                        <div style="margin-bottom: 1rem;">
+                            <label for="ws-answer-input" style="display: block; font-size: 0.88rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.4rem;">
+                                Your Answer:
+                            </label>
+                            <textarea id="ws-answer-input" rows="6" placeholder="Structure your response clearly. For technical questions, explain the concept and reference practical project examples. For behavioral questions, use the STAR format..." style="width: 100%; padding: 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-md); font-family: inherit; font-size: 0.95rem; color: var(--text-primary); background: var(--surface); line-height: 1.5;"></textarea>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
-                            <div>
-                                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--success); margin-bottom: 0.5rem;">Strengths</h4>
-                                <ul class="analysis-list" id="feedback-strengths"></ul>
-                            </div>
-                            <div>
-                                <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--danger); margin-bottom: 0.5rem;">Areas to Improve</h4>
-                                <ul class="analysis-list" id="feedback-improvements"></ul>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem;">Suggested Ideal Answer Model</h4>
-                            <p id="feedback-model-answer" style="font-size: 0.92rem; color: var(--text-primary); line-height: 1.6; background-color: var(--surface-secondary); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border);"></p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <button id="btn-ws-exit" class="btn btn-secondary btn-sm">Exit Training</button>
+                            <button id="btn-ws-submit-answer" class="btn btn-primary" style="padding: 0.65rem 1.75rem;">
+                                <span class="btn-text">Submit & Evaluate Answer</span>
+                            </button>
                         </div>
                     </div>
 
+                    <!-- Instant Answer Feedback Box -->
+                    <div id="ws-feedback-card" class="content-card" style="display: none; background: var(--surface); border: 1px solid var(--border-light); border-left: 4px solid var(--primary); padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0;">AI Answer Evaluation</h4>
+                            <span id="ws-fb-score" style="font-size: 1.3rem; font-weight: 800; color: var(--primary);">85/100</span>
+                        </div>
+                        <p id="ws-fb-summary" style="font-size: 0.92rem; color: var(--text-primary); line-height: 1.5; margin: 0 0 0.85rem 0;">--</p>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="background: rgba(46, 125, 50, 0.08); padding: 0.75rem; border-radius: var(--radius-sm);">
+                                <strong style="font-size: 0.82rem; color: #2e7d32; text-transform: uppercase;">🟢 Strengths:</strong>
+                                <ul id="ws-fb-strengths" style="padding-left: 1.2rem; margin: 0.3rem 0 0 0; font-size: 0.85rem; color: var(--text-primary);"></ul>
+                            </div>
+                            <div style="background: rgba(198, 40, 40, 0.08); padding: 0.75rem; border-radius: var(--radius-sm);">
+                                <strong style="font-size: 0.82rem; color: #c62828; text-transform: uppercase;">🔴 Missing Points:</strong>
+                                <ul id="ws-fb-missing" style="padding-left: 1.2rem; margin: 0.3rem 0 0 0; font-size: 0.85rem; color: var(--text-primary);"></ul>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--surface-secondary); padding: 0.85rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.85rem;">
+                            <strong style="color: var(--text-primary);">Suggested Answer Framework:</strong>
+                            <ol id="ws-fb-structure" style="padding-left: 1.2rem; margin: 0.3rem 0 0 0; color: var(--text-secondary);"></ol>
+                        </div>
+
+                        <div style="text-align: right;">
+                            <button id="btn-ws-next-q" class="btn btn-primary" style="padding: 0.65rem 1.75rem;">
+                                Next Question ➔
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Final Mock Interview Summary Report View -->
+                <div id="interview-report-view" style="display: none;">
+                    <div class="content-card" style="background: var(--surface); border: 1px solid var(--border-light); padding: 2rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <span style="font-size: 0.8rem; font-weight: 800; color: var(--primary); text-transform: uppercase;">Mock Interview Completed</span>
+                                <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin: 0.2rem 0 0.35rem 0;">Performance Report</h2>
+                                <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;" id="rep-role-subtitle">Target Role Readiness Evaluation</p>
+                            </div>
+
+                            <div style="display: flex; gap: 1.5rem; align-items: center;">
+                                <div style="text-align: center;">
+                                    <div id="rep-overall-score" style="font-size: 2.2rem; font-weight: 900; color: var(--primary); line-height: 1;">82%</div>
+                                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Overall Score</span>
+                                </div>
+                                <span id="rep-readiness-badge" class="badge" style="padding: 0.5rem 1rem; font-size: 0.95rem; font-weight: 800; background: rgba(46, 125, 50, 0.15); color: #2e7d32;">
+                                    INTERVIEW READY
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Category Breakdown Bars -->
+                        <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.85rem 0;">📊 Performance by Category</h4>
+                        <div id="rep-category-bars" style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;"></div>
+
+                        <!-- Improvement Plan -->
+                        <div style="background: var(--surface-secondary); border-left: 4px solid var(--primary); padding: 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
+                            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.4rem 0;">💡 Actionable Improvement Steps</h4>
+                            <ul id="rep-improvement-list" style="padding-left: 1.2rem; margin: 0; font-size: 0.88rem; color: var(--text-primary); line-height: 1.5;"></ul>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <a href="learning-plan.html" class="btn btn-secondary">➔ Review Learning Plan</a>
+                            <button id="btn-rep-retake" class="btn btn-primary">Start Another Session 🔄</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attempt History View -->
+                <div class="content-card" style="background: var(--surface); border: 1px solid var(--border-light); padding: 1.5rem;">
+                    <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem;">📜 Your Interview Attempt History</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 600px;">
+                            <thead>
+                                <tr style="background: var(--surface-secondary); border-bottom: 2px solid var(--border-light);">
+                                    <th style="padding: 0.75rem 1rem; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Session Type</th>
+                                    <th style="padding: 0.75rem 1rem; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Target Role</th>
+                                    <th style="padding: 0.75rem 1rem; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Questions</th>
+                                    <th style="padding: 0.75rem 1rem; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Score</th>
+                                    <th style="padding: 0.75rem 1rem; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Readiness</th>
+                                    <th style="padding: 0.75rem 1rem; font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="interview-history-table-body">
+                                <tr>
+                                    <td colspan="6" style="padding: 1.5rem; text-align: center; color: var(--text-secondary); font-style: italic;">
+                                        Loading interview attempt history...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </main>
         </div>
@@ -328,4 +505,5 @@
     <script type="module" src="js/main.js"></script>
     <script type="module" src="js/interview.js"></script>
 </body>
+
 </html>
