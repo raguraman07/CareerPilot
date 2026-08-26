@@ -45,6 +45,14 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
+    max-width: 100%;
+}
+
+.sidebar-header .logo .brand-logo-img {
+    height: 34px;
+    width: auto;
+    max-width: 160px;
+    object-fit: contain;
 }
 
 .logo-icon {
@@ -56,6 +64,13 @@
     align-items: center;
     justify-content: center;
     color: #FFFFFF;
+    overflow: hidden;
+}
+
+.logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .logo-icon svg {

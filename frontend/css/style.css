@@ -775,11 +775,31 @@ select option:checked, select option:hover {
 .logo {
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.65rem;
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--dark);
     text-decoration: none;
+    transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.logo:hover {
+    opacity: 0.92;
+}
+
+.brand-logo-img {
+    height: 38px;
+    width: auto;
+    max-width: 170px;
+    object-fit: contain;
+    display: block;
+}
+
+.brand-emblem-img {
+    height: 32px;
+    width: 32px;
+    object-fit: contain;
+    display: block;
 }
 
 .logo-icon {
@@ -791,6 +811,13 @@ select option:checked, select option:hover {
     align-items: center;
     justify-content: center;
     color: #ffffff;
+    overflow: hidden;
+}
+
+.logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .logo-icon svg {
