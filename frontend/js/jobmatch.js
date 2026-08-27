@@ -1,7 +1,6 @@
 import { supabase } from './supabaseClient.js';
 import { renderResumeCards, renderSelectionSkeleton, renderSelectionError } from './selection.js';
-
-const API_BASE_URL = window.API_BASE_URL || 'http://127.0.0.1:5000';
+import { API_BASE_URL } from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const resumeSelect = document.getElementById('jobmatch-resume-select') || document.getElementById('resume-select');

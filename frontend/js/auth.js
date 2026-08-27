@@ -13,14 +13,14 @@ import {
     signInWithPopup
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
+import { API_BASE_URL } from './config.js';
+
 // Automatically redirect 127.0.0.1 to localhost for default Firebase Auth domain authorization
 if (window.location.hostname === '127.0.0.1') {
     const normalizedUrl = new URL(window.location.href);
     normalizedUrl.hostname = 'localhost';
     window.location.replace(normalizedUrl.toString());
 }
-
-const API_BASE_URL = window.API_BASE_URL || 'http://127.0.0.1:5000';
 
 
 

@@ -5,8 +5,7 @@
  */
 
 import { supabase } from './supabaseClient.js';
-
-const API_BASE_URL = window.API_BASE_URL || 'http://127.0.0.1:5000';
+import { API_BASE_URL } from './config.js';
 const ALLOWED_MIME_TYPES = ['.pdf', '.doc', '.docx'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 

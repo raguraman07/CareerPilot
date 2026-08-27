@@ -4,8 +4,7 @@ import { getCurrentCareerGoal } from './careerGoal.js';
 import { getCandidateProfile } from './candidateProfile.js';
 import { getCurrentAssessment } from './assessment.js';
 import { getCurrentLearningPlan } from './learningPlan.js';
-
-const API_BASE_URL = window.API_BASE_URL || 'http://127.0.0.1:5000';
+import { API_BASE_URL } from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const statAtsVal = document.getElementById('stat-ats-val');

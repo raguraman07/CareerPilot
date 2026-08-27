@@ -9,7 +9,10 @@ from jobmatch_routes import jobmatch_bp
 from interview_routes import interview_bp
 from roadmap_routes import roadmap_bp
 from chat_routes import chat_bp
-from app.blueprints.ai import ai_bp
+try:
+    from app.blueprints.ai import ai_bp
+except ImportError:
+    from backend.app.blueprints.ai import ai_bp
 from career_goal_routes import career_goal_bp
 from profile_routes import profile_bp
 from assessment_routes import assessment_bp
@@ -54,6 +57,9 @@ app.register_blueprint(resume_builder_bp)
 app.register_blueprint(jobs_bp)
 
 # Custom CORS Handlers
+ALLOWED_ORIGINS = os.getenv("FRONTEND_ORIGIN", "").split(",")
+ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()]
+
 @app.before_request
 def before_request():
     if request.method == "OPTIONS":
@@ -61,7 +67,14 @@ def before_request():
 
 @app.after_request
 def after_request(response):
-    response.headers.add("Access-Control-Allow-Origin", "*")
+    origin = request.headers.get("Origin")
+    if origin:
+        if not ALLOWED_ORIGINS or "*" in ALLOWED_ORIGINS or origin in ALLOWED_ORIGINS or origin.startswith("http://localhost:") or origin.startswith("http://127.0.0.1:"):
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+    else:
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        
     response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
     response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
     return response
@@ -88,7 +101,11 @@ def favicon():
 
 @app.route('/api/health', methods=['GET'])
 def health():
-    return jsonify({"status": "healthy", "service": "careercopilot-auth-api"}), 200
+    return jsonify({
+        "success": True,
+        "service": "CareerPilot AI Backend",
+        "status": "healthy"
+    }), 200
 
 @app.route('/<path:path>', methods=['GET'])
 def serve_static(path):
