@@ -1,5 +1,5 @@
 """
-CareerPilot AI — Job Opportunities Flask Blueprint Routes
+CareerPilot AI — Job Opportunities & Real-Time Hiring Flask Blueprint Routes
 """
 import logging
 from flask import Blueprint, request, jsonify
@@ -33,10 +33,12 @@ def get_auth_uid(req):
     raise ValueError("Unauthorized. Invalid session token.")
 
 
+@jobs_bp.route('/api/jobs/relevant', methods=['GET'])
 @jobs_bp.route('/api/jobs/opportunities', methods=['GET'])
-def get_opportunities_endpoint():
+def get_relevant_jobs_endpoint():
     """
-    Retrieves filtered job opportunities tailored to authenticated user's target role & dream company.
+    Retrieves filtered and prioritized real job opportunities tailored to
+    the authenticated user's target job role and dream company from Adzuna.
     Accepts query params: company_filter, location, experience, search.
     """
     try:
@@ -125,8 +127,7 @@ def mark_all_notifications_read_endpoint():
 @jobs_bp.route('/api/jobs/refresh', methods=['POST'])
 def refresh_jobs_endpoint():
     """
-    Triggers job provider polling refresh.
-    Returns clean configuration status if provider is not active.
+    Triggers fresh Adzuna job polling and returns updated results.
     """
     try:
         uid = get_auth_uid(request)

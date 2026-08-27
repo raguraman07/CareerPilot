@@ -1,4 +1,4 @@
-// CareerPilot AI — Job Opportunities Frontend Client Module (Module 9)
+import { auth } from './firebaseClient.js';
 import { supabase } from './supabaseClient.js';
 import { getCurrentCareerGoal } from './careerGoal.js';
 
@@ -7,17 +7,37 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
     : `http://${window.location.hostname}:5000`;
 
 /**
- * Retrieve active user auth token
+ * Retrieve active user auth token (supports Firebase Auth & Supabase)
  */
 export async function getAuthToken() {
+    // 1. Try active Firebase user
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return null;
-        return session.access_token;
-    } catch (err) {
-        console.error("Error retrieving auth token for job opportunities:", err);
-        return null;
+        if (auth && auth.currentUser) {
+            const token = await auth.currentUser.getIdToken();
+            if (token) return token;
+        }
+    } catch (e) {
+        console.warn("Firebase direct token retrieval error:", e);
     }
+
+    // 2. Try auth.js helper
+    try {
+        const { getAuthToken: getFirebaseToken } = await import('./auth.js');
+        const token = await getFirebaseToken();
+        if (token) return token;
+    } catch (e) {}
+
+    // 3. Fallback to Supabase session
+    try {
+        if (supabase && supabase.auth) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) return session.access_token;
+        }
+    } catch (err) {
+        console.warn("Supabase token retrieval error:", err);
+    }
+
+    return null;
 }
 
 /**
@@ -33,7 +53,7 @@ export async function fetchJobOpportunities(filters = {}) {
     if (filters.experience) queryParams.append('experience', filters.experience);
     if (filters.search) queryParams.append('search', filters.search);
 
-    const url = `${API_BASE_URL}/api/jobs/opportunities${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const url = `${API_BASE_URL}/api/jobs/relevant${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -104,6 +124,24 @@ export async function markAllNotificationsRead() {
     });
 }
 
+/**
+ * Helper to format salary values
+ */
+function formatSalary(min, max) {
+    if (!min && !max) return null;
+    const formatNum = (n) => {
+        if (n >= 100000) return `${(n / 100000).toFixed(1).replace(/\.0$/, '')}L`;
+        if (n >= 1000) return `${Math.round(n / 1000)}k`;
+        return `${n}`;
+    };
+    if (min && max) {
+        return `₹${formatNum(min)} - ₹${formatNum(max)}`;
+    }
+    if (min) return `From ₹${formatNum(min)}`;
+    if (max) return `Up to ₹${formatNum(max)}`;
+    return null;
+}
+
 // -------------------------------------------------------------
 // Interactive UI Controller for job-opportunities.html
 // -------------------------------------------------------------
@@ -168,6 +206,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             alertBox.style.background = 'rgba(46, 125, 50, 0.12)';
             alertBox.style.color = '#2e7d32';
             alertBox.style.border = '1px solid rgba(46, 125, 50, 0.3)';
+        } else if (type === 'info') {
+            alertBox.style.background = 'rgba(82, 70, 70, 0.08)';
+            alertBox.style.color = 'var(--text-primary)';
+            alertBox.style.border = '1px solid var(--border-light)';
         }
         alertBox.textContent = message;
     };
@@ -203,6 +245,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             ? `<div class="job-card-skills">${skillsList.slice(0, 4).map(s => `<span class="job-skill-chip">${escapeHtml(s)}</span>`).join('')}</div>`
             : '';
 
+        const salaryStr = formatSalary(job.salary_min, job.salary_max);
+        const salaryBadge = salaryStr
+            ? `<span><i class="fas fa-coins" style="color: #2e7d32;"></i> ${escapeHtml(salaryStr)}</span>`
+            : '';
+
+        const postedDateStr = job.posted_date ? new Date(job.posted_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Recently';
+
         card.innerHTML = `
             <div class="job-card-header">
                 <div>
@@ -214,19 +263,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             <div class="job-meta-row">
                 <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(job.location || 'Location')}</span>
-                <span><i class="fas fa-briefcase"></i> ${escapeHtml(job.employment_type || 'Full-time')}</span>
-                <span><i class="fas fa-graduation-cap"></i> ${escapeHtml(job.experience || 'Entry Level')}</span>
-                <span><i class="fas fa-clock"></i> ${escapeHtml(job.posted_date || 'Recently')}</span>
+                <span><i class="fas fa-briefcase"></i> ${escapeHtml(job.contract_type || job.employment_type || 'Full-time')}</span>
+                ${salaryBadge}
+                <span><i class="fas fa-clock"></i> ${escapeHtml(postedDateStr)}</span>
             </div>
 
             <p class="job-card-description">${escapeHtml((job.description || '').substring(0, 160))}${job.description && job.description.length > 160 ? '...' : ''}</p>
 
             ${skillsHtml}
 
-            <div class="job-card-footer">
+            <div class="job-card-footer" style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
                 <button type="button" class="btn btn-secondary btn-sm btn-view-job-detail" style="font-weight: 700;">
-                    View Details & Apply
+                    Details
                 </button>
+                <a href="${escapeHtml(job.application_url || job.job_url || '#')}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 4px; font-weight: 700; text-decoration: none;">
+                    Apply <i class="fas fa-external-link-alt" style="font-size: 0.75rem;"></i>
+                </a>
             </div>
         `;
 
@@ -244,9 +296,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (modalTitle) modalTitle.textContent = job.title || 'Job Title';
         if (modalCompany) modalCompany.textContent = job.company || 'Company';
         if (modalLocation) modalLocation.textContent = job.location || 'Not specified';
-        if (modalType) modalType.textContent = job.employment_type || 'Full-time';
-        if (modalExp) modalExp.textContent = job.experience || 'Not specified';
-        if (modalPosted) modalPosted.textContent = job.posted_date || 'Recently';
+        if (modalType) modalType.textContent = job.contract_type || job.employment_type || 'Full-time';
+        if (modalExp) modalExp.textContent = job.experience || 'Entry / Relevant Experience';
+        if (modalPosted) modalPosted.textContent = job.posted_date ? new Date(job.posted_date).toLocaleDateString() : 'Recently';
         if (modalDesc) modalDesc.textContent = job.description || 'No description provided by the employer.';
 
         // Responsibilities
@@ -333,13 +385,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const item = document.createElement('div');
                         item.className = `notif-dropdown-item ${n.read ? 'read' : 'unread'}`;
                         item.innerHTML = `
-                            <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-primary); margin-bottom: 2px;">
+                            <div style="font-weight: 700; font-size: 0.88rem; color: var(--dark); margin-bottom: 2px;">
                                 ${escapeHtml(n.title || 'Job Opportunity')}
                             </div>
                             <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">
                                 ${escapeHtml(n.message || '')}
                             </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted);">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-secondary);">
                                 <span>${escapeHtml(n.location || '')}</span>
                                 <span>${n.created_at ? new Date(n.created_at).toLocaleDateString() : ''}</span>
                             </div>
@@ -405,9 +457,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await fetchJobOpportunities(filters);
             currentJobData = data;
 
-            // Handle unconfigured provider state
+            // Handle unconfigured provider or missing target role
+            if (!data.target_role) {
+                if (unconfiguredBanner) {
+                    unconfiguredBanner.style.display = 'block';
+                    const h3 = unconfiguredBanner.querySelector('h3');
+                    const p = unconfiguredBanner.querySelector('p');
+                    if (h3) h3.textContent = "Complete your Career Goal first";
+                    if (p) p.textContent = "Define your Target Job Role in Step 1 to automatically receive active job opportunities.";
+                }
+                if (dreamSection) dreamSection.style.display = 'none';
+                if (otherSection) otherSection.style.display = 'none';
+                return;
+            }
+
             if (!data.provider_configured && (!data.total_count || data.total_count === 0)) {
-                if (unconfiguredBanner) unconfiguredBanner.style.display = 'block';
+                if (unconfiguredBanner) {
+                    unconfiguredBanner.style.display = 'block';
+                    const h3 = unconfiguredBanner.querySelector('h3');
+                    const p = unconfiguredBanner.querySelector('p');
+                    if (h3) h3.textContent = "Live Job Opportunities";
+                    if (p) p.textContent = data.message || "Job opportunities are temporarily unavailable. Please try again later.";
+                }
                 if (dreamSection) dreamSection.style.display = 'none';
                 if (otherSection) otherSection.style.display = 'none';
                 return;
@@ -425,10 +496,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else {
                     dreamSection.style.display = 'block';
                     dreamJobList.innerHTML = `
-                        <div class="empty-dream-state">
-                            <i class="fas fa-building" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem;"></i>
-                            <div style="font-weight: 600; color: var(--text-primary);">No active openings found at your Dream Company (${escapeHtml(data.dream_company || 'Target')}) right now.</div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Explore hiring opportunities for ${escapeHtml(data.target_role || 'your target role')} at other leading companies below.</div>
+                        <div class="empty-dream-state" style="background: #fff; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.75rem; text-align: center;">
+                            <i class="fas fa-building" style="font-size: 1.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;"></i>
+                            <div style="font-weight: 700; color: var(--dark);">No current openings found for your dream company (${escapeHtml(data.dream_company || 'Selected')}).</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Here are other active opportunities matching your target role below.</div>
                         </div>
                     `;
                 }
@@ -443,7 +514,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     otherJobs.forEach(j => otherJobList.appendChild(renderJobCard(j, false)));
                 } else if (dreamJobs.length === 0) {
                     otherSection.style.display = 'block';
-                    otherJobList.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-secondary); font-style: italic;">No matching job opportunities found for the selected filters.</div>';
+                    otherJobList.innerHTML = '<div style="background: #fff; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 2rem; text-align: center; color: var(--text-secondary); font-style: italic;">No current openings found for your target role. Check again later.</div>';
                 } else {
                     otherSection.style.display = 'none';
                 }

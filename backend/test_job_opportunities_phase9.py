@@ -43,9 +43,10 @@ class TestJobOpportunitiesPhase9(unittest.TestCase):
     def test_provider_unconfigured_by_default(self):
         """Verify ExternalJobProvider raises NotImplementedError when unconfigured."""
         provider = ExternalJobProvider()
-        self.assertFalse(provider.is_configured())
-        with self.assertRaises(NotImplementedError):
-            provider.search_jobs("Cloud Engineer")
+        with patch.object(provider, 'is_configured', return_value=False):
+            self.assertFalse(provider.is_configured())
+            with self.assertRaises(NotImplementedError):
+                provider.search_jobs("Cloud Engineer")
 
     def test_models_normalization_stable_hash(self):
         """Verify raw dictionary is normalized and gets a deterministic unique ID."""
@@ -128,8 +129,10 @@ class TestJobOpportunitiesPhase9(unittest.TestCase):
 
     def test_service_unconfigured_clean_empty_state(self):
         """Verify service returns clean empty state when provider is unconfigured without mock data."""
-        svc = JobOpportunityService(provider=ExternalJobProvider())
-        with patch.object(svc, 'get_user_target_career_context', return_value=("Cloud Engineer", "Microsoft", "Remote")), \
+        provider = ExternalJobProvider()
+        svc = JobOpportunityService(provider=provider)
+        with patch.object(provider, 'is_configured', return_value=False), \
+             patch.object(svc, 'get_user_target_career_context', return_value=("Cloud Engineer", "Microsoft", "Remote")), \
              patch('job_opportunities.service.get_all_active_jobs', return_value=[]):
             result = svc.fetch_and_sync_opportunities("user_test_456")
             self.assertTrue(result["success"])

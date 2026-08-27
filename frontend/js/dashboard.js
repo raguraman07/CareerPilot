@@ -1,3 +1,4 @@
+import { auth } from './firebaseClient.js';
 import { supabase } from './supabaseClient.js';
 import { getCurrentCareerGoal } from './careerGoal.js';
 import { getCandidateProfile } from './candidateProfile.js';
@@ -40,9 +41,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const planDesc = document.getElementById('dash-plan-status-desc');
 
     const getAuthToken = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return null;
-        return session.access_token;
+        try {
+            if (auth && auth.currentUser) {
+                const token = await auth.currentUser.getIdToken();
+                if (token) return token;
+            }
+        } catch (e) {}
+
+        try {
+            const { getAuthToken: getFirebaseToken } = await import('./auth.js');
+            const token = await getFirebaseToken();
+            if (token) return token;
+        } catch (e) {}
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) return session.access_token;
+        } catch (err) {}
+        return null;
     };
 
     // Load Learning Plan status

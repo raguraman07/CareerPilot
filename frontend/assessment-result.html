@@ -84,7 +84,7 @@
 
             <nav class="sidebar-nav" aria-label="Main Navigation">
                 <div class="nav-section">
-                    <span class="nav-section-label">General</span>
+                    <span class="nav-section-label">Overview</span>
                     <ul class="nav-list">
                         <li>
                             <a href="dashboard.html" class="nav-item">
@@ -97,12 +97,18 @@
                                 <span>Dashboard</span>
                             </a>
                         </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-label">1. Target & Profile</span>
+                    <ul class="nav-list">
                         <li>
                             <a href="career-goal.html" class="nav-item">
                                 <svg class="nav-icon" viewBox="0 0 24 24">
                                     <circle cx="12" cy="12" r="10"></circle>
-                                    <circle cx="12" cy="12" r="6"></circle>
-                                    <circle cx="12" cy="12" r="2"></circle>
+                                    <circle cx="12" cy="6" r="6"></circle>
+                                    <circle cx="12" cy="2" r="2"></circle>
                                 </svg>
                                 <span>Career Goal</span>
                             </a>
@@ -116,14 +122,20 @@
                                 <span>Profile</span>
                             </a>
                         </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-label">2. Analysis & Learning</span>
+                    <ul class="nav-list">
                         <li>
-                            <a href="assessment.html" class="nav-item">
+                            <a href="assessment.html" class="nav-item active" aria-current="page">
                                 <svg class="nav-icon" viewBox="0 0 24 24">
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                                 </svg>
-                                <span>Career Assessment</span>
+                                <span>Career Analysis</span>
                             </a>
                         </li>
                         <li>
@@ -136,57 +148,73 @@
                             </a>
                         </li>
                         <li>
-                            <a href="candidate-profile.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                <span>Profile</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="assessment.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                                <span>Career Analysis</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="learning-plan.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-                                <span>Learning Plan</span>
+                            <a href="roadmap.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                    <polyline points="2 17 12 22 22 17"></polyline>
+                                    <polyline points="2 12 12 17 22 12"></polyline>
+                                </svg>
+                                <span>Career Roadmap</span>
                             </a>
                         </li>
                     </ul>
                 </div>
 
                 <div class="nav-section">
-                    <span class="nav-section-label">AI Modules</span>
+                    <span class="nav-section-label">3. Placement Preparation</span>
                     <ul class="nav-list">
                         <li>
                             <a href="interview.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
                                 <span>Interview Prep</span>
                             </a>
                         </li>
                         <li>
                             <a href="certifications.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="8" r="7"></circle>
+                                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                                </svg>
                                 <span>Certifications & Projects</span>
                             </a>
                         </li>
                         <li>
                             <a href="resume-builder.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
                                 <span>AI Resume Builder</span>
                             </a>
                         </li>
                         <li>
                             <a href="careercoach.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="22"></line>
+                                </svg>
                                 <span>AI Career Coach</span>
                             </a>
                         </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-label">4. Job Search</span>
+                    <ul class="nav-list">
                         <li>
-                            <a href="roadmap.html" class="nav-item">
-                                <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                                <span>Career Roadmap</span>
+                            <a href="job-opportunities.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                                <span>Job Opportunities</span>
                             </a>
                         </li>
                     </ul>

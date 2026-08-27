@@ -1,16 +1,24 @@
 """
-CareerPilot AI — Job Provider Interface and Base Abstraction
+CareerPilot AI — Job Provider Interface & Real Adzuna Integration
 """
 import os
 import logging
 from abc import ABC, abstractmethod
+
+try:
+    from services.adzuna_service import AdzunaService
+except ImportError:
+    try:
+        from backend.services.adzuna_service import AdzunaService
+    except ImportError:
+        AdzunaService = None
 
 logger = logging.getLogger(__name__)
 
 class BaseJobProvider(ABC):
     """
     Abstract Job Provider interface.
-    Real external job APIs (Adzuna, JSearch, Jooble, etc.) will implement this interface.
+    Real external job APIs (Adzuna, JSearch, etc.) implement this interface.
     """
     @abstractmethod
     def search_jobs(self, target_role: str, location: str = None, page: int = 1, limit: int = 20) -> list:
@@ -28,29 +36,39 @@ class BaseJobProvider(ABC):
 
 class ExternalJobProvider(BaseJobProvider):
     """
-    Placeholder External Job Provider implementation.
-    Reads configuration from environment variables without hardcoded credentials.
-    Does NOT connect to any external API until configured in future phases.
+    Production External Job Provider implementing Adzuna API integration.
+    Credentials are read from environment variables:
+      - ADZUNA_APP_ID
+      - ADZUNA_APP_KEY
+      - ADZUNA_COUNTRY
     """
     def __init__(self):
-        self.provider_name = os.getenv("JOB_PROVIDER", "").strip()
-        self.api_key = os.getenv("JOB_API_KEY", "").strip()
-        self.base_url = os.getenv("JOB_API_BASE_URL", "").strip()
+        self.provider_name = "adzuna"
+        if AdzunaService:
+            self.service = AdzunaService()
+        else:
+            self.service = None
 
     def is_configured(self) -> bool:
-        """Checks if a valid provider name and API key are configured."""
-        return bool(self.provider_name and self.api_key and not self.api_key.startswith("your_"))
+        """Checks if Adzuna service has valid environment credentials configured."""
+        if not self.service:
+            return False
+        return self.service.is_configured()
 
     def search_jobs(self, target_role: str, location: str = None, page: int = 1, limit: int = 20) -> list:
         """
-        Executes job search via the configured external provider.
-        Raises NotImplementedError if no provider is currently active.
+        Queries real job postings from Adzuna API.
         """
         if not self.is_configured():
-            logger.info("ExternalJobProvider: Job API provider has not been configured yet.")
-            raise NotImplementedError("Job API provider has not been configured yet.")
+            logger.info("ExternalJobProvider: Adzuna API credentials have not been configured yet.")
+            raise NotImplementedError("Adzuna API provider has not been configured yet.")
 
-        # Future integration point for real Job API calls
-        logger.info(f"ExternalJobProvider: Querying {self.provider_name} for role '{target_role}'...")
-        # (Real provider implementation will be connected here in future phase)
-        return []
+        return self.service.search_jobs(query=target_role, location=location, page=page, results_per_page=limit)
+
+    def fetch_relevant_jobs(self, target_role: str, dream_company: str = None, location: str = None) -> list:
+        """
+        Orchestrates target-role and dream-company prioritized discovery from Adzuna.
+        """
+        if not self.is_configured():
+            raise NotImplementedError("Adzuna API provider is not configured.")
+        return self.service.fetch_relevant_jobs(target_role=target_role, dream_company=dream_company, location=location)

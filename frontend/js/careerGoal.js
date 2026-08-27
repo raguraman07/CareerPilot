@@ -1,4 +1,4 @@
-// CareerPilot AI — Career Goal Frontend Client Module
+import { auth } from './firebaseClient.js';
 import { supabase } from './supabaseClient.js';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -6,17 +6,37 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
     : `http://${window.location.hostname}:5000`;
 
 /**
- * Retrieve the active user's auth token
+ * Retrieve the active user's auth token (supports Firebase Auth & Supabase)
  */
 export async function getAuthToken() {
+    // 1. Try active Firebase user
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return null;
-        return session.access_token;
-    } catch (err) {
-        console.error("Error retrieving auth token for career goal:", err);
-        return null;
+        if (auth && auth.currentUser) {
+            const token = await auth.currentUser.getIdToken();
+            if (token) return token;
+        }
+    } catch (e) {
+        console.warn("Firebase direct token retrieval error:", e);
     }
+
+    // 2. Try auth.js helper
+    try {
+        const { getAuthToken: getFirebaseToken } = await import('./auth.js');
+        const token = await getFirebaseToken();
+        if (token) return token;
+    } catch (e) {}
+
+    // 3. Fallback to Supabase session
+    try {
+        if (supabase && supabase.auth) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) return session.access_token;
+        }
+    } catch (err) {
+        console.warn("Supabase token retrieval error:", err);
+    }
+
+    return null;
 }
 
 /**
