@@ -8,7 +8,7 @@ if backend_dir not in sys.path:
 
 from server import app
 
-# Export for Vercel and WSGI servers
+# Export for WSGI servers
 application = app
 
 if __name__ == '__main__':

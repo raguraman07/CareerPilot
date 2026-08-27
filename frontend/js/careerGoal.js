@@ -1,9 +1,7 @@
 import { auth } from './firebaseClient.js';
 import { supabase } from './supabaseClient.js';
 
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://127.0.0.1:5000'
-    : 'https://careerpilot-txa0.onrender.com';
+const API_BASE_URL = window.API_BASE_URL || 'http://127.0.0.1:5000';
 
 /**
  * Retrieve the active user's auth token (supports Firebase Auth & Supabase)
