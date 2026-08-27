@@ -7,3 +7,4 @@ PyPDF2
 python-docx
 xhtml2pdf>=0.2.16
 reportlab>=4.0.0
+gunicorn>=21.2.0
