@@ -1,0 +1,12 @@
+flask>=3.0.0
+supabase>=2.0.0
+firebase-admin>=6.0.0
+python-dotenv>=1.0.0
+werkzeug>=3.0.0
+google-genai
+requests>=2.31.0
+PyPDF2
+python-docx
+xhtml2pdf>=0.2.16
+reportlab>=4.0.0
+gunicorn>=21.2.0
