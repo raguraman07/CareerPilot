@@ -17,6 +17,7 @@ from learning_plan_routes import learning_plan_bp
 from knowledge_assessment_routes import knowledge_assessment_bp
 from recommendation_routes import recommendation_bp
 from resume_builder_routes import resume_builder_bp
+from job_opportunities import jobs_bp
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -50,6 +51,7 @@ app.register_blueprint(learning_plan_bp)
 app.register_blueprint(knowledge_assessment_bp)
 app.register_blueprint(recommendation_bp)
 app.register_blueprint(resume_builder_bp)
+app.register_blueprint(jobs_bp)
 
 # Custom CORS Handlers
 @app.before_request

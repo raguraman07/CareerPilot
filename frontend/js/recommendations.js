@@ -167,7 +167,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const loadRecommendations = async (forceRefresh = false) => {
         hideAlert();
+
+        // 1. Verify user has set a Career Goal first
+        try {
+            const goal = await getCurrentCareerGoal();
+            if (!goal || !goal.company_name || !goal.job_role) {
+                if (roleTitleEl) roleTitleEl.textContent = 'Set Your Target Goal';
+                if (companyTitleEl) companyTitleEl.textContent = '';
+                if (summaryTextEl) {
+                    summaryTextEl.innerHTML = `You haven't set an active career goal yet. <a href="career-goal.html" style="color: var(--primary); font-weight: 700;">Set your target company & role in Step 1</a> and complete your profile to have Gemini AI generate personalized project and certification recommendations.`;
+                }
+                if (certsMustList) certsMustList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); grid-column: 1 / -1; font-style: italic;">No certifications generated yet. Set your Career Goal first.</div>';
+                if (certsRecList) certsRecList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); grid-column: 1 / -1; font-style: italic;">No recommendations available yet.</div>';
+                if (certsAdvList) certsAdvList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); grid-column: 1 / -1; font-style: italic;">No advanced credentials available yet.</div>';
+                if (projBeginnerList) projBeginnerList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); font-style: italic;">No beginner projects generated yet.</div>';
+                if (projInterList) projInterList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); font-style: italic;">No intermediate projects generated yet.</div>';
+                if (projAdvList) projAdvList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); font-style: italic;">No advanced projects generated yet.</div>';
+                if (btnRefresh) btnRefresh.style.display = 'none';
+                return;
+            }
+        } catch (goalErr) {
+            console.warn("Error checking career goal:", goalErr);
+        }
+
         if (btnRefresh) {
+            btnRefresh.style.display = 'inline-flex';
             btnRefresh.disabled = true;
             btnRefresh.textContent = "Analyzing & Generating...";
         }
@@ -175,8 +199,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const data = await fetchRecommendations(forceRefresh);
 
-            if (roleTitleEl) roleTitleEl.textContent = data.target_role || 'Role';
-            if (companyTitleEl) companyTitleEl.textContent = data.target_company || 'Company';
+            if (roleTitleEl) roleTitleEl.textContent = data.target_role || 'Target Role';
+            if (companyTitleEl) companyTitleEl.textContent = data.target_company || 'Target Company';
             if (summaryTextEl && data.career_value_summary) {
                 summaryTextEl.textContent = data.career_value_summary;
             }
@@ -187,29 +211,59 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Render Certifications
             if (certsMustList) {
                 certsMustList.innerHTML = '';
-                (certs.must_complete || []).forEach(c => certsMustList.appendChild(renderCertCard(c)));
+                const mustCerts = certs.must_complete || [];
+                if (mustCerts.length > 0) {
+                    mustCerts.forEach(c => certsMustList.appendChild(renderCertCard(c)));
+                } else {
+                    certsMustList.innerHTML = '<div style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">No mandatory certifications for this specific profile. Focus on projects.</div>';
+                }
             }
             if (certsRecList) {
                 certsRecList.innerHTML = '';
-                (certs.recommended || []).forEach(c => certsRecList.appendChild(renderCertCard(c)));
+                const recCerts = certs.recommended || [];
+                if (recCerts.length > 0) {
+                    recCerts.forEach(c => certsRecList.appendChild(renderCertCard(c)));
+                } else {
+                    certsRecList.innerHTML = '<div style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">No recommended certifications listed.</div>';
+                }
             }
             if (certsAdvList) {
                 certsAdvList.innerHTML = '';
-                (certs.advanced || []).forEach(c => certsAdvList.appendChild(renderCertCard(c)));
+                const advCerts = certs.advanced || [];
+                if (advCerts.length > 0) {
+                    advCerts.forEach(c => certsAdvList.appendChild(renderCertCard(c)));
+                } else {
+                    certsAdvList.innerHTML = '<div style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">No advanced credentials required at this stage.</div>';
+                }
             }
 
             // Render Projects
             if (projBeginnerList) {
                 projBeginnerList.innerHTML = '';
-                (projs.beginner || []).forEach(p => projBeginnerList.appendChild(renderProjectCard(p)));
+                const begProjs = projs.beginner || [];
+                if (begProjs.length > 0) {
+                    begProjs.forEach(p => projBeginnerList.appendChild(renderProjectCard(p)));
+                } else {
+                    projBeginnerList.innerHTML = '<div style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">No beginner projects recommended. Proceed to intermediate portfolio systems.</div>';
+                }
             }
             if (projInterList) {
                 projInterList.innerHTML = '';
-                (projs.intermediate || []).forEach(p => projInterList.appendChild(renderProjectCard(p)));
+                const interProjs = projs.intermediate || [];
+                if (interProjs.length > 0) {
+                    interProjs.forEach(p => projInterList.appendChild(renderProjectCard(p)));
+                } else {
+                    projInterList.innerHTML = '<div style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">No intermediate projects recommended.</div>';
+                }
             }
             if (projAdvList) {
                 projAdvList.innerHTML = '';
-                (projs.advanced || []).forEach(p => projAdvList.appendChild(renderProjectCard(p)));
+                const advProjs = projs.advanced || [];
+                if (advProjs.length > 0) {
+                    advProjs.forEach(p => projAdvList.appendChild(renderProjectCard(p)));
+                } else {
+                    projAdvList.innerHTML = '<div style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">No advanced projects recommended.</div>';
+                }
             }
 
         } catch (err) {

@@ -1,0 +1,626 @@
+/* ==========================================================================
+   CareerPilot AI — Resume Builder & Studio Stylesheet
+   Grounded in CareerPilot Brand System (#524646, #A8A492, #FCF2E5, #EC5B38)
+   ========================================================================== */
+
+.builder-workspace-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2.5rem;
+}
+
+/* 1. Header Banner & Target Job Readiness */
+.builder-target-banner {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.builder-target-info h2 {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0.2rem 0 0.35rem 0;
+}
+
+.builder-target-info .target-company-highlight {
+    color: var(--primary);
+}
+
+.builder-target-info p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.builder-metrics-row {
+    display: flex;
+    gap: 1.75rem;
+    align-items: center;
+}
+
+.builder-metric-box {
+    text-align: center;
+}
+
+.builder-metric-val {
+    font-size: 1.85rem;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--primary);
+}
+
+.builder-metric-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+    display: block;
+}
+
+/* 2. Builder 2-Column Split Workspace */
+.builder-main-grid {
+    display: grid;
+    grid-template-columns: minmax(420px, 1.15fr) minmax(450px, 1fr);
+    gap: 1.75rem;
+    align-items: start;
+}
+
+@media (max-width: 1100px) {
+    .builder-main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 3. Form Wizard Stepper */
+.builder-wizard-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.stepper-progress-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    margin-bottom: 1.75rem;
+    padding: 0 0.5rem;
+}
+
+.stepper-progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 1.5rem;
+    right: 1.5rem;
+    height: 2px;
+    background: var(--border-light);
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.step-bubble {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.step-bubble:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.step-bubble.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #ffffff;
+    box-shadow: 0 0 0 4px var(--primary-light);
+}
+
+.step-bubble.completed {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+/* Step Containers */
+.form-step-pane {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.form-step-pane.active {
+    display: block;
+}
+
+.step-pane-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.step-pane-header h3 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 0.2rem 0;
+}
+
+.step-pane-header p {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Form Groups & Controls */
+.builder-form-group {
+    margin-bottom: 1.15rem;
+}
+
+.builder-form-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.35rem;
+}
+
+.builder-input, .builder-textarea, .builder-select {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    background: #ffffff;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.builder-input:focus, .builder-textarea:focus, .builder-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.builder-textarea {
+    resize: vertical;
+    line-height: 1.45;
+}
+
+/* Dynamic Item Card for Repeatable Sections */
+.dynamic-entry-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 1.15rem;
+    margin-bottom: 1rem;
+    position: relative;
+    animation: slideDown 0.25s ease;
+}
+
+.dynamic-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.85rem;
+}
+
+.dynamic-entry-header h4 {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-remove-entry {
+    background: rgba(198, 40, 40, 0.08);
+    color: var(--danger);
+    border: 1px solid rgba(198, 40, 40, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all var(--transition-fast);
+}
+
+.btn-remove-entry:hover {
+    background: var(--danger);
+    color: #ffffff;
+}
+
+.btn-add-entry {
+    width: 100%;
+    background: var(--surface-secondary);
+    border: 1.5px dashed var(--border);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 0.5rem;
+    transition: all var(--transition-fast);
+}
+
+.btn-add-entry:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+/* Skills Tag Inputs */
+.tags-wrapper-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: #ffffff;
+    min-height: 42px;
+}
+
+.skill-pill-tag {
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid rgba(236, 91, 56, 0.3);
+    border-radius: var(--radius-full);
+    padding: 2px 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.skill-pill-tag button {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.tag-raw-input {
+    flex: 1;
+    min-width: 120px;
+    border: none;
+    outline: none;
+    padding: 4px;
+    font-size: 0.85rem;
+    font-family: inherit;
+}
+
+/* Quick Recommendations Helper Drawer/Box */
+.rec-helper-card {
+    background: #ffffff;
+    border: 1px solid var(--border-light);
+    border-left: 3px solid var(--primary);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.rec-helper-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--primary);
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rec-chips-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.rec-chip-btn {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-full);
+    padding: 3px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.rec-chip-btn:hover {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+}
+
+/* Step Wizard Footer */
+.wizard-nav-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1.25rem;
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--border-light);
+}
+
+/* 4. Right Side: Canvas Toolbar & Paper Preview */
+.builder-preview-wrapper {
+    position: sticky;
+    top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.preview-top-toolbar {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-icon-control {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-icon-control:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+/* Paper Canvas Rendering Container */
+.resume-viewport-canvas {
+    background: #e2e8f0;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    overflow: auto;
+    max-height: 820px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.resume-paper-render {
+    background: #ffffff;
+    width: 8.5in;
+    min-height: 11in;
+    padding: 0.45in;
+    box-shadow: 0 10px 30px rgba(82, 70, 70, 0.15);
+    border-radius: 4px;
+    box-sizing: border-box;
+    transform-origin: top center;
+    transition: transform var(--transition-fast);
+}
+
+/* Fullscreen Mode */
+.builder-preview-wrapper.fullscreen-mode {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 1.5rem;
+    box-sizing: border-box;
+}
+
+.builder-preview-wrapper.fullscreen-mode .resume-viewport-canvas {
+    max-height: calc(100vh - 100px);
+}
+
+/* 5. Drawers / Slide-out Panels */
+.builder-slide-drawer {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 400px;
+    max-width: 90vw;
+    height: 100vh;
+    background: var(--surface);
+    box-shadow: -4px 0 25px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.builder-slide-drawer.active {
+    right: 0;
+}
+
+.drawer-top-bar {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.drawer-top-bar h3 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.drawer-scroll-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Color Swatches */
+.color-swatches-grid {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.swatch-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.swatch-circle:hover {
+    transform: scale(1.1);
+}
+
+.swatch-circle.active {
+    border-color: var(--dark);
+    box-shadow: 0 0 0 3px rgba(236, 91, 56, 0.35);
+    transform: scale(1.15);
+}
+
+/* 6. AI Writing Suggestion Modal */
+.builder-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(82, 70, 70, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.builder-modal-overlay.active {
+    display: flex;
+}
+
+.builder-modal-card {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+    max-width: 580px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+    animation: zoomIn 0.25s ease;
+    overflow: hidden;
+}
+
+.builder-modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.builder-modal-header h3 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.builder-modal-body {
+    padding: 1.5rem;
+}
+
+.builder-modal-footer {
+    padding: 1rem 1.5rem;
+    background: var(--surface-secondary);
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}

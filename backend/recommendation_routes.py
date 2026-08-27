@@ -98,12 +98,10 @@ def generate_recommendations():
 
     active_goal, profile, resume, assessment, learning_plan = handle_db_op(db_fetch, mock_fetch)
 
-    if not active_goal:
-        active_goal = {
-            "company_name": "Target Company",
-            "job_role": "Software Engineer",
-            "experience_level": "Fresher"
-        }
+    if not active_goal or not active_goal.get("company_name") or not active_goal.get("job_role"):
+        return jsonify({
+            "error": "Please set your Target Company and Dream Job Role in Career Goal (Step 1) before generating recommendations."
+        }), 400
 
     # 2. Generate recommendations via AI service
     try:

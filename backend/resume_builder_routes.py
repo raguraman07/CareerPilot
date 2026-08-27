@@ -93,12 +93,10 @@ def generate_targeted_resume_endpoint():
 
     active_goal, profile, learning_plan, recommendations = handle_db_op(db_fetch, mock_fetch)
 
-    if not active_goal:
-        active_goal = {
-            "company_name": "Microsoft",
-            "job_role": "Cloud Engineer",
-            "experience_level": "Fresher"
-        }
+    if not active_goal or not active_goal.get("company_name") or not active_goal.get("job_role"):
+        return jsonify({
+            "error": "Please set your Target Company and Dream Job Role in Career Goal (Step 1) before compiling your targeted resume."
+        }), 400
 
     # Extract verified skills from learning plan
     verified_skills = []
@@ -293,3 +291,88 @@ def get_builder_history():
         })
 
     return jsonify(summary_list), 200
+
+
+@resume_builder_bp.route('/api/generate-pdf', methods=['POST'])
+@resume_builder_bp.route('/api/resume-builder/generate-pdf', methods=['POST'])
+def generate_pdf_endpoint():
+    """
+    Accepts raw styled HTML content and converts it into a downloadable PDF stream via xhtml2pdf.
+    """
+    try:
+        from services.pdf_generator import html_to_pdf
+        import io
+        from flask import send_file
+
+        data = request.get_json() or {}
+        html_content = data.get('html')
+        filename = data.get('filename', 'CareerPilot_Resume.pdf')
+
+        if not html_content:
+            return jsonify({'error': 'Missing HTML content'}), 400
+
+        if not filename.endswith('.pdf'):
+            filename += '.pdf'
+
+        styled_html = f"""<!DOCTYPE html><html><head><meta charset="utf-8">
+        <style>
+            @page {{ size: letter; margin: 0.35in; }}
+            body {{ font-family: Helvetica, sans-serif; font-size: 9.5pt; line-height: 1.35; color: #2D3748; }}
+            .pdf-row {{ display: block; width: 100%; clear: both; }}
+            .pdf-col-12 {{ width: 100%; float: left; }}
+            .pdf-col-8 {{ width: 66.66%; float: left; }}
+            .pdf-col-4 {{ width: 33.33%; float: left; }}
+            .pdf-col-6 {{ width: 50%; float: left; }}
+            .pdf-col-3 {{ width: 25%; float: left; }}
+            table {{ width: 100%; border-collapse: collapse; }}
+        </style></head><body>{html_content}</body></html>"""
+
+        pdf_bytes = html_to_pdf(styled_html)
+
+        if pdf_bytes is None:
+            logger.error("PDF generation returned None. Check HTML/CSS formatting.")
+            return jsonify({'error': 'PDF generation failed on server.'}), 500
+
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        logger.error(f"Server error during PDF export: {e}", exc_info=True)
+        return jsonify({'error': str(e), 'message': 'Server error during PDF export'}), 500
+
+
+@resume_builder_bp.route('/api/ai-suggest', methods=['POST'])
+@resume_builder_bp.route('/api/resume-builder/ai-suggest', methods=['POST'])
+def ai_suggest_endpoint():
+    """
+    Accepts current section text, type, and target context to return optimized statements.
+    """
+    try:
+        data = request.get_json() or {}
+        prompt_type = data.get('type')  # 'summary', 'experience', 'skills'
+        current_text = (data.get('text') or '').strip()
+        target_role = data.get('target_role') or data.get('platform') or 'Software Engineer'
+        target_company = data.get('target_company') or 'Target Company'
+
+        if not prompt_type:
+            return jsonify({'error': 'Missing suggestion type'}), 400
+
+        improved = rewrite_section_content_ai(
+            section_type=prompt_type,
+            content=current_text,
+            target_role=target_role,
+            target_company=target_company
+        )
+
+        return jsonify({
+            'success': True,
+            'suggestion': improved,
+            'source': 'CareerPilot AI'
+        }), 200
+    except Exception as e:
+        logger.error(f"Error generating AI suggestion: {e}")
+        return jsonify({'error': str(e), 'message': 'Failed to generate AI suggestion'}), 500
+

@@ -5,3 +5,5 @@ werkzeug>=3.0.0
 google-genai
 PyPDF2
 python-docx
+xhtml2pdf>=0.2.16
+reportlab>=4.0.0

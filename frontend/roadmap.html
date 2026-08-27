@@ -138,6 +138,15 @@
                     <span class="nav-section-label">3. Placement Preparation</span>
                     <ul class="nav-list">
                         <li>
+                            <a href="job-opportunities.html" class="nav-item">
+                                <svg class="nav-icon" viewBox="0 0 24 24">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                </svg>
+                                <span>Job Opportunities</span>
+                            </a>
+                        </li>
+                        <li>
                             <a href="interview.html" class="nav-item">
                                 <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                                 <span>Interview Prep</span>
@@ -243,90 +252,206 @@
 
             <!-- Main Workspace Area -->
             <main class="workspace-content" id="main-content">
-                <header class="content-header">
-                    <h2>AI Career Roadmap & Personalized Learning Plan</h2>
-                    <p class="content-subtitle">Generate a custom milestone roadmap, track your overall readiness score (0-100), update phase completion status, and build recommended portfolio projects.</p>
+                <header class="content-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.25rem;">
+                    <div>
+                        <h2>Personalized Career Roadmap</h2>
+                        <p class="content-subtitle">Step-by-step milestone learning path tailored to your dream company, role requirements, and current skill gaps.</p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <button id="btn-download-pdf" class="btn btn-secondary" style="display: none;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            <span>Download Roadmap as PDF</span>
+                        </button>
+                    </div>
                 </header>
 
-                <!-- Roadmap Generator Form Card -->
-                <div class="card" style="margin-bottom: 2rem;">
-                    <form id="roadmap-setup-form">
-                        <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 1.25rem;">
-                            <div class="form-group">
-                                <label for="roadmap-target-role" class="form-label">Target Career Goal / Role Title</label>
-                                <input type="text" id="roadmap-target-role" class="form-input" placeholder="e.g. Senior Full-Stack Engineer, AI Specialist" required>
+                <!-- Career Goal Active Banner Card -->
+                <div class="card" id="roadmap-goal-card" style="margin-bottom: 1.75rem; border-left: 4px solid var(--primary);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.25rem;">
+                        <div>
+                            <span style="font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em;">TARGET CAREER GOAL</span>
+                            <div style="display: flex; align-items: baseline; gap: 0.85rem; margin-top: 0.25rem; flex-wrap: wrap;">
+                                <h3 id="goal-display-company" style="font-size: 1.6rem; font-weight: 700; color: var(--dark);">Target Company</h3>
+                                <span style="color: var(--text-muted); font-size: 1.2rem;">—</span>
+                                <h4 id="goal-display-role" style="font-size: 1.3rem; font-weight: 600; color: var(--primary);">Target Job Role</h4>
                             </div>
-
-                            <div class="form-group">
-                                <label for="roadmap-resume-select" class="form-label">Select Base Resume (Optional)</label>
-                                <div id="roadmap-resume-select-container">
-                                    <div class="selection-skeleton">
-                                        <div class="skeleton-icon"></div>
-                                        <div class="skeleton-lines">
-                                            <div class="skeleton-line long"></div>
-                                            <div class="skeleton-line short"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <select id="roadmap-resume-select" class="form-select" style="display: none;">
-                                    <option value="" disabled selected>-- Choose a resume (Optional) --</option>
-                                </select>
-                            </div>
+                            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 0.35rem;" id="goal-display-subtitle">
+                                Your personalized roadmap to become job-ready for this role based on your profile, skill gaps, and ATS analysis.
+                            </p>
                         </div>
-
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <button type="submit" class="btn btn-primary" id="btn-generate-roadmap">
-                                <span>Generate Learning Plan Roadmap</span>
+                        <div style="display: flex; gap: 0.85rem; align-items: center;">
+                            <button class="btn btn-primary" id="btn-generate-roadmap">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                                <span id="btn-generate-text">Generate / Refresh Roadmap</span>
                             </button>
-                            <span id="roadmap-status-msg" style="font-size: 0.9rem; color: var(--text-muted); display: none;"></span>
                         </div>
-                    </form>
+                    </div>
                     <div id="roadmap-alert-box" class="alert-box" style="display: none; margin-top: 1.25rem;"></div>
+                </div>
+
+                <!-- Missing Goal Prompt (Hidden by default, shown if no goal set) -->
+                <div class="card" id="roadmap-empty-goal-prompt" style="display: none; margin-bottom: 1.75rem; text-align: center; padding: 2.5rem 1.5rem;">
+                    <div style="max-width: 500px; margin: 0 auto;">
+                        <div style="width: 54px; height: 54px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        </div>
+                        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem;">Target Career Goal Required</h3>
+                        <p style="font-size: 0.92rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+                            To generate a personalized roadmap with exact skill gaps and milestone requirements, please set your Target Company and Job Role.
+                        </p>
+                        <a href="career-goal.html" class="btn btn-primary">Set Career Goal</a>
+                    </div>
+                </div>
+
+                <!-- Loading State Card -->
+                <div class="card" id="roadmap-loading-state" style="display: none; margin-bottom: 1.75rem; text-align: center; padding: 3rem 1.5rem;">
+                    <div class="loading-spinner" style="width: 38px; height: 38px; margin: 0 auto 1.25rem auto;"></div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem;" id="loading-state-title">Analyzing Profile & Generating Personalized Roadmap...</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);" id="loading-state-sub">Comparing current skills against role requirements, prioritizing gaps, and mapping logical milestones.</p>
                 </div>
 
                 <!-- Roadmap Workspace Output -->
                 <div id="roadmap-workspace-results" class="analysis-results-grid" style="display: none;">
                     
-                    <!-- Readiness Score & Progress Hero Header -->
+                    <!-- Readiness Score & Progress Hero Card -->
                     <div class="analysis-card" style="display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap;">
-                        <div>
-                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Career Readiness Index</span>
-                            <div style="display: flex; align-items: baseline; gap: 0.75rem; margin-top: 0.25rem;">
-                                <h3 id="roadmap-readiness-score" style="font-size: 2.75rem; font-weight: 700; color: var(--primary);">72/100</h3>
-                                <span class="badge badge-info" id="roadmap-readiness-label" style="font-size: 0.9rem; padding: 0.35rem 0.75rem;">Intermediate Ready</span>
+                        <div style="flex: 1; min-width: 260px;">
+                            <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Current Role Readiness</span>
+                            <div style="display: flex; align-items: baseline; gap: 0.85rem; margin-top: 0.25rem;">
+                                <h3 id="roadmap-readiness-score" style="font-size: 2.85rem; font-weight: 800; color: var(--primary);">62/100</h3>
+                                <span class="badge badge-info" id="roadmap-readiness-label" style="font-size: 0.9rem; padding: 0.35rem 0.85rem;">Developing</span>
+                                <span style="font-size: 0.88rem; color: var(--text-secondary); margin-left: 0.5rem;" id="roadmap-duration-label">Estimated: 10–12 weeks</span>
                             </div>
+                            <p style="font-size: 0.9rem; color: var(--dark); margin-top: 0.5rem; line-height: 1.5;" id="roadmap-readiness-summary">
+                                Strategic learning path designed to bridge verified skill gaps.
+                            </p>
                         </div>
 
                         <!-- Progress Bar Container -->
-                        <div style="flex: 1; max-width: 400px; min-width: 260px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.88rem; font-weight: 600;">
-                                <span>Overall Milestone Completion</span>
-                                <span id="roadmap-progress-percent">0%</span>
+                        <div style="flex: 1; max-width: 380px; min-width: 260px; background-color: var(--surface-secondary); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-light);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.45rem; font-size: 0.88rem; font-weight: 600; color: var(--dark);">
+                                <span>Roadmap Completion</span>
+                                <span id="roadmap-progress-percent" style="color: var(--primary);">0%</span>
                             </div>
-                            <div style="height: 10px; background-color: var(--surface-secondary); border-radius: var(--radius-full); overflow: hidden; border: 1px solid var(--border);">
+                            <div style="height: 10px; background-color: #FFFFFF; border-radius: var(--radius-full); overflow: hidden; border: 1px solid var(--border-light);">
                                 <div id="roadmap-progress-bar-fill" style="height: 100%; width: 0%; background-color: var(--primary); transition: width 0.4s ease;"></div>
                             </div>
+                            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 0;">Check off skills, projects, and phases as you complete them.</p>
                         </div>
                     </div>
 
-                    <!-- Sequential Roadmap Phases List -->
+                    <!-- Identified Skill Gaps Table Card -->
+                    <div class="analysis-card" id="roadmap-skill-gaps-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <h3 class="analysis-card-title" style="margin-bottom: 0; color: var(--primary);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                Priority Skill Gaps & Focus Areas
+                            </h3>
+                            <span style="font-size: 0.82rem; color: var(--text-muted);">Identified based on your profile & target role</span>
+                        </div>
+                        <div class="table-responsive" style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid var(--border); text-align: left; color: var(--dark);">
+                                        <th style="padding: 0.65rem 0.85rem; font-weight: 700;">SKILL</th>
+                                        <th style="padding: 0.65rem 0.85rem; font-weight: 700;">IMPORTANCE</th>
+                                        <th style="padding: 0.65rem 0.85rem; font-weight: 700;">WHY YOU NEED IT</th>
+                                        <th style="padding: 0.65rem 0.85rem; font-weight: 700;">CURRENT LEVEL</th>
+                                        <th style="padding: 0.65rem 0.85rem; font-weight: 700;">TARGET LEVEL</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="roadmap-skill-gaps-table-body">
+                                    <!-- Dynamic Rows Generated from Gemini -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Sequential Roadmap Phases -->
                     <div class="analysis-card">
-                        <h3 class="analysis-card-title">Milestone Roadmap Phases</h3>
-                        <div id="roadmap-phases-container" style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <h3 class="analysis-card-title" style="margin-bottom: 0;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                                Sequential Learning Phases
+                            </h3>
+                            <span style="font-size: 0.82rem; color: var(--text-muted);">Step-by-step dependency sequence</span>
+                        </div>
+                        <div id="roadmap-phases-container" style="display: flex; flex-direction: column; gap: 1.5rem;">
                             <!-- Phases injected dynamically -->
                         </div>
                     </div>
 
-                    <!-- Recommended Portfolio Projects & Priority Skills -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <!-- Languages, Technologies & Tools, Core Subjects Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        
+                        <!-- Programming Languages Card -->
                         <div class="analysis-card">
-                            <h3 class="analysis-card-title" style="color: var(--primary);">Recommended Portfolio Projects</h3>
-                            <ul class="analysis-list" id="roadmap-projects-list"></ul>
+                            <h3 class="analysis-card-title" style="color: var(--primary);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                                Programming Languages
+                            </h3>
+                            <div class="skills-badge-list" id="roadmap-languages-list" style="margin-top: 0.75rem;"></div>
                         </div>
 
+                        <!-- Technologies & Tools Card -->
                         <div class="analysis-card">
-                            <h3 class="analysis-card-title" style="color: var(--warning);">Priority Skill Gaps to Focus</h3>
-                            <div class="skills-badge-list" id="roadmap-priority-skills"></div>
+                            <h3 class="analysis-card-title" style="color: var(--dark);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                                Technologies & Tools
+                            </h3>
+                            <div style="margin-top: 0.75rem;">
+                                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">Technologies</div>
+                                <div class="skills-badge-list" id="roadmap-technologies-list" style="margin-bottom: 0.85rem;"></div>
+                                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">Developer Tools</div>
+                                <div class="skills-badge-list" id="roadmap-tools-list"></div>
+                            </div>
+                        </div>
+
+                        <!-- Core Academic Subjects Card -->
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--secondary);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                                Core Subjects & Fundamentals
+                            </h3>
+                            <ul class="analysis-list" id="roadmap-subjects-list" style="margin-top: 0.75rem;"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Recommended Certifications & Portfolio Projects Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <!-- Recommended Certifications -->
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--primary);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                                Recommended Certifications
+                            </h3>
+                            <div id="roadmap-certifications-container" style="display: flex; flex-direction: column; gap: 0.85rem; margin-top: 0.85rem;"></div>
+                        </div>
+
+                        <!-- Portfolio Projects -->
+                        <div class="analysis-card">
+                            <h3 class="analysis-card-title" style="color: var(--dark);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                Portfolio Project Roadmap
+                            </h3>
+                            <div id="roadmap-projects-container" style="display: flex; flex-direction: column; gap: 0.85rem; margin-top: 0.85rem;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Final Job-Ready Checklist Card -->
+                    <div class="analysis-card" style="background-color: var(--surface-secondary); border: 1px solid var(--border-light);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <h3 class="analysis-card-title" style="margin-bottom: 0; color: var(--dark);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                Final Job-Ready Checklist
+                            </h3>
+                            <span class="badge badge-success">Target: Job Readiness</span>
+                        </div>
+                        <p style="font-size: 0.92rem; color: var(--dark); margin-bottom: 1.25rem; font-style: italic;">
+                            "Your goal is not just to complete this roadmap. Your goal is to become completely job-ready for your selected role."
+                        </p>
+                        <div id="roadmap-checklist-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.85rem;">
+                            <!-- Checklist items injected dynamically -->
                         </div>
                     </div>
 
@@ -339,4 +464,4 @@
     <script type="module" src="js/main.js"></script>
     <script type="module" src="js/roadmap.js"></script>
 </body>
-</html>
+</html>

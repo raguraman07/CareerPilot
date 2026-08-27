@@ -159,5 +159,25 @@ class TestResumeBuilderPhase8(unittest.TestCase):
         hist_list = res_hist.get_json()
         self.assertEqual(len(hist_list), 1)
 
+        # 7. AI Suggest Endpoint
+        res_sug = self.client.post('/api/ai-suggest', json={
+            "type": "summary",
+            "text": "Proficient in Python and AWS.",
+            "target_role": "Cloud Engineer",
+            "target_company": "Microsoft"
+        })
+        self.assertEqual(res_sug.status_code, 200)
+        self.assertTrue(res_sug.get_json()["success"])
+
+        # 8. PDF Generation Endpoint
+        res_pdf = self.client.post('/api/generate-pdf', json={
+            "html": "<p>Bob Candidate - Cloud Engineer</p>",
+            "filename": "Bob_Resume.pdf"
+        })
+        self.assertEqual(res_pdf.status_code, 200)
+        self.assertEqual(res_pdf.mimetype, 'application/pdf')
+
+
 if __name__ == '__main__':
     unittest.main()
+

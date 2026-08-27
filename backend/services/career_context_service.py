@@ -9,13 +9,17 @@ logger = logging.getLogger(__name__)
 def fetch_user_career_data(uid):
     """
     Retrieves all relevant Firestore documents for the authenticated user across:
-    1. Resumes
-    2. Resume Analyses
-    3. ATS Scores
-    4. Job Matches
-    5. Interview Sessions
+    1. Career Goals
+    2. Profile / Education / Skills / Projects / Certs
+    3. Resumes
+    4. Resume Analyses
+    5. ATS Scores
+    6. Job Matches
+    7. Interview Sessions
     """
     context_data = {
+        "career_goal": None,
+        "profile": None,
         "resumes": [],
         "analyses": [],
         "ats_scores": [],
@@ -28,7 +32,19 @@ def fetch_user_career_data(uid):
         return _fetch_mock_career_data(uid)
 
     try:
-        # 1. Resumes
+        # 1. Career Goals (active)
+        goal_docs = db.collection("career_goals").where("user_id", "==", uid).where("status", "==", "active").stream()
+        goals = [d.to_dict() for d in goal_docs]
+        if goals:
+            goals.sort(key=lambda x: x.get("updated_at") or x.get("created_at") or "", reverse=True)
+            context_data["career_goal"] = goals[0]
+
+        # 2. Candidate Profile
+        prof_doc = db.collection("profiles").document(uid).get()
+        if prof_doc.exists:
+            context_data["profile"] = prof_doc.to_dict()
+
+        # 3. Resumes
         res_docs = db.collection("resumes").where("user_id", "==", uid).stream()
         for doc in res_docs:
             d = doc.to_dict()
@@ -42,22 +58,24 @@ def fetch_user_career_data(uid):
         # Sort resumes by upload date
         context_data["resumes"].sort(key=lambda x: x.get("uploaded_at", ""), reverse=True)
 
-        # 2. Resume Analyses
+        # 4. Resume Analyses
         ana_docs = db.collection("resume_analyses").where("user_id", "==", uid).stream()
         for doc in ana_docs:
             d = doc.to_dict()
             res_json = d.get("analysis_results") or {}
+            skills_block = res_json.get("skills") if isinstance(res_json.get("skills"), dict) else {}
             context_data["analyses"].append({
                 "id": d.get("id", doc.id),
-                "summary": res_json.get("resume_summary") or "",
-                "technical_skills": res_json.get("technical_skills_found") or [],
+                "summary": res_json.get("resume_summary") or res_json.get("professional_summary", {}).get("quality") or "",
+                "technical_skills": res_json.get("technical_skills_found") or skills_block.get("technical_skills_found") or [],
+                "missing_skills": res_json.get("missing_skills") or skills_block.get("missing_skills") or [],
                 "strengths": res_json.get("strengths") or [],
                 "weaknesses": res_json.get("weaknesses") or [],
                 "recommendations": res_json.get("actionable_recommendations") or [],
                 "created_at": d.get("created_at", "")
             })
 
-        # 3. ATS Scores
+        # 5. ATS Scores
         ats_docs = db.collection("resume_ats_scores").where("user_id", "==", uid).stream()
         for doc in ats_docs:
             d = doc.to_dict()
@@ -73,7 +91,7 @@ def fetch_user_career_data(uid):
                 "created_at": d.get("created_at", "")
             })
 
-        # 4. Job Matches
+        # 6. Job Matches
         jm_docs = db.collection("job_matches").where("user_id", "==", uid).stream()
         for doc in jm_docs:
             d = doc.to_dict()
@@ -93,7 +111,7 @@ def fetch_user_career_data(uid):
                 "created_at": d.get("created_at", "")
             })
 
-        # 5. Interview Preparation Sessions
+        # 7. Interview Preparation Sessions
         int_docs = db.collection("interview_sessions").where("user_id", "==", uid).stream()
         for doc in int_docs:
             d = doc.to_dict()
@@ -119,15 +137,21 @@ def fetch_user_career_data(uid):
 def _fetch_mock_career_data(uid):
     """Fallback fetcher for mock DB environment."""
     try:
+        from backend.career_goal_routes import MOCK_CAREER_GOALS_DB
+        from backend.profile_routes import MOCK_PROFILES_DB
         from backend.resume_routes import MOCK_RESUMES_DB
         from backend.jobmatch_routes import MOCK_JOBMATCH_DB
         from backend.interview_routes import MOCK_INTERVIEW_DB
     except ImportError:
+        from career_goal_routes import MOCK_CAREER_GOALS_DB
+        from profile_routes import MOCK_PROFILES_DB
         from resume_routes import MOCK_RESUMES_DB
         from jobmatch_routes import MOCK_JOBMATCH_DB
         from interview_routes import MOCK_INTERVIEW_DB
 
     context_data = {
+        "career_goal": next((g for g in MOCK_CAREER_GOALS_DB.values() if g.get("user_id") == uid and g.get("status") == "active"), None),
+        "profile": MOCK_PROFILES_DB.get(uid),
         "resumes": [],
         "analyses": [],
         "ats_scores": [],
@@ -178,3 +202,4 @@ def _fetch_mock_career_data(uid):
             })
 
     return context_data
+

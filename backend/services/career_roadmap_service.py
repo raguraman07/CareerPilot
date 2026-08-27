@@ -63,7 +63,7 @@ def get_readiness_label(score):
 def generate_career_roadmap(uid, career_goal=""):
     """
     Generates a dynamic personalized career roadmap and learning plan
-    based on the candidate's actual CareerPilot profile data (resumes, ATS, job matches, skill gaps, interview feedback).
+    based on the candidate's actual CareerPilot profile data (Career Goal, Profile, Resumes, ATS, Job Matches, Skill Gaps, Interview Feedback).
     """
     if not is_gemini_configured or not genai_client:
         raise ValueError("Gemini API key is not configured.")
@@ -71,103 +71,174 @@ def generate_career_roadmap(uid, career_goal=""):
     # 1. Retrieve all user career context
     user_data = fetch_user_career_data(uid)
 
+    goal_obj = user_data.get("career_goal") or {}
+    profile_obj = user_data.get("profile") or {}
     resumes = user_data.get("resumes") or []
     job_matches = user_data.get("job_matches") or []
     analyses = user_data.get("analyses") or []
     ats_scores = user_data.get("ats_scores") or []
     interviews = user_data.get("interviews") or []
 
-    # If no goal supplied, attempt to infer target from job matches or resume
-    inferred_goal = career_goal.strip()
-    if not inferred_goal:
-        if job_matches:
-            inferred_goal = job_matches[0].get("job_title") or "Software Career"
-        else:
-            inferred_goal = "Target Professional Role"
+    # Target company and role determination
+    target_company = (goal_obj.get("company_name") or "").strip()
+    target_role = (goal_obj.get("job_role") or "").strip()
 
-    # Construct context blocks
+    if not target_role:
+        if career_goal and career_goal.strip():
+            target_role = career_goal.strip()
+        elif job_matches:
+            target_role = job_matches[0].get("job_title") or "Software Engineer"
+        else:
+            target_role = "Software Engineer"
+
+    if not target_company:
+        target_company = "Target Tech Company"
+
+    # Profile & Education Details
+    edu = profile_obj.get("education") or {}
+    edu_text = f"Education: {edu.get('highest_education', '')} in {edu.get('specialization', '')} from {edu.get('institution', '')}" if edu else "Education: Not specified"
+
+    skills_dict = profile_obj.get("skills") or {}
+    curr_prog_langs = skills_dict.get("programming_languages") or []
+    curr_tech_skills = skills_dict.get("technical_skills") or []
+    curr_tools = skills_dict.get("tools_and_technologies") or []
+    curr_soft_skills = skills_dict.get("soft_skills") or []
+    
+    # Existing Certifications & Projects
+    curr_certs = [c.get("name") for c in (profile_obj.get("certifications") or []) if isinstance(c, dict) and c.get("name")]
+    curr_projects = [p.get("title") for p in (profile_obj.get("projects") or []) if isinstance(p, dict) and p.get("title")]
+
+    # Resume & Analysis Data
     resume_text = resumes[0].get("extracted_text", "") if resumes else "No uploaded resume."
     
+    analysis_skills = []
+    missing_analysis_skills = []
+    if analyses:
+        analysis_skills = analyses[0].get("technical_skills") or []
+        missing_analysis_skills = analyses[0].get("missing_skills") or []
+
+    # Job Match & Skill Gaps
     jm_summary = ""
+    jm_missing_skills = []
     if job_matches:
         jm = job_matches[0]
+        jm_missing_skills = jm.get("missing_skills") or []
         gaps_list = [f"{g.get('skill')}: {g.get('reason')}" for g in (jm.get("skill_gaps") or []) if isinstance(g, dict)]
-        jm_summary = f"Job Match Target: {jm.get('job_title')}\nMatch Score: {jm.get('match_score')}%\nMatching Skills: {', '.join(jm.get('matching_skills') or [])}\nMissing Skills: {', '.join(jm.get('missing_skills') or [])}\nSkill Gaps: {'; '.join(gaps_list)}"
+        jm_summary = f"Job Match Role: {jm.get('job_title')}\nMatching: {', '.join(jm.get('matching_skills') or [])}\nMissing: {', '.join(jm_missing_skills)}\nSkill Gaps: {'; '.join(gaps_list)}"
 
     ats_summary = ""
     if ats_scores:
         ats = ats_scores[0]
-        ats_summary = f"ATS Score: {ats.get('ats_score')}/100\nMissing Keywords: {', '.join(ats.get('missing_keywords') or [])}\nWarnings: {', '.join(ats.get('warnings') or [])}"
+        ats_summary = f"ATS Score: {ats.get('ats_score')}/100\nMissing Keywords: {', '.join(ats.get('missing_keywords') or [])}"
 
     interview_summary = ""
     if interviews:
         inv = interviews[0]
         interview_summary = f"Interview Prep Target: {inv.get('job_title')}\nIdentified Weaknesses: {', '.join(inv.get('potential_weaknesses') or [])}"
 
-    prompt = f"""You are an expert career strategist, technical mentor, learning advisor, and hiring specialist.
+    prompt = f"""You are an expert career development and technical recruitment advisor for CareerPilot AI.
 
-Create a personalized career roadmap and learning plan for the candidate using the supplied career profile context.
+Create a realistic, personalized, and actionable career preparation roadmap for this specific user.
+The objective is to help the user become genuinely prepared for the selected job role and company.
 
-Analyze the candidate's current capabilities, target career direction, job requirements, missing skills, resume weaknesses, ATS feedback, and interview weaknesses.
+Do not provide generic career advice.
+Analyze the user's current skills against the expected requirements of the target role and company.
+Identify the most important missing skills and skill gaps.
+Prioritize skills based on job relevance.
+Recommend only technologies, subjects, certifications, and projects that meaningfully improve the user's readiness.
 
-Prioritize the most important improvements first based on dependencies and impact.
+Do not invent certifications, companies, technologies, requirements or URLs.
+If reliable certification information cannot be established, return an empty string for the certification URL rather than fabricating one.
+The roadmap must be practical and achievable for the user's current level.
 
-Target Career Goal: {inferred_goal}
+USER CAREER PROFILE:
+- Target Company: {target_company}
+- Target Job Role: {target_role}
+- {edu_text}
+- Current Verified Skills & Programming Languages: {', '.join(curr_prog_langs + curr_tech_skills) if (curr_prog_langs or curr_tech_skills) else 'None listed'}
+- Current Tools & Platforms: {', '.join(curr_tools) if curr_tools else 'None listed'}
+- Current Soft Skills: {', '.join(curr_soft_skills) if curr_soft_skills else 'None listed'}
+- Existing Portfolio Projects: {', '.join(curr_projects) if curr_projects else 'None recorded'}
+- Existing Certifications: {', '.join(curr_certs) if curr_certs else 'None recorded'}
+- Identified Skill Gaps from Resume & Match Analysis: {', '.join(missing_analysis_skills + jm_missing_skills) if (missing_analysis_skills or jm_missing_skills) else 'Analyze gaps based on role requirements'}
 
-CANDIDATE CAREER CONTEXT:
+--- RESUME TEXT CONTEXT ---
+{resume_text[:2500]}
 
---- RESUME TEXT ---
-{resume_text}
+--- MATCH & ATS CONTEXT ---
+{jm_summary if jm_summary else "No prior job match data recorded."}
+{ats_summary if ats_summary else "No prior ATS analysis recorded."}
+{interview_summary if interview_summary else "No prior interview session recorded."}
 
---- JOB MATCH & SKILL GAP ANALYSIS ---
-{jm_summary if jm_summary else "No job match data recorded."}
-
---- ATS SCORE ANALYSIS ---
-{ats_summary if ats_summary else "No ATS score recorded."}
-
---- INTERVIEW FEEDBACK ---
-{interview_summary if interview_summary else "No interview session recorded."}
-
-
-Instructions:
-1. Do not assume technologies or skills that are not supported by the candidate's target role or job requirements.
-2. Recommendations must be justified by the gap between candidate's current profile and target career goal.
-3. For learning resources, recommend resource TYPES (e.g. "Official documentation", "Interactive hands-on course", "Practice platform"). Do NOT invent fake URLs or course names.
-4. "readiness_score" MUST be an integer between 0 and 100 evaluating candidate's overall readiness for the target role.
-
-Return ONLY a single valid JSON object matching this exact schema:
+CRITICAL RULES FOR ROADMAP GENERATION:
+1. Personalized Skill Gaps: Directly identify what this specific candidate lacks for {target_company} {target_role}. Provide a detailed 'skill_gaps' array with skill name, importance (High/Medium/Low), why needed, current level, and target level.
+2. Logical Sequence: Follow a clear dependency progression:
+   FOUNDATION -> CORE SKILLS -> ROLE-SPECIFIC TECHNOLOGIES -> ADVANCED SKILLS -> PROJECTS -> CERTIFICATION -> INTERVIEW READINESS.
+3. Skill Prioritization: Categorize every skill into "High", "Medium", or "Low" priority:
+   - High: Essential for {target_role} at {target_company} and candidate currently lacks it.
+   - Medium: Highly recommended for proficiency.
+   - Low: Good to have / future improvement.
+   Provide a concrete 'reason' and 'what_to_learn' for each.
+4. Clean Categorization: Provide distinct lists for programming languages, technologies, developer tools, and core academic subjects.
+5. Certifications: Recommend ONLY 1 to 3 legitimate, highly relevant certifications for {target_company} + {target_role}. Provide provider, priority, rationale, and official certification website URL (or leave url empty if unavailable).
+6. Portfolio Projects: Recommend 2 to 3 progressive projects (Beginner -> Intermediate -> Advanced Portfolio) specifically designed to demonstrate the missing skills. Include project title, difficulty, skills demonstrated, what to build, and why it helps.
+7. Return ONLY a single raw valid JSON object matching this exact schema:
 
 {{
-  "career_goal": "{inferred_goal}",
-  "current_profile_summary": "Concise summary of candidate's current state relative to goal.",
-  "readiness_score": 75,
-  "readiness_label": "Strongly Prepared",
-  "current_strengths": ["Strength 1", "Strength 2"],
-  "priority_gaps": ["Priority Gap 1", "Priority Gap 2"],
-  "roadmap": [
+  "career_goal": {{
+    "company": "{target_company}",
+    "role": "{target_role}"
+  }},
+  "current_readiness": {{
+    "score": 65,
+    "summary": "Concise summary of candidate's current capabilities, key skill gaps, and strategic focus for {target_company} {target_role}."
+  }},
+  "roadmap_duration": "10–12 weeks",
+  "skill_gaps": [
     {{
-      "phase": 1,
-      "title": "Phase Title",
-      "objective": "Clear learning objective",
-      "reason": "Why this comes first in the learning sequence",
-      "skills_to_develop": ["Skill 1", "Skill 2"],
-      "activities": ["Practical activity 1", "Practical activity 2"],
-      "project_ideas": ["Specific project idea to build"],
-      "success_criteria": ["Measurable success criterion"],
-      "status": "not_started"
+      "skill": "Skill Name",
+      "importance": "High",
+      "reason": "Detailed explanation of why this skill is needed for {target_company} {target_role}.",
+      "current_level": "Beginner / None",
+      "target_level": "Intermediate / Production Ready"
     }}
   ],
-  "recommended_projects": ["Project 1", "Project 2"],
-  "interview_preparation": ["Interview focus area 1"],
-  "job_readiness_checklist": ["Checklist item 1", "Checklist item 2"],
-  "estimated_timeline": "4–6 weeks",
-  "final_recommendations": ["Final actionable tip 1"]
+  "phases": [
+    {{
+      "phase_number": 1,
+      "title": "Phase Title (e.g. Core Foundations & System Mastery)",
+      "duration": "2 weeks",
+      "objective": "Clear milestone objective",
+      "skills": [
+        {{
+          "name": "Skill Name",
+          "priority": "High",
+          "reason": "Why this skill is needed",
+          "what_to_learn": "Key concepts and topics to master"
+        }}
+      ],
+      "languages": ["Language 1"],
+      "technologies": ["Tech 1"],
+      "tools": ["Tool 1"],
+      "core_subjects": ["Subject 1"],
+      "certifications": [],
+      "projects": [],
+      "milestone": "Measurable milestone to complete this phase"
+    }}
+  ],
+  "final_readiness": {{
+    "technical_skills": ["Skill 1", "Skill 2"],
+    "certifications_completed": ["Relevant Cert"],
+    "projects_completed": ["Portfolio Project"],
+    "interview_ready": false
+  }}
 }}
 
 Constraints:
-1. "roadmap" array MUST contain 3 to 5 logically sequenced phases.
-2. Return ONLY raw valid JSON with no markdown syntax.
+- Include between 3 and 5 well-structured sequential phases.
+- Do NOT return markdown codeblocks or placeholder text. Return pure JSON.
 """
+
     raw_text = ""
     try:
         raw_text = call_gemini_with_retry(genai_client, prompt, response_mime_type="application/json")
@@ -183,47 +254,214 @@ Constraints:
     try:
         parsed = json.loads(cleaned)
     except json.JSONDecodeError as json_err:
-        logger.error(f"Failed to parse Gemini JSON output for career roadmap: {json_err}")
+        logger.error(f"Failed to parse Gemini JSON output for career roadmap: {json_err}. Cleaned text: {cleaned[:300]}")
         raise ValueError("Invalid JSON response from Gemini AI.")
 
-    # Validate readiness score and label
-    try:
-        score = max(0, min(100, int(parsed.get("readiness_score", 60))))
-    except (ValueError, TypeError):
-        score = 60
+    return sanitize_and_validate_roadmap(parsed, target_company, target_role)
 
+
+def sanitize_and_validate_roadmap(parsed, default_company="Target Company", default_role="Software Engineer"):
+    """
+    Validates and standardizes the AI roadmap schema, adding defaults where needed.
+    """
     from backend.services.resume_intelligence import deduplicate_list
 
+    if not isinstance(parsed, dict):
+        parsed = {}
+
+    # 1. Career Goal
+    cg = parsed.get("career_goal")
+    if not isinstance(cg, dict):
+        cg = {}
+    company = str(cg.get("company") or default_company).strip()
+    role = str(cg.get("role") or default_role).strip()
+    parsed["career_goal"] = {"company": company, "role": role}
+
+    # 2. Current Readiness
+    cr = parsed.get("current_readiness")
+    if not isinstance(cr, dict):
+        cr = {}
+    try:
+        score = max(0, min(100, int(cr.get("score", parsed.get("readiness_score", 60)))))
+    except (ValueError, TypeError):
+        score = 60
+    summary = str(cr.get("summary") or parsed.get("current_profile_summary") or f"Roadmap for {role} at {company}.").strip()
+    parsed["current_readiness"] = {
+        "score": score,
+        "summary": summary
+    }
+
+    # Backward compatibility root scores
     parsed["readiness_score"] = score
     parsed["readiness_label"] = get_readiness_label(score)
-    parsed["career_goal"] = str(parsed.get("career_goal") or inferred_goal).strip()
-    parsed["current_profile_summary"] = str(parsed.get("current_profile_summary") or "").strip()
-    parsed["current_strengths"] = deduplicate_list(parsed.get("current_strengths") or [])
-    parsed["priority_gaps"] = deduplicate_list(parsed.get("priority_gaps") or [])
-    parsed["recommended_projects"] = deduplicate_list(parsed.get("recommended_projects") or [])
-    parsed["interview_preparation"] = deduplicate_list(parsed.get("interview_preparation") or [])
-    parsed["job_readiness_checklist"] = deduplicate_list(parsed.get("job_readiness_checklist") or [])
-    parsed["estimated_timeline"] = str(parsed.get("estimated_timeline") or "4–8 weeks").strip()
-    parsed["final_recommendations"] = deduplicate_list(parsed.get("final_recommendations") or [])
+    parsed["roadmap_duration"] = str(parsed.get("roadmap_duration") or parsed.get("estimated_timeline") or "8–12 weeks").strip()
 
-    # Validate roadmap phases
-    phases = parsed.get("roadmap") or []
+    # 3. Dynamic Skill Gaps Validation
+    raw_gaps = parsed.get("skill_gaps") or []
+    sanitized_gaps = []
+    if isinstance(raw_gaps, list):
+        for g in raw_gaps:
+            if isinstance(g, dict) and g.get("skill"):
+                imp = str(g.get("importance") or "High").capitalize()
+                if imp not in ["High", "Medium", "Low"]:
+                    imp = "High"
+                sanitized_gaps.append({
+                    "skill": str(g.get("skill")).strip(),
+                    "importance": imp,
+                    "reason": str(g.get("reason") or f"Required for {company} {role} competency.").strip(),
+                    "current_level": str(g.get("current_level") or "Beginner").strip(),
+                    "target_level": str(g.get("target_level") or "Production Ready").strip()
+                })
+            elif isinstance(g, str) and g.strip():
+                sanitized_gaps.append({
+                    "skill": g.strip(),
+                    "importance": "High",
+                    "reason": f"Required competency for {role}.",
+                    "current_level": "Needs Improvement",
+                    "target_level": "Intermediate / Job Ready"
+                })
+    parsed["skill_gaps"] = sanitized_gaps
+
+    # 4. Phases validation
+    raw_phases = parsed.get("phases") or parsed.get("roadmap") or []
+    if not isinstance(raw_phases, list):
+        raw_phases = []
+
     sanitized_phases = []
-    for idx, p in enumerate(phases):
-        if isinstance(p, dict):
-            sanitized_phases.append({
-                "phase": p.get("phase") or (idx + 1),
-                "title": str(p.get("title") or f"Phase {idx + 1}").strip(),
-                "objective": str(p.get("objective") or "").strip(),
-                "reason": str(p.get("reason") or "").strip(),
-                "skills_to_develop": list(p.get("skills_to_develop") or []),
-                "activities": list(p.get("activities") or []),
-                "project_ideas": list(p.get("project_ideas") or []),
-                "success_criteria": list(p.get("success_criteria") or []),
-                "status": str(p.get("status") or "not_started").strip()
-            })
+    for idx, p in enumerate(raw_phases):
+        if not isinstance(p, dict):
+            continue
 
+        p_num = p.get("phase_number") or p.get("phase") or (idx + 1)
+        p_title = str(p.get("title") or f"Phase {p_num}").strip()
+        p_duration = str(p.get("duration") or p.get("estimated_duration") or "2 weeks").strip()
+        p_obj = str(p.get("objective") or p.get("description") or "").strip()
+        p_milestone = str(p.get("milestone") or (p.get("success_criteria")[0] if p.get("success_criteria") else "")).strip()
+
+        # Skills with priorities
+        raw_skills = p.get("skills") or []
+        sanitized_skills = []
+        if isinstance(raw_skills, list):
+            for s in raw_skills:
+                if isinstance(s, dict):
+                    priority = str(s.get("priority") or "High").capitalize()
+                    if priority not in ["High", "Medium", "Low"]:
+                        priority = "High"
+                    sanitized_skills.append({
+                        "name": str(s.get("name") or "Skill").strip(),
+                        "priority": priority,
+                        "reason": str(s.get("reason") or "").strip(),
+                        "what_to_learn": str(s.get("what_to_learn") or "").strip(),
+                        "status": str(s.get("status") or "not_started").strip()
+                    })
+                elif isinstance(s, str) and s.strip():
+                    sanitized_skills.append({
+                        "name": s.strip(),
+                        "priority": "High",
+                        "reason": "Core competency for this phase.",
+                        "what_to_learn": f"Master {s.strip()} fundamentals and hands-on usage.",
+                        "status": "not_started"
+                    })
+
+        # If no skills in skills list, check skills_to_develop
+        if not sanitized_skills and p.get("skills_to_develop"):
+            for s_str in p.get("skills_to_develop", []):
+                if isinstance(s_str, str) and s_str.strip():
+                    sanitized_skills.append({
+                        "name": s_str.strip(),
+                        "priority": "High",
+                        "reason": "Required phase skill.",
+                        "what_to_learn": f"Learn practical {s_str.strip()}.",
+                        "status": "not_started"
+                    })
+
+        # Certifications inside phase
+        raw_certs = p.get("certifications") or []
+        sanitized_certs = []
+        if isinstance(raw_certs, list):
+            for c in raw_certs:
+                if isinstance(c, dict):
+                    sanitized_certs.append({
+                        "name": str(c.get("name") or "Certification").strip(),
+                        "provider": str(c.get("provider") or "").strip(),
+                        "priority": str(c.get("priority") or "High").strip(),
+                        "reason": str(c.get("reason") or "").strip(),
+                        "url": str(c.get("url") or c.get("official_url") or "").strip(),
+                        "status": str(c.get("status") or "not_started").strip()
+                    })
+                elif isinstance(c, str) and c.strip():
+                    sanitized_certs.append({
+                        "name": c.strip(),
+                        "provider": company,
+                        "priority": "High",
+                        "reason": "Directly relevant certification.",
+                        "url": "",
+                        "status": "not_started"
+                    })
+
+        # Projects inside phase
+        raw_projects = p.get("projects") or []
+        sanitized_projects = []
+        if isinstance(raw_projects, list):
+            for pr in raw_projects:
+                if isinstance(pr, dict):
+                    sanitized_projects.append({
+                        "title": str(pr.get("title") or pr.get("name") or "Portfolio Project").strip(),
+                        "difficulty": str(pr.get("difficulty") or "Intermediate").strip(),
+                        "skills": deduplicate_list(pr.get("skills") or []),
+                        "what_to_build": str(pr.get("what_to_build") or pr.get("description") or "").strip(),
+                        "expected_outcome": str(pr.get("expected_outcome") or "").strip(),
+                        "status": str(pr.get("status") or "not_started").strip()
+                    })
+                elif isinstance(pr, str) and pr.strip():
+                    sanitized_projects.append({
+                        "title": pr.strip(),
+                        "difficulty": "Intermediate",
+                        "skills": [],
+                        "what_to_build": f"Implement a working solution for {pr.strip()}.",
+                        "expected_outcome": "Working repository deployed to portfolio.",
+                        "status": "not_started"
+                    })
+
+        sanitized_phases.append({
+            "phase_number": p_num,
+            "title": p_title,
+            "duration": p_duration,
+            "objective": p_obj,
+            "skills": sanitized_skills,
+            "languages": deduplicate_list(p.get("languages") or []),
+            "technologies": deduplicate_list(p.get("technologies") or []),
+            "tools": deduplicate_list(p.get("tools") or []),
+            "core_subjects": deduplicate_list(p.get("core_subjects") or []),
+            "certifications": sanitized_certs,
+            "projects": sanitized_projects,
+            "milestone": p_milestone,
+            "status": str(p.get("status") or "not_started").strip()
+        })
+
+    parsed["phases"] = sanitized_phases
+    # Maintain backward compatibility 'roadmap' key
     parsed["roadmap"] = sanitized_phases
-    parsed["progress"] = 0
+
+    # 4. Final Readiness
+    fr = parsed.get("final_readiness")
+    if not isinstance(fr, dict):
+        fr = {}
+    parsed["final_readiness"] = {
+        "technical_skills": deduplicate_list(fr.get("technical_skills") or []),
+        "certifications_completed": deduplicate_list(fr.get("certifications_completed") or []),
+        "projects_completed": deduplicate_list(fr.get("projects_completed") or []),
+        "interview_ready": bool(fr.get("interview_ready", False))
+    }
+
+    # Consolidated project list & certifications
+    all_projects = []
+    for ph in sanitized_phases:
+        for pr in ph.get("projects", []):
+            all_projects.append(pr)
+    parsed["recommended_projects"] = all_projects if all_projects else deduplicate_list(parsed.get("recommended_projects") or [])
+
+    parsed["progress"] = parsed.get("progress", 0)
 
     return parsed
+
