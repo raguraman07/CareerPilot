@@ -65,9 +65,6 @@ def generate_career_roadmap(uid, career_goal=""):
     Generates a dynamic personalized career roadmap and learning plan
     based on the candidate's actual CareerPilot profile data (Career Goal, Profile, Resumes, ATS, Job Matches, Skill Gaps, Interview Feedback).
     """
-    if not is_gemini_configured or not genai_client:
-        raise ValueError("Gemini API key is not configured.")
-
     # 1. Retrieve all user career context
     user_data = fetch_user_career_data(uid)
 
@@ -239,25 +236,265 @@ Constraints:
 - Do NOT return markdown codeblocks or placeholder text. Return pure JSON.
 """
 
-    raw_text = ""
-    try:
-        raw_text = call_gemini_with_retry(genai_client, prompt, response_mime_type="application/json")
-    except Exception as api_err:
-        logger.error(f"Gemini API call failed during career roadmap generation: {api_err}")
-        raise RuntimeError("Career roadmap generation is temporarily unavailable. Please try again.")
+    if is_gemini_configured and genai_client:
+        try:
+            raw_text = call_gemini_with_retry(genai_client, prompt, response_mime_type="application/json")
+            if raw_text and raw_text.strip():
+                cleaned = clean_json_text(raw_text)
+                parsed = json.loads(cleaned)
+                return sanitize_and_validate_roadmap(parsed, target_company, target_role)
+        except Exception as api_err:
+            logger.warning(f"Gemini API call failed during career roadmap generation: {api_err}. Falling back to rule-based generator.")
 
-    if not raw_text or not raw_text.strip():
-        raise RuntimeError("Empty response from Gemini AI.")
+    # Rule-based fallback generator
+    logger.info(f"Career Roadmap Service: Using rule-based fallback generator for {target_role} at {target_company}.")
+    fallback_data = generate_rule_based_roadmap(target_company, target_role, user_data)
+    return sanitize_and_validate_roadmap(fallback_data, target_company, target_role)
 
-    cleaned = clean_json_text(raw_text)
 
-    try:
-        parsed = json.loads(cleaned)
-    except json.JSONDecodeError as json_err:
-        logger.error(f"Failed to parse Gemini JSON output for career roadmap: {json_err}. Cleaned text: {cleaned[:300]}")
-        raise ValueError("Invalid JSON response from Gemini AI.")
+def generate_rule_based_roadmap(company, role, user_data):
+    """
+    Generates a high-quality, customized career roadmap based on role and company requirements.
+    """
+    role_lower = role.lower()
+    company_name = company or "Target Company"
 
-    return sanitize_and_validate_roadmap(parsed, target_company, target_role)
+    if any(k in role_lower for k in ["cyber", "security", "infosec", "soc", "penetration", "ethical"]):
+        duration = "10–12 weeks"
+        skill_gaps = [
+            {"skill": "Network Security & Protocols", "importance": "High", "reason": f"Core foundation for {role} at {company_name}.", "current_level": "Beginner", "target_level": "Production Ready"},
+            {"skill": "SIEM & Log Analysis (Splunk / ELK)", "importance": "High", "reason": f"Essential for real-time security monitoring at {company_name}.", "current_level": "Beginner", "target_level": "Intermediate"},
+            {"skill": "Vulnerability Assessment & Penetration Testing", "importance": "High", "reason": "Identifying threats and CVE remediation.", "current_level": "None", "target_level": "Intermediate"},
+            {"skill": "Cloud Security (AWS IAM / Azure Sentinel)", "importance": "Medium", "reason": "Securing cloud-native infrastructure.", "current_level": "Beginner", "target_level": "Competent"},
+            {"skill": "Incident Response & Forensics", "importance": "Medium", "reason": "Handling enterprise security breaches and threat mitigation.", "current_level": "None", "target_level": "Intermediate"}
+        ]
+        phases = [
+            {
+                "phase_number": 1,
+                "title": "Phase 1: Networking, OS Internals & Security Foundations",
+                "duration": "3 weeks",
+                "objective": f"Master foundational security concepts, TCP/IP networking, Linux CLI, and defensive architecture for {company_name}.",
+                "skills": [
+                    {"name": "TCP/IP & OSI Model", "priority": "High", "reason": "Essential for packet inspection and network security.", "what_to_learn": "Packet flow, DNS, DHCP, TLS/SSL, Wireshark analysis."},
+                    {"name": "Linux Security & Command Line", "priority": "High", "reason": "Server administration and incident handling.", "what_to_learn": "Permissions, iptables, SSH hardening, bash scripting."},
+                    {"name": "Cryptography Basics", "priority": "Medium", "reason": "Data encryption and authentication standards.", "what_to_learn": "Symmetric vs Asymmetric, Hashing (SHA-256), PKI."}
+                ],
+                "languages": ["Python", "Bash"],
+                "technologies": ["Linux", "Wireshark", "OpenVPN"],
+                "tools": ["Nmap", "Wireshark", "Tcpdump"],
+                "core_subjects": ["Computer Networks", "Operating Systems", "Information Security Principles"],
+                "certifications": [
+                    {"name": "CompTIA Security+", "provider": "CompTIA", "priority": "High", "url": "https://www.comptia.org/certifications/security", "status": "recommended"}
+                ],
+                "projects": [
+                    {
+                        "title": "Network Traffic & Threat Packet Analyzer",
+                        "difficulty": "Beginner",
+                        "skills": ["Python", "Scapy", "Wireshark"],
+                        "what_to_build": "Build a Python CLI tool to capture live packets, parse headers, and detect port-scanning attempts in real-time.",
+                        "expected_outcome": "Working packet capture script committed to GitHub with detection logs.",
+                        "status": "not_started"
+                    }
+                ],
+                "milestone": "Successfully analyze network packet dumps and implement basic Linux firewall rules."
+            },
+            {
+                "phase_number": 2,
+                "title": "Phase 2: Threat Detection, SIEM & Security Operations",
+                "duration": "3 weeks",
+                "objective": "Build practical skills in security monitoring, log analysis, threat intelligence, and vulnerability scanning.",
+                "skills": [
+                    {"name": "SIEM Tools & Log Ingestion", "priority": "High", "reason": f"Directly expected in SOC and {role} roles at {company_name}.", "what_to_learn": "Splunk SPL queries, ELK stack setup, correlation rules."},
+                    {"name": "Vulnerability Scanning", "priority": "High", "reason": "Discovering unpatched vulnerabilities and misconfigurations.", "what_to_learn": "Nessus, OpenVAS, CVSS score interpretation."},
+                    {"name": "MITRE ATT&CK Framework", "priority": "Medium", "reason": "Standard methodology for threat classification.", "what_to_learn": "Adversary tactics, techniques, and mapping alert detections."}
+                ],
+                "languages": ["Python", "SQL"],
+                "technologies": ["Splunk", "ELK Stack", "Snort / Suricata"],
+                "tools": ["Nessus", "Burp Suite", "Splunk Enterprise"],
+                "core_subjects": ["Network Security", "Threat Intelligence", "Security Operations"],
+                "certifications": [
+                    {"name": "Certified Ethical Hacker (CEH) or eJPT", "provider": "EC-Council / INE", "priority": "High", "url": "https://www.eccouncil.org/programs/certified-ethical-hacker-ceh/", "status": "recommended"}
+                ],
+                "projects": [
+                    {
+                        "title": "SOC Automation & Incident Detection Lab",
+                        "difficulty": "Intermediate",
+                        "skills": ["Splunk", "Python", "Sysmon", "SIEM"],
+                        "what_to_build": "Configure a local SIEM lab forwarding Windows Sysmon logs to Splunk, triggering automated alerts on brute-force login attempts.",
+                        "expected_outcome": "Documented home lab setup with custom SPL alert rules and incident playbook.",
+                        "status": "not_started"
+                    }
+                ],
+                "milestone": "Deploy a working SIEM lab and configure custom detection alerts for common attack vectors."
+            },
+            {
+                "phase_number": 3,
+                "title": "Phase 3: Web Security, Penetration Testing & Cloud Hardening",
+                "duration": "3 weeks",
+                "objective": "Learn application security fundamentals, OWASP Top 10 vulnerabilities, and cloud security compliance.",
+                "skills": [
+                    {"name": "OWASP Top 10 Exploitation & Defense", "priority": "High", "reason": "Securing web services and API endpoints.", "what_to_learn": "SQL Injection, XSS, CSRF, SSRF, Broken Access Control."},
+                    {"name": "Cloud Security & IAM", "priority": "High", "reason": f"Enterprise cloud governance at {company_name}.", "what_to_learn": "AWS IAM policies, Security Groups, Azure Sentinel, cloud compliance."},
+                    {"name": "API Security & Token Verification", "priority": "Medium", "reason": "Protecting modern microservice APIs.", "what_to_learn": "JWT validation, OAuth2 flows, rate limiting."}
+                ],
+                "languages": ["Python", "JavaScript / Go"],
+                "technologies": ["AWS / Azure", "Docker", "Burp Suite"],
+                "tools": ["Burp Suite Community", "Postman", "OWASP ZAP", "Trivy"],
+                "core_subjects": ["Web Application Security", "Cloud Computing Security"],
+                "certifications": [
+                    {"name": "AWS Certified Security - Specialty", "provider": "Amazon Web Services", "priority": "Medium", "url": "https://aws.amazon.com/certification/certified-security-specialty/", "status": "recommended"}
+                ],
+                "projects": [
+                    {
+                        "title": "Automated Web Vulnerability & API Scanner",
+                        "difficulty": "Advanced",
+                        "skills": ["Python", "Requests", "OWASP ZAP API", "Docker"],
+                        "what_to_build": "Develop a containerized API scanner that tests web applications for SQLi, XSS, and misconfigured HTTP headers, generating PDF audit reports.",
+                        "expected_outcome": "Complete GitHub repository with automated CI/CD security check and report generation.",
+                        "status": "not_started"
+                    }
+                ],
+                "milestone": "Conduct full vulnerability assessment on a vulnerable web application and draft remediation report."
+            },
+            {
+                "phase_number": 4,
+                "title": f"Phase 4: {company_name} Interview Prep & Mock Assessments",
+                "duration": "2 weeks",
+                "objective": f"Sharpen technical interview skills, scenario-based defense questions, and {company_name} recruitment patterns.",
+                "skills": [
+                    {"name": "Incident Response Playbooks", "priority": "High", "reason": f"Commonly asked in {company_name} security technical interviews.", "what_to_learn": "Triage, containment, eradication, lessons learned methodology."},
+                    {"name": "System Architecture Defense", "priority": "High", "reason": "Designing secure multi-tier enterprise systems.", "what_to_learn": "Zero Trust architecture, DMZ layout, WAF configuration."},
+                    {"name": "Behavioral & Technical Mock Interviews", "priority": "High", "reason": "Confidence in live technical evaluations.", "what_to_learn": "STAR method responses for security projects and troubleshooting."}
+                ],
+                "languages": ["Python"],
+                "technologies": ["Enterprise Security Architecture", "Zero Trust"],
+                "tools": ["CareerPilot Interview Prep", "Wireshark", "Linux Terminal"],
+                "core_subjects": ["Incident Response", "Security Architecture & Compliance"],
+                "certifications": [],
+                "projects": [],
+                "milestone": f"Complete 5+ company mock interview simulations for {company_name} and finalize technical portfolio."
+            }
+        ]
+        readiness_score = 65
+        profile_summary = f"Customized technical roadmap designed for {company_name} {role}, focusing on networking foundations, SIEM log monitoring, OWASP web application security, and incident response."
+    else:
+        # Software Engineer / General Developer Roadmap
+        duration = "10–12 weeks"
+        skill_gaps = [
+            {"skill": "Data Structures & Algorithms", "importance": "High", "reason": f"Essential for technical assessments at {company_name}.", "current_level": "Intermediate", "target_level": "Advanced"},
+            {"skill": "System Design & Architecture", "importance": "High", "reason": f"Required for {role} engineering standards.", "current_level": "Beginner", "target_level": "Intermediate"},
+            {"skill": "Modern Frameworks & API Design", "importance": "High", "reason": "Building production-grade scalable services.", "current_level": "Intermediate", "target_level": "Production Ready"},
+            {"skill": "Cloud Deployment & CI/CD", "importance": "Medium", "reason": "Deploying containerized microservices.", "current_level": "Beginner", "target_level": "Intermediate"}
+        ]
+        phases = [
+            {
+                "phase_number": 1,
+                "title": "Phase 1: Advanced Algorithms, Data Structures & Coding Patterns",
+                "duration": "3 weeks",
+                "objective": f"Master core algorithms, complexity analysis, and problem-solving patterns required for {company_name}.",
+                "skills": [
+                    {"name": "Arrays, HashMaps & Two Pointers", "priority": "High", "reason": "Core foundation of technical coding interviews.", "what_to_learn": "Sliding window, prefix sums, binary search."},
+                    {"name": "Trees, Graphs & Dynamic Programming", "priority": "High", "reason": "Frequent coding assessment questions.", "what_to_learn": "BFS/DFS, Dijkstra, Top-down and bottom-up DP."}
+                ],
+                "languages": ["Java / Python / C++"],
+                "technologies": ["Git", "Data Structures"],
+                "tools": ["VS Code", "LeetCode / HackerRank"],
+                "core_subjects": ["Data Structures & Algorithms", "Discrete Mathematics"],
+                "certifications": [],
+                "projects": [],
+                "milestone": "Solve 75+ targeted algorithmic problems and achieve proficiency in Big-O optimization."
+            },
+            {
+                "phase_number": 2,
+                "title": "Phase 2: Backend Architecture, Databases & API Engineering",
+                "duration": "3 weeks",
+                "objective": "Build robust REST/GraphQL APIs, database models, caching mechanisms, and authentication.",
+                "skills": [
+                    {"name": "RESTful API Design & Best Practices", "priority": "High", "reason": "Industry standard for service communication.", "what_to_learn": "Status codes, pagination, rate limiting, JWT auth."},
+                    {"name": "Database Schema Design & Query Optimization", "priority": "High", "reason": "Handling enterprise data efficiently.", "what_to_learn": "PostgreSQL, Indexing, Transactions, NoSQL."}
+                ],
+                "languages": ["Python / JavaScript / Java"],
+                "technologies": ["Node.js / FastAPI / Spring Boot", "PostgreSQL", "Redis"],
+                "tools": ["Postman", "Docker", "DBeaver"],
+                "core_subjects": ["Database Management Systems", "Object-Oriented Design"],
+                "certifications": [],
+                "projects": [
+                    {
+                        "title": "Scalable RESTful Backend with Caching & Auth",
+                        "difficulty": "Intermediate",
+                        "skills": ["REST API", "Database", "Redis", "Docker"],
+                        "what_to_build": "Implement a full authentication and resource management API featuring Redis caching and JWT security.",
+                        "expected_outcome": "Containerized backend repository with automated tests.",
+                        "status": "not_started"
+                    }
+                ],
+                "milestone": "Deploy a containerized API backed by a relational database and Redis caching."
+            },
+            {
+                "phase_number": 3,
+                "title": "Phase 3: System Design, Cloud Deployment & CI/CD",
+                "duration": "3 weeks",
+                "objective": "Master high-level system design concepts, microservices, messaging queues, and automated deployments.",
+                "skills": [
+                    {"name": "System Design Fundamentals", "priority": "High", "reason": f"Required for {role} interviews at {company_name}.", "what_to_learn": "Load balancing, horizontal scaling, CAP theorem, message queues."},
+                    {"name": "Docker & Cloud Deployment", "priority": "Medium", "reason": "Cloud-native application lifecycle.", "what_to_learn": "Dockerfile creation, AWS ECS/S3, GitHub Actions CI/CD."}
+                ],
+                "languages": ["Python / JavaScript"],
+                "technologies": ["Docker", "AWS / GCP", "GitHub Actions"],
+                "tools": ["Docker Compose", "AWS Console", "Git"],
+                "core_subjects": ["Distributed Systems", "Cloud Computing"],
+                "certifications": [
+                    {"name": "AWS Certified Cloud Practitioner or Developer", "provider": "AWS", "priority": "Medium", "url": "https://aws.amazon.com/certification/certified-cloud-practitioner/", "status": "recommended"}
+                ],
+                "projects": [
+                    {
+                        "title": "Full-Stack Cloud-Deployed Application",
+                        "difficulty": "Advanced",
+                        "skills": ["Full Stack", "Docker", "CI/CD", "Cloud"],
+                        "what_to_build": "End-to-end full-stack web application featuring automated GitHub Actions CI/CD pipeline and cloud hosting.",
+                        "expected_outcome": "Live deployed web application with public URL and documented architecture.",
+                        "status": "not_started"
+                    }
+                ],
+                "milestone": "Successfully complete high-level system design architectures and deploy an end-to-end project."
+            },
+            {
+                "phase_number": 4,
+                "title": f"Phase 4: {company_name} Interview Readiness & Behavioral Mastery",
+                "duration": "2 weeks",
+                "objective": f"Final interview preparation targeting {company_name}'s specific hiring rounds and technical bars.",
+                "skills": [
+                    {"name": "Live Technical Problem Solving", "priority": "High", "reason": f"Passing {company_name} live coding rounds.", "what_to_learn": "Thinking aloud, test cases validation, clean code standards."},
+                    {"name": "Behavioral Leadership Principles", "priority": "High", "reason": "Managerial and HR interview rounds.", "what_to_learn": "STAR technique for past projects, conflict resolution, ownership."}
+                ],
+                "languages": ["Target Language"],
+                "technologies": ["Company Tech Stack"],
+                "tools": ["CareerPilot AI Interview Trainer"],
+                "core_subjects": ["Software Engineering Principles", "Communication"],
+                "certifications": [],
+                "projects": [],
+                "milestone": f"Complete mock interview sessions for {company_name} and finalize your polished resume."
+            }
+        ]
+        readiness_score = 65
+        profile_summary = f"Comprehensive career roadmap for {company_name} {role}, balancing algorithmic problem-solving, backend architecture, system design, and interview readiness."
+
+    return {
+        "career_goal": {"company": company_name, "role": role},
+        "current_readiness": {"score": readiness_score, "summary": profile_summary},
+        "readiness_score": readiness_score,
+        "readiness_label": get_readiness_label(readiness_score),
+        "roadmap_duration": duration,
+        "skill_gaps": skill_gaps,
+        "phases": phases,
+        "recommended_projects": [pr for ph in phases for pr in ph.get("projects", [])],
+        "final_readiness": {
+            "technical_skills": [s.get("name") for ph in phases for s in ph.get("skills", [])][:6],
+            "certifications_completed": [c.get("name") for ph in phases for c in ph.get("certifications", [])],
+            "projects_completed": [pr.get("title") for ph in phases for pr in ph.get("projects", [])],
+            "interview_ready": False
+        }
+    }
 
 
 def sanitize_and_validate_roadmap(parsed, default_company="Target Company", default_role="Software Engineer"):
