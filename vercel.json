@@ -1,14 +1,10 @@
 {
-  "builds": [
+  "outputDirectory": "frontend",
+  "cleanUrls": true,
+  "rewrites": [
     {
-      "src": "app.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "app.py"
+      "source": "/api/:path*",
+      "destination": "https://careerpilot-txa0.onrender.com/api/:path*"
     }
   ]
 }
