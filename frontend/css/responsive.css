@@ -1,10 +1,74 @@
 /* ==========================================================================
-   CareerPilot AI - Responsive Adjustments & Mobile Drawer
+   CareerPilot AI — Master Responsive Design & Device Adaptation System
+   Breakpoints:
+     - Ultra-Small Mobile: <= 360px
+     - Mobile: <= 480px
+     - Large Mobile & Phablet: <= 600px
+     - Tablets: <= 768px
+     - Small Laptops & Landscape Tablets: <= 992px
+     - Laptops & Desktops: <= 1200px
+     - Large Displays: >= 1440px / 1920px / 2560px
    ========================================================================== */
 
-/* Breakpoint for Tablets and Large Mobiles (992px and below) */
+/* ==========================================================================
+   1. Global Fluid Media & Container Rules
+   ========================================================================== */
+img, svg, video, canvas, audio, iframe {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Prevent text clipping and horizontal blowout */
+p, h1, h2, h3, h4, h5, h6, span, a, label, li, td, th {
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Responsive Table Container */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+    border-radius: var(--radius-sm);
+}
+
+.table-responsive table {
+    width: 100%;
+    min-width: 500px;
+    border-collapse: collapse;
+}
+
+/* ==========================================================================
+   2. Large & Ultra-Wide Desktop Displays (1440px to 2560px)
+   ========================================================================== */
+@media (min-width: 1440px) {
+    .container {
+        max-width: 1360px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .workspace-content {
+        max-width: 1500px;
+    }
+}
+
+@media (min-width: 1920px) {
+    .container {
+        max-width: 1600px;
+    }
+
+    .workspace-content {
+        max-width: 1750px;
+    }
+}
+
+/* ==========================================================================
+   3. Small Laptops & Landscape Tablets (992px and below)
+   ========================================================================== */
 @media (max-width: 992px) {
-    /* Header Mobile Layout */
+    /* Header Mobile Navigation Menu */
     .menu-toggle {
         display: block;
         z-index: 1100;
@@ -15,31 +79,32 @@
         position: fixed;
         top: 0;
         right: -100%;
-        width: 300px;
+        width: min(320px, 85vw);
         height: 100vh;
-        background-color: var(--surface-color);
-        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
-        border-left: 1px solid var(--border-color);
+        height: 100dvh;
+        background-color: var(--surface);
+        box-shadow: -10px 0 30px rgba(82, 70, 70, 0.15);
+        border-left: 1px solid var(--border-light);
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
         align-items: flex-start;
-        padding: 100px 2rem 2rem;
-        gap: 1.5rem;
+        padding: 85px 1.5rem 2rem;
+        gap: 1.25rem;
         transition: right var(--transition-normal);
         z-index: 1050;
+        overflow-y: auto;
     }
-
 
     .nav-links.active {
         right: 0;
     }
 
     .nav-link {
-        font-size: 1.15rem;
+        font-size: 1.05rem;
         width: 100%;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid var(--border-color);
+        padding: 0.65rem 0;
+        border-bottom: 1px solid var(--border-light);
     }
 
     .nav-links .mobile-only {
@@ -49,81 +114,210 @@
     .nav-actions {
         gap: 0.75rem;
     }
-}
 
-/* Breakpoint for Mobiles (768px and below) */
-@media (max-width: 768px) {
-    /* Scale Typography */
-    html {
-        font-size: 14px;
-    }
-    
-    .hero {
-        padding: 140px 0 80px;
-    }
-    
-    .hero h1 {
-        font-size: 2.25rem;
-    }
-    
-    .hero-subtitle {
-        font-size: 1.05rem;
-        margin-bottom: 2rem;
-    }
-    
-    .hero-buttons {
-        flex-direction: column;
-        gap: 0.75rem;
-        padding: 0 1.5rem;
-    }
-    
-    .btn {
-        width: 100%;
-        padding: 0.85rem 1.5rem;
+    /* Multi-column grids become 2 columns or stack */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem;
     }
 
-    .nav-actions .btn {
-        display: none; /* Hide header buttons on small screens, users will use dashboard/cta buttons */
+    .builder-main-grid {
+        grid-template-columns: 1fr !important;
     }
 
-    /* Grids scaling */
-    .features-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-
-    .benefits-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-
-    /* Section Spacings */
-    .features-section, .benefits-section, .cta-section {
-        padding: 60px 0;
-    }
-
-    .section-header {
-        margin-bottom: 2.5rem;
-    }
-
-    .cta-banner {
-        padding: 3rem 1.5rem;
-    }
-
-    .cta-banner h2 {
-        font-size: 1.85rem;
-    }
-}
-
-/* Breakpoint for Small Mobiles (480px and below) */
-@media (max-width: 480px) {
-    .logo span {
-        display: none; /* Hide brand name text on tiny screens to fit toggle and burger */
+    .form-row {
+        grid-template-columns: 1fr !important;
     }
 }
 
 /* ==========================================================================
-   Hamburger Button Animation Transitions
+   4. Tablets (768px and below)
+   ========================================================================== */
+@media (max-width: 768px) {
+    html {
+        font-size: 14px;
+    }
+
+    /* Landing Page Hero */
+    .hero {
+        padding: 110px 1rem 60px;
+    }
+
+    .hero h1 {
+        font-size: clamp(1.85rem, 5vw, 2.5rem);
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
+        max-width: 360px;
+        margin: 0 auto;
+        padding: 0;
+    }
+
+    .btn {
+        min-height: 44px;
+        padding: 0.75rem 1.25rem;
+    }
+
+    /* Grids scaling */
+    .features-grid,
+    .benefits-grid,
+    .jobs-grid,
+    .recommendations-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.25rem;
+    }
+
+    /* Section Spacings */
+    .features-section,
+    .benefits-section,
+    .cta-section {
+        padding: 45px 0;
+    }
+
+    .cta-banner {
+        padding: 2.25rem 1.25rem;
+    }
+
+    .cta-banner h2 {
+        font-size: 1.6rem;
+    }
+
+    /* Dashboard Workspace Content */
+    .workspace-content {
+        padding: 1rem 1rem 2.5rem !important;
+    }
+
+    .top-navbar,
+    .topbar {
+        padding: 0 1rem !important;
+    }
+
+    .page-title {
+        font-size: 1.25rem !important;
+    }
+
+    /* Timeline Linear Adaptation */
+    .timeline-container,
+    .roadmap-phases-container {
+        flex-direction: column !important;
+    }
+
+    /* Modals & Dialogs */
+    .modal-card,
+    .builder-modal-card {
+        width: 100% !important;
+        max-width: calc(100vw - 1.5rem) !important;
+        margin: 0.75rem;
+    }
+}
+
+/* ==========================================================================
+   5. Large Phones & Small Mobiles (480px and below)
+   ========================================================================== */
+@media (max-width: 480px) {
+    .logo span {
+        font-size: 1.05rem;
+    }
+
+    /* Single column stats */
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Touch-friendly inputs & selects */
+    .form-input,
+    .form-select,
+    select,
+    .btn {
+        min-height: 44px;
+        font-size: 16px; /* Prevents iOS Safari auto-zoom on input focus */
+    }
+
+    /* Header title truncation / wrapping */
+    .page-title-area {
+        gap: 0.35rem;
+    }
+
+    .page-title {
+        font-size: 1.1rem !important;
+        line-height: 1.3;
+    }
+
+    /* Chatbot full width */
+    .chat-bubble {
+        max-width: 90% !important;
+    }
+
+    .chat-input-row {
+        padding: 0.65rem !important;
+        gap: 0.5rem !important;
+    }
+
+    /* Profile & Settings cards */
+    .card,
+    .auth-card,
+    .analysis-card {
+        padding: 1.25rem 1rem !important;
+        border-radius: var(--radius-sm) !important;
+    }
+
+    /* Assessment Option Cards */
+    .assessment-option-card,
+    .selection-card {
+        padding: 0.85rem 0.95rem !important;
+    }
+}
+
+/* ==========================================================================
+   6. Ultra-Small Phones (320px to 360px — iPhone SE / Galaxy Fold)
+   ========================================================================== */
+@media (max-width: 360px) {
+    html {
+        font-size: 13.5px;
+    }
+
+    .workspace-content {
+        padding: 0.75rem 0.65rem 2rem !important;
+    }
+
+    .top-navbar,
+    .topbar {
+        padding: 0 0.65rem !important;
+    }
+
+    .brand-logo-img {
+        height: 28px !important;
+    }
+
+    .btn-sm {
+        padding: 0.4rem 0.65rem !important;
+        font-size: 0.78rem !important;
+    }
+
+    .card {
+        padding: 1rem 0.75rem !important;
+    }
+
+    .auth-card {
+        padding: 1.15rem 0.75rem !important;
+    }
+
+    .badge {
+        font-size: 0.7rem !important;
+        padding: 2px 6px !important;
+    }
+}
+
+/* ==========================================================================
+   7. Hamburger Button Animation Transitions
    ========================================================================== */
 .hamburger line {
     transition: transform var(--transition-fast), opacity var(--transition-fast);

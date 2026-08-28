@@ -92,25 +92,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dashboard Mobile Drawer & Profile Dropdown
     // -------------------------------------------------------------
     const sidebar = document.getElementById('sidebar-wrapper');
-    const hamburgerBtn = document.getElementById('hamburger-menu-btn') || document.getElementById('sidebar-open-btn');
+    const openBtns = document.querySelectorAll('.hamburger-menu-btn, #hamburger-menu-btn, .mobile-toggle, #sidebar-open-btn');
     const closeSidebarBtn = document.getElementById('sidebar-close-btn');
     const overlay = document.getElementById('sidebar-overlay');
 
     const openDrawer = () => {
         if (sidebar) sidebar.classList.add('open');
         if (overlay) overlay.classList.add('active');
-        if (hamburgerBtn) hamburgerBtn.setAttribute('aria-expanded', 'true');
+        openBtns.forEach(btn => btn.setAttribute('aria-expanded', 'true'));
     };
 
     const closeDrawer = () => {
         if (sidebar) sidebar.classList.remove('open');
         if (overlay) overlay.classList.remove('active');
-        if (hamburgerBtn) hamburgerBtn.setAttribute('aria-expanded', 'false');
+        openBtns.forEach(btn => btn.setAttribute('aria-expanded', 'false'));
     };
 
-    if (hamburgerBtn) hamburgerBtn.addEventListener('click', openDrawer);
+    openBtns.forEach(btn => btn.addEventListener('click', openDrawer));
     if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeDrawer);
     if (overlay) overlay.addEventListener('click', closeDrawer);
+
+    // Auto-close sidebar on mobile when navigating
+    document.querySelectorAll('.sidebar-nav a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 992) {
+                closeDrawer();
+            }
+        });
+    });
 
     // Profile Avatar Dropdown
     const profileBtn = document.getElementById('profile-dropdown-btn');
@@ -131,6 +140,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Escape key accessibility
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeDrawer();
+            if (profileDropdown) profileDropdown.classList.remove('show');
+        }
+    });
 
     // -------------------------------------------------------------
     // Landing Page Nav Toggle (If Present)

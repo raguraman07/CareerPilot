@@ -163,13 +163,16 @@
     background-color: #FFFFFF;
     border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
-    overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     margin-top: 1rem;
     box-shadow: var(--shadow-sm);
+    width: 100%;
 }
 
 .resumes-table {
     width: 100%;
+    min-width: 480px;
     border-collapse: collapse;
     text-align: left;
 }
@@ -204,6 +207,14 @@
 
 /* 2-Column Grid Adaptations */
 @media (max-width: 768px) {
+    .analysis-setup-panel {
+        padding: 1.25rem 1rem;
+    }
+
+    .analysis-card {
+        padding: 1.25rem 1rem;
+    }
+
     div[style*="grid-template-columns: 1fr 1fr"] {
         grid-template-columns: 1fr !important;
     }

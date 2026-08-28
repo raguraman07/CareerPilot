@@ -558,7 +558,8 @@
         display: block;
     }
 
-    .hamburger-menu-btn {
+    .hamburger-menu-btn,
+    .mobile-toggle {
         display: block;
     }
 
@@ -571,15 +572,24 @@
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .top-navbar, .workspace-content {
+    .top-navbar, .topbar, .workspace-content {
         padding-left: 1.25rem;
         padding-right: 1.25rem;
+    }
+
+    .profile-dropdown {
+        max-width: calc(100vw - 2rem);
     }
 }
 
 @media (max-width: 576px) {
     .stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .top-navbar, .topbar, .workspace-content {
+        padding-left: 0.85rem;
+        padding-right: 0.85rem;
     }
 }
 
@@ -588,7 +598,7 @@
    ========================================================================== */
 .jobs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
     gap: 1.25rem;
 }
 
