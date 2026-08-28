@@ -3,8 +3,8 @@ import time
 from flask import Blueprint, request, jsonify
 from firebase_client import db
 from resume_routes import get_auth_uid, handle_db_op
-from app.blueprints.ai.gemini_service import analyze_resume_text
-import app.blueprints.ai.db_service as db_service
+from .gemini_service import analyze_resume_text
+from . import db_service
 
 logger = logging.getLogger(__name__)
 

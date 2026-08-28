@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 sys.path.append(os.path.dirname(__file__))
 
-from app.blueprints.ai.gemini_service import analyze_resume_text, validate_analysis_json
+from backend.app.blueprints.ai.gemini_service import analyze_resume_text, validate_analysis_json
 
 RESUME_A_SOFTWARE_DEV = """
 Jane Doe - Senior Python Backend Engineer
@@ -42,8 +42,8 @@ Education: B.A. in Graphic Design & Human-Computer Interaction.
 """
 
 class TestDynamicGeminiResumeAnalysis(unittest.TestCase):
-    @patch('app.blueprints.ai.gemini_service.genai_client')
-    @patch('app.blueprints.ai.gemini_service.is_gemini_configured', True)
+    @patch('backend.app.blueprints.ai.gemini_service.genai_client')
+    @patch('backend.app.blueprints.ai.gemini_service.is_gemini_configured', True)
     def test_dynamic_gemini_resume_isolation(self, mock_genai_client):
         """Verifies that 3 different resumes produce strictly dynamic, distinct skills and roles using Google Gemini."""
         

@@ -1,6 +1,16 @@
 import os
+import sys
 import logging
 from flask import Flask, request, jsonify, send_from_directory
+
+# Ensure backend directory and project root are in sys.path
+backend_dir = os.path.abspath(os.path.dirname(__file__))
+project_root = os.path.abspath(os.path.join(backend_dir, '..'))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 from auth_routes import auth_bp
 from resume_routes import resume_bp
 from analysis_routes import analysis_bp
@@ -9,10 +19,7 @@ from jobmatch_routes import jobmatch_bp
 from interview_routes import interview_bp
 from roadmap_routes import roadmap_bp
 from chat_routes import chat_bp
-try:
-    from app.blueprints.ai import ai_bp
-except ImportError:
-    from backend.app.blueprints.ai import ai_bp
+from backend.app.blueprints.ai import ai_bp
 from career_goal_routes import career_goal_bp
 from profile_routes import profile_bp
 from assessment_routes import assessment_bp

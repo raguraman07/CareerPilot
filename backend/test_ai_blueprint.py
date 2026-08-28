@@ -17,7 +17,10 @@ sys.modules["app_module"] = app_module
 spec.loader.exec_module(app_module)
 app = app_module.app
 
-from app.blueprints.ai.gemini_service import validate_analysis_json, REQUIRED_KEYS
+from backend.app.blueprints.ai.gemini_service import validate_analysis_json, REQUIRED_KEYS
+AI_ROUTES_PATH = 'backend.app.blueprints.ai.routes'
+AI_GEMINI_PATH = 'backend.app.blueprints.ai.gemini_service'
+AI_DB_PATH = 'backend.app.blueprints.ai.db_service'
 
 class TestAIBlueprint(unittest.TestCase):
     def setUp(self):
@@ -50,71 +53,71 @@ class TestAIBlueprint(unittest.TestCase):
         invalid_type_sample["technical_skills_found"] = "Python, Flask"
         self.assertFalse(validate_analysis_json(invalid_type_sample))
 
-    @patch('app.blueprints.ai.routes.analyze_resume_text')
-    @patch('app.blueprints.ai.routes.get_auth_uid')
-    @patch('app.blueprints.ai.routes.handle_db_op')
-    @patch('app.blueprints.ai.db_service.handle_db_op')
-    def test_analyze_resume_endpoint_success(self, mock_db_service_op, mock_routes_op, mock_get_uid, mock_analyze_text):
-        mock_get_uid.return_value = "mock-user-123"
+    def test_analyze_resume_endpoint_success(self):
+        with patch(f'{AI_ROUTES_PATH}.analyze_resume_text') as mock_analyze_text, \
+             patch(f'{AI_ROUTES_PATH}.get_auth_uid') as mock_get_uid, \
+             patch(f'{AI_ROUTES_PATH}.handle_db_op') as mock_routes_op, \
+             patch(f'{AI_DB_PATH}.handle_db_op') as mock_db_service_op:
+            mock_get_uid.return_value = "mock-user-123"
 
-        mock_routes_op.return_value = {
-            "extracted_text": "Experienced Python Software Engineer with Flask, JavaScript, SQL. Developed web apps.",
-            "filename": "test_resume.pdf",
-            "user_id": "mock-user-123"
-        }
+            mock_routes_op.return_value = {
+                "extracted_text": "Experienced Python Software Engineer with Flask, JavaScript, SQL. Developed web apps.",
+                "filename": "test_resume.pdf",
+                "user_id": "mock-user-123"
+            }
 
-        mock_analyze_text.return_value = {
-            "resume_summary": "Experienced Python engineer",
-            "technical_skills_found": ["Python", "Flask", "SQL"],
-            "technical_skills": ["Python", "Flask", "SQL"],
-            "soft_skills_found": ["Problem Solving"],
-            "soft_skills": ["Problem Solving"],
-            "strengths": ["Strong backend skills"],
-            "weaknesses": ["Needs test coverage"],
-            "missing_skills": ["Docker"],
-            "actionable_recommendations": ["Add pytest tests"],
-            "improvements": ["Add pytest tests"],
-            "recommended_roles": ["Backend Developer"],
-            "career_recommendations": ["Learn Docker"]
-        }
+            mock_analyze_text.return_value = {
+                "resume_summary": "Experienced Python engineer",
+                "technical_skills_found": ["Python", "Flask", "SQL"],
+                "technical_skills": ["Python", "Flask", "SQL"],
+                "soft_skills_found": ["Problem Solving"],
+                "soft_skills": ["Problem Solving"],
+                "strengths": ["Strong backend skills"],
+                "weaknesses": ["Needs test coverage"],
+                "missing_skills": ["Docker"],
+                "actionable_recommendations": ["Add pytest tests"],
+                "improvements": ["Add pytest tests"],
+                "recommended_roles": ["Backend Developer"],
+                "career_recommendations": ["Learn Docker"]
+            }
 
-        mock_db_service_op.side_effect = lambda callback, fallback: fallback()
+            mock_db_service_op.side_effect = lambda callback, fallback: fallback()
 
-        response = self.client.post(
-            '/api/ai/analyze-resume',
-            headers={"Authorization": "Bearer mock-jwt-token"},
-            json={"resume_id": "mock-resume-uuid-456"}
-        )
+            response = self.client.post(
+                '/api/ai/analyze-resume',
+                headers={"Authorization": "Bearer mock-jwt-token"},
+                json={"resume_id": "mock-resume-uuid-456"}
+            )
 
-        self.assertEqual(response.status_code, 201)
-        res_json = response.get_json()
-        self.assertTrue(res_json.get("success"))
-        self.assertIn("analysis", res_json)
-        self.assertIn("analysis_results", res_json)
+            self.assertEqual(response.status_code, 201)
+            res_json = response.get_json()
+            self.assertTrue(res_json.get("success"))
+            self.assertIn("analysis", res_json)
+            self.assertIn("analysis_results", res_json)
 
-    @patch('app.blueprints.ai.gemini_service.is_gemini_configured', False)
-    @patch('app.blueprints.ai.routes.get_auth_uid')
-    @patch('app.blueprints.ai.routes.handle_db_op')
-    def test_gemini_unavailable_returns_502(self, mock_routes_op, mock_get_uid):
+    def test_gemini_unavailable_returns_502(self):
         """Verifies that when Gemini is unavailable, 502 error is returned and no mock analysis is shown."""
-        mock_get_uid.return_value = "mock-user-123"
+        with patch(f'{AI_GEMINI_PATH}.is_gemini_configured', False), \
+             patch(f'{AI_ROUTES_PATH}.get_auth_uid') as mock_get_uid, \
+             patch(f'{AI_ROUTES_PATH}.handle_db_op') as mock_routes_op:
+            mock_get_uid.return_value = "mock-user-123"
 
-        mock_routes_op.return_value = {
-            "extracted_text": "Candidate text",
-            "filename": "resume.pdf",
-            "user_id": "mock-user-123"
-        }
+            mock_routes_op.return_value = {
+                "extracted_text": "Candidate text",
+                "filename": "resume.pdf",
+                "user_id": "mock-user-123"
+            }
 
-        response = self.client.post(
-            '/api/ai/analyze-resume',
-            headers={"Authorization": "Bearer mock-jwt-token"},
-            json={"resume_id": "mock-resume-uuid-999"}
-        )
+            response = self.client.post(
+                '/api/ai/analyze-resume',
+                headers={"Authorization": "Bearer mock-jwt-token"},
+                json={"resume_id": "mock-resume-uuid-999"}
+            )
 
-        self.assertEqual(response.status_code, 502)
-        res_json = response.get_json()
-        self.assertFalse(res_json.get("success"))
-        self.assertEqual(res_json.get("error"), "AI resume analysis is temporarily unavailable. Please try again.")
+            self.assertEqual(response.status_code, 502)
+            res_json = response.get_json()
+            self.assertFalse(res_json.get("success"))
+            self.assertEqual(res_json.get("error"), "AI resume analysis is temporarily unavailable. Please try again.")
 
     def test_unauthenticated_request_rejected(self):
         """Unauthenticated requests must be rejected with 401."""

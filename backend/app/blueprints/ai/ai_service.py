@@ -1,4 +1,4 @@
-from app.blueprints.ai.gemini_service import (
+from .gemini_service import (
     analyze_resume_text,
     validate_analysis_json,
     REQUIRED_KEYS,
