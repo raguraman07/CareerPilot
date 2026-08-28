@@ -183,7 +183,7 @@
                                 <span>Certifications & Projects</span>
                             </a>
                         </li>
-                        <li>
+                        <li class="desktop-only-nav">
                             <a href="resume-builder.html" class="nav-item active" aria-current="page">
                                 <svg class="nav-icon" viewBox="0 0 24 24">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -294,7 +294,19 @@
 
             <!-- Main Content Area -->
             <main class="dashboard-content" id="main-content">
-                <div class="builder-workspace-shell">
+                <!-- Desktop-Only Device Guard Message (Visible on < 1024px) -->
+                <div id="builder-desktop-guard" class="builder-desktop-guard-card" style="display: none;">
+                    <div class="desktop-guard-icon">
+                        <i class="fas fa-laptop"></i>
+                    </div>
+                    <h2 class="desktop-guard-title">Resume Builder is available on desktop devices.</h2>
+                    <p class="desktop-guard-desc">Please open CareerPilot AI on a laptop or desktop to use the Resume Builder.</p>
+                    <a href="dashboard.html" class="btn btn-primary desktop-guard-btn">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+
+                <div class="builder-workspace-shell" id="builder-workspace-content">
                     
                     <!-- Alert Box -->
                     <div id="builder-alert-box" style="display: none; padding: 0.85rem 1.25rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.88rem;"></div>
@@ -689,6 +701,33 @@
     <script type="module" src="js/main.js"></script>
     <script type="module" src="js/templates.js"></script>
     <script type="module" src="js/resumeBuilder.js"></script>
+    <script>
+        // Reactive Desktop-Only Guard for Resume Builder
+        (function () {
+            const mediaQuery = window.matchMedia('(min-width: 1024px)');
+            function handleViewportChange(e) {
+                const isDesktop = e.matches;
+                const guard = document.getElementById('builder-desktop-guard');
+                const shell = document.getElementById('builder-workspace-content');
+                if (guard && shell) {
+                    if (isDesktop) {
+                        guard.style.display = 'none';
+                        shell.style.display = 'flex';
+                    } else {
+                        guard.style.display = 'flex';
+                        shell.style.display = 'none';
+                    }
+                }
+            }
+            if (mediaQuery.addEventListener) {
+                mediaQuery.addEventListener('change', handleViewportChange);
+            } else {
+                mediaQuery.addListener(handleViewportChange);
+            }
+            // Initial check
+            handleViewportChange(mediaQuery);
+        })();
+    </script>
 </body>
 
 </html>

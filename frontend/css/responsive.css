@@ -65,7 +65,17 @@ p, h1, h2, h3, h4, h5, h6, span, a, label, li, td, th {
 }
 
 /* ==========================================================================
-   3. Small Laptops & Landscape Tablets (992px and below)
+   3. Desktop-Only Breakpoint (< 1024px)
+   ========================================================================== */
+@media (max-width: 1023px) {
+    .desktop-only-nav,
+    .desktop-only {
+        display: none !important;
+    }
+}
+
+/* ==========================================================================
+   4. Small Laptops & Landscape Tablets (992px and below)
    ========================================================================== */
 @media (max-width: 992px) {
     /* Header Mobile Navigation Menu */

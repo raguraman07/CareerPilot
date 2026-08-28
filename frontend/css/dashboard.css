@@ -541,6 +541,14 @@
     margin-bottom: 1.75rem;
 }
 
+/* Hide Desktop-Only Nav Items (e.g. AI Resume Builder) on Screens < 1024px */
+@media (max-width: 1023px) {
+    .desktop-only-nav,
+    .desktop-only {
+        display: none !important;
+    }
+}
+
 /* Responsive Drawer Styles */
 @media (max-width: 992px) {
     .sidebar-wrapper {

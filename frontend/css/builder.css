@@ -1,13 +1,77 @@
 /* ==========================================================================
-   CareerPilot AI — Resume Builder & Studio Stylesheet
+   CareerPilot AI — Resume Builder & Studio Stylesheet (Desktop-Only)
    Grounded in CareerPilot Brand System (#524646, #A8A492, #FCF2E5, #EC5B38)
    ========================================================================== */
+
+/* Desktop-Only Device Guard Overlay / Message */
+.builder-desktop-guard-card {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 3.5rem 1.75rem;
+    margin: 2.5rem auto;
+    max-width: 580px;
+    box-shadow: var(--shadow-sm);
+}
+
+.desktop-guard-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.desktop-guard-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 0.75rem;
+    line-height: 1.35;
+}
+
+.desktop-guard-desc {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.75rem;
+    max-width: 440px;
+    line-height: 1.55;
+}
 
 .builder-workspace-shell {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
     padding-bottom: 2.5rem;
+}
+
+/* Enforce Desktop-Only on Screens < 1024px */
+@media (max-width: 1023px) {
+    #builder-desktop-guard,
+    .builder-desktop-guard-card {
+        display: flex !important;
+    }
+
+    #builder-workspace-content,
+    .builder-workspace-shell {
+        display: none !important;
+    }
+
+    .topbar-right #btn-toggle-styles-drawer,
+    .topbar-right #btn-recompile-targeted,
+    .topbar-right #btn-save-resume-main {
+        display: none !important;
+    }
 }
 
 /* 1. Header Banner & Target Job Readiness */
