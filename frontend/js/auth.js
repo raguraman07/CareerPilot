@@ -15,27 +15,45 @@ import {
 
 import { API_BASE_URL } from './config.js';
 
-// Automatically redirect 127.0.0.1 to localhost for default Firebase Auth domain authorization
-if (window.location.hostname === '127.0.0.1') {
+// Automatically redirect 127.0.0.1 to localhost for local testing
+if (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1') {
     const normalizedUrl = new URL(window.location.href);
     normalizedUrl.hostname = 'localhost';
     window.location.replace(normalizedUrl.toString());
 }
 
+// -------------------------------------------------------------
+// Helper: Path & Page Classification (Vercel & Clean URL Safe)
+// -------------------------------------------------------------
+export function getPageName() {
+    if (typeof window === 'undefined') return '';
+    const pathname = window.location.pathname.toLowerCase();
+    const segment = pathname.split('/').filter(Boolean).pop() || 'index';
+    return segment.replace(/\.html$/, '');
+}
 
+export function isAuthPage() {
+    const page = getPageName();
+    return ['login', 'register', 'forgot-password', 'reset-password'].includes(page);
+}
+
+export function isPublicPage() {
+    const page = getPageName();
+    return ['index', '', 'login', 'register', 'forgot-password', 'reset-password'].includes(page);
+}
 
 // User-facing error message mapper for Firebase Auth
-function mapFirebaseError(error) {
+export function mapFirebaseError(error) {
     if (!error) return "";
     const code = error.code || "";
     const msg = (error.message || "").toLowerCase();
     console.error("Firebase auth error details:", { code, message: error.message, fullError: error });
 
-    if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password' || msg.includes('invalid credential')) {
-        return "That email or password doesn't look right. Please try again.";
+    if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password' || msg.includes('invalid credential') || msg.includes('invalid-credential')) {
+        return "Invalid email or password. Please double check and try again.";
     }
     if (code === 'auth/email-already-in-use' || msg.includes('email already in use')) {
-        return "An account with this email address already exists. Please login instead.";
+        return "An account with this email address already exists. Please sign in instead.";
     }
     if (code === 'auth/weak-password' || msg.includes('weak password')) {
         return "Password is too weak. Please choose a stronger password (minimum 6 characters).";
@@ -44,25 +62,25 @@ function mapFirebaseError(error) {
         return "Please enter a valid email address.";
     }
     if (code === 'auth/operation-not-allowed') {
-        return "Firebase Console Setup Required: Email/Password authentication is disabled in your Firebase project. Please enable Email/Password in Firebase Console -> Authentication -> Sign-in method.";
+        return "Firebase Email/Password authentication is not enabled. Please enable it in Firebase Console.";
     }
     if (code === 'auth/unauthorized-domain') {
-        return `Firebase Console Setup Required: Domain (${window.location.hostname}) is not authorized for OAuth in Firebase. Add it in Firebase Console -> Authentication -> Settings -> Authorized domains.`;
+        return `Firebase Domain Authorization: Domain (${window.location.hostname}) must be added to Firebase Console -> Authentication -> Settings -> Authorized domains.`;
     }
     if (code === 'auth/invalid-api-key') {
-        return "Firebase Config Error: Invalid API key in firebaseClient.js. Please verify your project credentials.";
+        return "Firebase Config Error: Invalid API key. Please check firebaseClient.js.";
     }
     if (code === 'auth/user-disabled') {
-        return "This account has been disabled by an administrator.";
+        return "This account has been disabled. Please contact support.";
     }
     if (code === 'auth/popup-closed-by-user') {
         return "Sign-in popup was closed before completing authentication.";
     }
     if (code === 'auth/too-many-requests') {
-        return "Access to this account has been temporarily disabled due to many failed login attempts. You can reset your password or try again later.";
+        return "Too many failed attempts. Access to this account has been temporarily disabled. Please try again later or reset your password.";
     }
     if (code === 'auth/network-request-failed') {
-        return "Network connection issue. Please check your internet connection and try again.";
+        return "Network connection error. Please check your internet connection.";
     }
     return error.message || "An authentication error occurred. Please try again.";
 }
@@ -76,8 +94,18 @@ function logAuth(message, data = null) {
     }
 }
 
+// Track redirection to prevent loop / race conditions
+let isRedirecting = false;
+
+function safeRedirect(targetUrl) {
+    if (isRedirecting) return;
+    isRedirecting = true;
+    logAuth(`Navigating to target: ${targetUrl}`);
+    window.location.href = targetUrl;
+}
+
 // Helper to wait for Firebase to resolve initial Auth state
-function getCurrentFirebaseUser() {
+export function getCurrentFirebaseUser() {
     return new Promise((resolve) => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             unsubscribe();
@@ -86,13 +114,12 @@ function getCurrentFirebaseUser() {
     });
 }
 
-
 // -------------------------------------------------------------
 // 1. Page Guards & Session Management
 // -------------------------------------------------------------
 
 /**
- * Checks for an active Firebase session.
+ * Checks for an active Firebase session on protected pages.
  * Redirects to login.html only if no active user session exists.
  */
 export async function requireAuth() {
@@ -102,7 +129,7 @@ export async function requireAuth() {
         
         if (!user) {
             logAuth('Redirect reason: No active Firebase user found. Redirecting to login.html');
-            window.location.href = 'login.html';
+            safeRedirect('login.html');
             return null;
         }
         
@@ -113,23 +140,30 @@ export async function requireAuth() {
 
         try {
             token = await user.getIdToken();
+            // Sync with backend with a fast abort timeout to avoid blocking during Render cold starts
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3500);
+
             const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                signal: controller.signal
+            }).catch(e => {
+                logAuth('Backend profile fetch timed out or offline:', e.message);
+                return null;
             });
+            clearTimeout(timeoutId);
             
-            if (response.ok) {
+            if (response && response.ok) {
                 const result = await response.json();
                 if (result.user?.full_name) {
                     fullName = result.user.full_name;
                 }
                 logAuth('Backend profile sync succeeded.');
-            } else {
-                logAuth(`Backend profile fetch returned HTTP ${response.status}. Using Firebase session info.`);
             }
         } catch (fetchErr) {
-            logAuth('Backend profile sync offline or unreachable. Falling back to Firebase user info:', fetchErr.message);
+            logAuth('Backend profile sync note:', fetchErr.message);
         }
         
         return {
@@ -143,7 +177,7 @@ export async function requireAuth() {
         };
     } catch (e) {
         logAuth("Auth check error:", e);
-        window.location.href = 'login.html';
+        safeRedirect('login.html');
         return null;
     }
 }
@@ -164,61 +198,31 @@ export async function getAuthToken() {
 }
 
 /**
- * Helper to determine redirect destination based on Career Goal existence
+ * Helper to determine redirect destination based on query param or default dashboard
  */
-export async function determinePostAuthDestination(user, explicitRedirect = null) {
+export function determinePostAuthDestination(explicitRedirect = null) {
     if (explicitRedirect) {
-        if (/^[a-zA-Z0-9_\-]+\.html$/.test(explicitRedirect)) {
-            return explicitRedirect;
-        } else if (/^[a-zA-Z0-9_\-]+$/.test(explicitRedirect)) {
-            return `${explicitRedirect}.html`;
+        const clean = explicitRedirect.trim();
+        if (/^[a-zA-Z0-9_\-]+\.html$/.test(clean)) {
+            return clean;
+        } else if (/^[a-zA-Z0-9_\-]+$/.test(clean)) {
+            return `${clean}.html`;
         }
     }
-
-    try {
-        const token = await user.getIdToken();
-        
-        // 1. Check Career Goal
-        const resGoal = await fetch(`${API_BASE_URL}/api/career-goals/current`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (resGoal.ok) {
-            const goalData = await resGoal.json();
-            if (!goalData.career_goal) {
-                logAuth('No active career goal found for user. Directing to career-goal.html');
-                return 'career-goal.html';
-            }
-        }
-
-        // 2. Check Profile Completeness
-        const resProf = await fetch(`${API_BASE_URL}/api/profile`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (resProf.ok) {
-            const profData = await resProf.json();
-            if (profData.profile && (profData.profile.completeness || 0) < 30) {
-                logAuth('Candidate profile incomplete. Directing to candidate-profile.html');
-                return 'candidate-profile.html';
-            }
-        }
-    } catch (checkErr) {
-        logAuth('Post-auth onboarding check offline or errored, defaulting to dashboard.html:', checkErr.message);
-    }
-
     return 'dashboard.html';
 }
 
 /**
- * Redirects authenticated users from auth pages (e.g. login.html) to career-goal.html or dashboard.html.
+ * Redirects authenticated users from auth pages to dashboard.html
  */
 export async function redirectIfAuthenticated() {
     try {
         const user = await getCurrentFirebaseUser();
         if (user) {
             const params = new URLSearchParams(window.location.search);
-            const target = await determinePostAuthDestination(user, params.get('redirect'));
-            logAuth(`Redirect reason: Authenticated user detected on auth page. Redirecting to ${target}`);
-            window.location.href = target;
+            const target = determinePostAuthDestination(params.get('redirect'));
+            logAuth(`Redirect reason: Authenticated user on auth page. Redirecting to ${target}`);
+            safeRedirect(target);
             return true;
         }
     } catch (e) {
@@ -238,7 +242,7 @@ export async function logoutUser() {
         logAuth("Error during Firebase signOut:", e);
     } finally {
         logAuth('Redirect reason: User explicitly logged out. Redirecting to login.html');
-        window.location.href = 'login.html';
+        safeRedirect('login.html');
     }
 }
 
@@ -251,6 +255,23 @@ export async function signInWithGoogle() {
     try {
         const result = await signInWithPopup(auth, provider);
         logAuth('Google OAuth sign-in successful:', result.user?.email);
+        
+        // Sync with backend in background
+        try {
+            const token = await result.user.getIdToken();
+            fetch(`${API_BASE_URL}/api/auth/signup`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ full_name: result.user.displayName || "" })
+            }).catch(() => {});
+        } catch (e) {}
+
+        const params = new URLSearchParams(window.location.search);
+        const target = determinePostAuthDestination(params.get('redirect'));
+        safeRedirect(target);
         return result;
     } catch (error) {
         logAuth('Google OAuth error:', error);
@@ -258,49 +279,49 @@ export async function signInWithGoogle() {
     }
 }
 
+// -------------------------------------------------------------
 // Setup Global Auth State Listener
+// -------------------------------------------------------------
 onAuthStateChanged(auth, async (user) => {
     logAuth(`Auth state event triggered:`, user ? user.email : 'No user');
-    const path = window.location.pathname.toLowerCase();
-    const isAuthPage = path.endsWith('login.html') || path.endsWith('register.html') || path.endsWith('forgot-password.html') || path.endsWith('reset-password.html');
     
     if (user) {
-        logAuth('Login success: Valid Firebase session created for user:', user.email);
-        if (isAuthPage) {
+        logAuth('Login success: Valid Firebase session for user:', user.email);
+        if (isAuthPage()) {
             const params = new URLSearchParams(window.location.search);
-            const target = await determinePostAuthDestination(user, params.get('redirect'));
-            logAuth(`Redirect reason: Active session detected on auth page. Redirecting to ${target}`);
-            window.location.href = target;
+            const target = determinePostAuthDestination(params.get('redirect'));
+            logAuth(`Active session detected on auth page. Redirecting to ${target}`);
+            safeRedirect(target);
         }
     } else {
         logAuth('User signed out or no active session.');
-        if (!isAuthPage && !path.endsWith('index.html') && path !== '/' && path !== '') {
-            logAuth('Redirect reason: Signed out on protected page. Redirecting to login.html');
-            window.location.href = 'login.html';
+        if (!isPublicPage()) {
+            logAuth('Signed out on protected page. Redirecting to login.html');
+            safeRedirect('login.html');
         }
     }
 });
-
 
 // -------------------------------------------------------------
 // 2. Client-side Form Validation & Inputs Helpers
 // -------------------------------------------------------------
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function validateEmail(email) {
+export function validateEmail(email) {
     if (!email) return "Email address is required.";
     if (!emailRegex.test(email)) return "Please enter a valid email address.";
     return null;
 }
 
-function validatePassword(password) {
+export function validatePassword(password) {
     if (!password) return "Password is required.";
     if (password.length < 6) return "Password must be at least 6 characters long.";
     return null;
 }
 
-function setErrorState(inputEl, errorMessage) {
-    const groupEl = inputEl.closest('.form-group');
+export function setErrorState(inputEl, errorMessage) {
+    if (!inputEl) return;
+    const groupEl = inputEl.closest('.form-group') || inputEl.parentElement;
     if (!groupEl) return;
     
     if (errorMessage) {
@@ -316,19 +337,23 @@ function setErrorState(inputEl, errorMessage) {
     } else {
         groupEl.classList.remove('has-error');
         inputEl.classList.remove('input-error');
+        const feedbackEl = groupEl.querySelector('.invalid-feedback');
+        if (feedbackEl) feedbackEl.remove();
     }
 }
 
 // -------------------------------------------------------------
 // 3. Loading Spinner & Button Controls
 // -------------------------------------------------------------
-function setButtonLoading(buttonEl, isLoading, loadingText = "Processing...") {
+export function setButtonLoading(buttonEl, isLoading, loadingText = "Processing...") {
     if (!buttonEl) return;
     
     if (isLoading) {
         buttonEl.disabled = true;
-        buttonEl.dataset.originalText = buttonEl.innerHTML;
-        buttonEl.innerHTML = `<span class="spinner" style="display: block;"></span><span>${loadingText}</span>`;
+        if (!buttonEl.dataset.originalText) {
+            buttonEl.dataset.originalText = buttonEl.innerHTML;
+        }
+        buttonEl.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>${loadingText}</span>`;
     } else {
         buttonEl.disabled = false;
         if (buttonEl.dataset.originalText) {
@@ -340,20 +365,31 @@ function setButtonLoading(buttonEl, isLoading, loadingText = "Processing...") {
 // -------------------------------------------------------------
 // 4. Alert & Message Banners
 // -------------------------------------------------------------
-function showFormBanner(containerEl, message, type = 'error') {
+export function showFormBanner(containerEl, message, type = 'error') {
+    if (!containerEl) return;
+
+    // Check for existing alert box in card
+    const alertBox = document.getElementById('auth-alert-box') || containerEl.querySelector('.alert-box');
     const existingBanner = containerEl.querySelector('.form-banner');
     if (existingBanner) existingBanner.remove();
     
-    if (!message) return;
+    if (!message) {
+        if (alertBox) {
+            alertBox.style.display = 'none';
+            alertBox.textContent = '';
+        }
+        return;
+    }
     
     const banner = document.createElement('div');
     banner.className = `form-banner form-banner--${type}`;
+    banner.setAttribute('role', 'alert');
     
     let iconSvg = '';
     if (type === 'error') {
-        iconSvg = `<svg class="form-banner-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+        iconSvg = `<svg class="form-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
     } else {
-        iconSvg = `<svg class="form-banner-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+        iconSvg = `<svg class="form-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
     }
     
     banner.innerHTML = `
@@ -367,7 +403,7 @@ function showFormBanner(containerEl, message, type = 'error') {
 // -------------------------------------------------------------
 // 5. Password Strength Meter
 // -------------------------------------------------------------
-function checkPasswordStrength(password) {
+export function checkPasswordStrength(password) {
     if (!password) return { score: 0, label: "", class: "" };
     
     let score = 0;
@@ -415,8 +451,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
-    const forgotForm = document.getElementById('forgot-form');
-    const resetForm = document.getElementById('reset-form');
+    const forgotForm = document.getElementById('forgot-password-form') || document.getElementById('forgot-form');
+    const resetForm = document.getElementById('reset-password-form') || document.getElementById('reset-form');
 
     // -------------------------------------------------------------
     // Login Form Handler
@@ -426,23 +462,38 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
-        const submitBtn = loginForm.querySelector('button[type="submit"]');
+        const submitBtn = loginForm.querySelector('button[type="submit"]') || document.getElementById('btn-login');
 
-        emailInput.addEventListener('blur', () => {
-            setErrorState(emailInput, validateEmail(emailInput.value.trim()));
-        });
+        if (emailInput) {
+            emailInput.addEventListener('blur', () => {
+                setErrorState(emailInput, validateEmail(emailInput.value.trim()));
+            });
+            emailInput.addEventListener('input', () => {
+                if (emailInput.classList.contains('input-error')) {
+                    setErrorState(emailInput, null);
+                }
+            });
+        }
+
+        if (passwordInput) {
+            passwordInput.addEventListener('input', () => {
+                if (passwordInput.classList.contains('input-error')) {
+                    setErrorState(passwordInput, null);
+                }
+            });
+        }
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = emailInput.value.trim();
-            const password = passwordInput.value;
+            const email = emailInput ? emailInput.value.trim() : "";
+            const password = passwordInput ? passwordInput.value : "";
 
             const emailErr = validateEmail(email);
             const passErr = validatePassword(password);
 
-            setErrorState(emailInput, emailErr);
-            setErrorState(passwordInput, passErr);
+            if (emailInput) setErrorState(emailInput, emailErr);
+            if (passwordInput) setErrorState(passwordInput, passErr);
 
             if (emailErr || passErr) return;
 
@@ -456,12 +507,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 logAuth('Login success: Firebase authentication succeeded for user:', user.email);
 
-                // Handle redirection based on Career Goal existence or explicit ?redirect=
                 const params = new URLSearchParams(window.location.search);
-                const targetUrl = await determinePostAuthDestination(user, params.get('redirect'));
+                const targetUrl = determinePostAuthDestination(params.get('redirect'));
 
                 logAuth(`Redirecting to target page: ${targetUrl}`);
-                window.location.href = targetUrl;
+                safeRedirect(targetUrl);
             } catch (err) {
                 logAuth('Login failed error:', err.message);
                 const friendlyMsg = mapFirebaseError(err);
@@ -474,14 +524,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------
     // Google OAuth Buttons Event Listener Setup
     // -------------------------------------------------------------
-    document.querySelectorAll('.btn-google-auth, #btn-google-login, #google-signin-btn').forEach(btn => {
+    document.querySelectorAll('.google-auth-btn, .btn-google-auth, #btn-google-login, #btn-google-register, #google-signin-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.preventDefault();
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>Connecting...</span>`;
+            
             try {
                 await signInWithGoogle();
             } catch (googleErr) {
                 logAuth('Google sign-in error:', googleErr);
-                const currentForm = btn.closest('form');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                const currentForm = btn.closest('form') || document.querySelector('form');
                 if (currentForm) {
                     showFormBanner(currentForm, mapFirebaseError(googleErr), 'error');
                 }
@@ -501,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const confirmInput = document.getElementById('confirm-password');
         const strengthFill = document.querySelector('.password-strength-fill');
         const strengthText = document.querySelector('.password-strength-text');
-        const submitBtn = registerForm.querySelector('button[type="submit"]');
+        const submitBtn = registerForm.querySelector('button[type="submit"]') || document.getElementById('btn-register');
 
         if (passwordInput && strengthFill && strengthText) {
             passwordInput.addEventListener('input', () => {
@@ -548,7 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const nameErr = fullName ? null : "Full name is required.";
             const emailErr = validateEmail(email);
             const passErr = validatePassword(password);
-            const confirmErr = password === confirmPassword ? null : "Passwords do not match.";
+            const confirmErr = confirmInput ? (password === confirmPassword ? null : "Passwords do not match.") : null;
 
             if (nameInput) setErrorState(nameInput, nameErr);
             if (emailInput) setErrorState(emailInput, emailErr);
@@ -568,40 +624,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Update Firebase Auth Display Name
                 await updateProfile(user, { displayName: fullName });
 
-                // Sync account profile with Flask backend if reachable
+                // Sync account profile with Flask backend in background
                 try {
                     const token = await user.getIdToken();
-                    const syncResponse = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+                    fetch(`${API_BASE_URL}/api/auth/signup`, {
                         method: 'POST',
                         headers: { 
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({ full_name: fullName })
-                    });
+                    }).catch(() => {});
+                } catch (backendErr) {}
 
-                    if (!syncResponse.ok) {
-                        const syncErr = await syncResponse.json().catch(() => ({}));
-                        logAuth('Backend profile sync note:', syncErr);
-                    }
-                } catch (backendErr) {
-                    logAuth('Backend sync unreachable, proceeding with Firebase authentication:', backendErr.message);
-                }
-
-                showFormBanner(registerForm, "Account created! Setting up your career goal...", 'success');
+                showFormBanner(registerForm, "Account created successfully! Redirecting...", 'success');
                 registerForm.reset();
-                if (strengthFill) strengthFill.className = 'password-strength-fill';
-                if (strengthText) strengthText.textContent = '';
                 
-                setTimeout(async () => {
-                    const target = await determinePostAuthDestination(user);
-                    window.location.href = target;
-                }, 1200);
+                const target = determinePostAuthDestination();
+                safeRedirect(target);
 
             } catch (err) {
                 const friendlyMsg = mapFirebaseError(err);
                 showFormBanner(registerForm, friendlyMsg, 'error');
-            } finally {
                 setButtonLoading(submitBtn, false);
             }
         });
@@ -611,8 +655,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Forgot Password Form Handler
     // -------------------------------------------------------------
     if (forgotForm) {
-        const emailInput = document.getElementById('email');
-        const submitBtn = forgotForm.querySelector('button[type="submit"]');
+        const emailInput = forgotForm.querySelector('#email') || document.getElementById('email');
+        const submitBtn = forgotForm.querySelector('button[type="submit"]') || document.getElementById('btn-forgot');
 
         if (emailInput) {
             emailInput.addEventListener('blur', () => {
@@ -629,14 +673,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (emailInput) setErrorState(emailInput, emailErr);
             if (emailErr) return;
 
-            setButtonLoading(submitBtn, true, "Sending request...");
+            setButtonLoading(submitBtn, true, "Sending email...");
             showFormBanner(forgotForm, null);
 
             try {
                 logAuth('Sending password reset email via Firebase to:', email);
                 await sendPasswordResetEmail(auth, email);
                 
-                showFormBanner(forgotForm, "If an account exists for that email, we have sent a password reset link.", 'success');
+                showFormBanner(forgotForm, "Password reset link sent! Check your inbox.", 'success');
                 forgotForm.reset();
             } catch (err) {
                 const friendlyMsg = mapFirebaseError(err);
@@ -651,16 +695,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset Password Form Handler
     // -------------------------------------------------------------
     if (resetForm) {
-        const passwordInput = document.getElementById('password');
-        const confirmInput = document.getElementById('confirm-password');
-        const submitBtn = resetForm.querySelector('button[type="submit"]');
+        const passwordInput = resetForm.querySelector('#new-password') || resetForm.querySelector('#password') || document.getElementById('new-password') || document.getElementById('password');
+        const confirmInput = resetForm.querySelector('#confirm-password') || document.getElementById('confirm-password');
+        const submitBtn = resetForm.querySelector('button[type="submit"]') || document.getElementById('btn-reset');
 
         if (passwordInput) {
             passwordInput.addEventListener('blur', () => {
                 setErrorState(passwordInput, validatePassword(passwordInput.value));
             });
         }
-        if (confirmInput) {
+        if (confirmInput && passwordInput) {
             confirmInput.addEventListener('blur', () => {
                 const matchErr = passwordInput.value === confirmInput.value ? null : "Passwords do not match.";
                 setErrorState(confirmInput, matchErr);
@@ -674,7 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const confirmPassword = confirmInput ? confirmInput.value : "";
 
             const passErr = validatePassword(password);
-            const confirmErr = password === confirmPassword ? null : "Passwords do not match.";
+            const confirmErr = confirmInput ? (password === confirmPassword ? null : "Passwords do not match.") : null;
 
             if (passwordInput) setErrorState(passwordInput, passErr);
             if (confirmInput) setErrorState(confirmInput, confirmErr);
@@ -703,8 +747,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 resetForm.reset();
 
                 setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 2500);
+                    safeRedirect('login.html');
+                }, 2000);
 
             } catch (err) {
                 const friendlyMsg = mapFirebaseError(err);

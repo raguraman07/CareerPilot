@@ -66,25 +66,48 @@ app.register_blueprint(jobs_bp)
 # Custom CORS Handlers
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("FRONTEND_ORIGIN", "").split(",") if o.strip()]
 
+def is_allowed_origin(origin):
+    if not origin:
+        return False
+    if not ALLOWED_ORIGINS or "*" in ALLOWED_ORIGINS:
+        return True
+    if origin in ALLOWED_ORIGINS:
+        return True
+    if origin.startswith("http://localhost:") or origin.startswith("http://127.0.0.1:"):
+        return True
+    if origin.endswith(".vercel.app") or ".vercel.app" in origin:
+        return True
+    return False
+
 @app.before_request
-def before_request():
+def handle_options_preflight():
     if request.method == "OPTIONS":
-        return "", 204
+        origin = request.headers.get("Origin", "")
+        res = app.make_response(("", 204))
+        if is_allowed_origin(origin):
+            res.headers["Access-Control-Allow-Origin"] = origin
+            res.headers["Access-Control-Allow-Credentials"] = "true"
+        else:
+            res.headers["Access-Control-Allow-Origin"] = origin if origin else "*"
+        res.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept"
+        res.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        res.headers["Access-Control-Max-Age"] = "86400"
+        return res
 
 @app.after_request
 def after_request(response):
     origin = request.headers.get("Origin")
     if origin:
-        if not ALLOWED_ORIGINS or "*" in ALLOWED_ORIGINS or origin in ALLOWED_ORIGINS or origin.startswith("http://localhost:") or origin.startswith("http://127.0.0.1:") or ".vercel.app" in origin:
+        if is_allowed_origin(origin):
             response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Access-Control-Allow-Credentials"] = "true"
         else:
             response.headers["Access-Control-Allow-Origin"] = origin
     else:
-        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers["Access-Control-Allow-Origin"] = "*"
         
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
-    response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
     return response
 
 # Static & Frontend Routing

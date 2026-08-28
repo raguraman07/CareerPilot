@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account - CareerPilot</title>
+    <title>Create Account - CareerPilot AI</title>
     
     <!-- Meta Descriptions for SEO -->
     <meta name="description" content="CareerPilot AI Register - Create your account to start optimizing your resume and building your AI career roadmap.">
@@ -37,23 +37,37 @@
             </div>
 
             <!-- Error alert box -->
-            <div id="auth-alert-box" class="alert-box" style="display: none; margin-bottom: 1.25rem; background: rgba(220,38,38,0.1); color: #dc2626; border-color: rgba(220,38,38,0.2);"></div>
+            <div id="auth-alert-box" class="alert-box" style="display: none; margin-bottom: 1.25rem;"></div>
 
             <!-- Register Form -->
-            <form id="register-form" class="auth-form">
+            <form id="register-form" class="auth-form" novalidate>
                 <div class="form-group">
                     <label for="full-name" class="form-label">Full Name</label>
-                    <input type="text" id="full-name" class="form-input" placeholder="Jane Doe" required autocomplete="name">
+                    <input type="text" id="full-name" name="name" class="form-input" placeholder="Jane Doe" required autocomplete="name">
                 </div>
 
                 <div class="form-group">
                     <label for="email" class="form-label">Email Address</label>
-                    <input type="email" id="email" class="form-input" placeholder="name@example.com" required autocomplete="email">
+                    <input type="email" id="email" name="email" class="form-input" placeholder="name@example.com" required autocomplete="email">
                 </div>
 
                 <div class="form-group">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" id="password" class="form-input" placeholder="At least 6 characters" required autocomplete="new-password" minlength="6">
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" class="form-input" placeholder="At least 6 characters" required autocomplete="new-password" minlength="6">
+                        <button type="button" class="password-toggle" aria-label="Show password" tabindex="-1">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="password-strength" aria-live="polite">
+                        <div class="password-strength-bar">
+                            <div class="password-strength-fill"></div>
+                        </div>
+                        <div class="password-strength-text"></div>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-lg" id="btn-register" style="width: 100%; margin-top: 0.5rem;">
@@ -64,7 +78,7 @@
             <div class="auth-divider">Or continue with</div>
 
             <button type="button" class="google-auth-btn" id="btn-google-register">
-                <svg class="google-icon" viewBox="0 0 24 24">
+                <svg class="google-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>

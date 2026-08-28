@@ -47,7 +47,9 @@ const setupPageTransitions = () => {
             href.startsWith('mailto:') ||
             href.startsWith('tel:') ||
             target === '_blank' ||
-            link.hasAttribute('download')
+            link.hasAttribute('download') ||
+            link.classList.contains('logout-trigger') ||
+            link.hasAttribute('data-no-transition')
         ) {
             return;
         }
