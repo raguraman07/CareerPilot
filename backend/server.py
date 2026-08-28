@@ -64,9 +64,6 @@ app.register_blueprint(resume_builder_bp)
 app.register_blueprint(jobs_bp)
 
 # Custom CORS Handlers
-ALLOWED_ORIGINS = os.getenv("FRONTEND_ORIGIN", "").split(",")
-ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS if origin.strip()]
-
 @app.before_request
 def before_request():
     if request.method == "OPTIONS":
@@ -74,14 +71,7 @@ def before_request():
 
 @app.after_request
 def after_request(response):
-    origin = request.headers.get("Origin")
-    if origin:
-        if not ALLOWED_ORIGINS or "*" in ALLOWED_ORIGINS or origin in ALLOWED_ORIGINS or origin.startswith("http://localhost:") or origin.startswith("http://127.0.0.1:"):
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-    else:
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        
+    response.headers.add("Access-Control-Allow-Origin", "*")
     response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
     response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
     return response
