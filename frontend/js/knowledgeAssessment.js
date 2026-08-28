@@ -25,24 +25,31 @@ export async function generateSkillAssessment(skillId, skillName) {
         throw new Error("You must be logged in to start an assessment.");
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/skill-assessment/generate`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-            skill_id: skillId,
-            skill_name: skillName
-        })
-    });
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/skill-assessment/generate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                skill_id: skillId,
+                skill_name: skillName
+            })
+        });
 
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-        throw new Error(data.error || "Failed to initialize skill assessment session.");
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.error || "Failed to initialize skill assessment session.");
+        }
+
+        return data;
+    } catch (err) {
+        if (err.name === 'TypeError' && err.message.includes('fetch')) {
+            throw new Error("Unable to connect to the AI server. The backend may be waking up—please wait 10 seconds and try again.");
+        }
+        throw err;
     }
-
-    return data;
 }
 
 /**

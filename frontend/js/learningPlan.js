@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             phaseHeader.innerHTML = `
                 <div>
-                    <span style="font-size: 0.78rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em;">Phase ${phase.order || phaseIdx + 1}</span>
+                    <span style="font-size: 0.78rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em;">Stage ${phase.order || phaseIdx + 1}</span>
                     <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 0.2rem 0 0.4rem 0;">${escapeHtml(phase.name)}</h3>
                     <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">${escapeHtml(phase.description || '')}</p>
                 </div>

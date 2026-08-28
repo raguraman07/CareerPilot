@@ -99,15 +99,22 @@ def generate_assessment_session():
     active_goal, profile, learning_plan = handle_db_op(db_fetch_context, mock_fetch_context)
 
     if not active_goal:
-        return jsonify({"error": "No active career goal found. Set your Career Goal before taking an assessment."}), 400
+        active_goal = {
+            "target_role": profile.get("target_role") or profile.get("headline") or "Software Engineer",
+            "target_company": profile.get("target_company") or "Tech Company",
+            "target_timeline_months": 6
+        }
 
     if not learning_plan:
-        return jsonify({"error": "No active learning plan found. Please create your Learning Plan (Phase 4) first."}), 400
+        learning_plan = {
+            "title": f"Skill Development for {active_goal.get('target_role', 'Target Role')}",
+            "phases": []
+        }
 
-    # Find the skill in the user's learning plan
+    # Find the skill in the user's learning plan or profile
     matched_skill = None
-    for phase in learning_plan.get("phases", []):
-        for sk in phase.get("skills", []):
+    for phase in (learning_plan.get("phases") or []):
+        for sk in (phase.get("skills") or []):
             if (skill_id and sk.get("skill_id") == skill_id) or (skill_name and sk.get("name", "").lower() == skill_name.lower()):
                 matched_skill = sk
                 break
@@ -115,7 +122,13 @@ def generate_assessment_session():
             break
 
     if not matched_skill:
-        return jsonify({"error": f"Skill '{skill_name or skill_id}' was not found in your active learning plan."}), 404
+        matched_skill = {
+            "skill_id": skill_id or f"skill_{int(time.time())}",
+            "name": skill_name or "Technical Core Competency",
+            "category": "Technical",
+            "proficiency_level": "intermediate",
+            "target_depth": "hands_on"
+        }
 
     # 2. Check previous attempts to determine attempt number
     def db_count_attempts():

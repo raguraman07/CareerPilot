@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div style="display: flex; align-items: center; gap: 0.75rem;">
                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                                     <input type="checkbox" class="roadmap-phase-checkbox" data-phase="${pIdx}" ${isPhaseCompleted ? 'checked' : ''} style="width: 19px; height: 19px; accent-color: var(--primary); cursor: pointer;">
-                                    <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--dark); margin: 0;">Phase ${phase.phase_number || (pIdx + 1)}: ${phase.title || 'Learning Phase'}</h4>
+                                    <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--dark); margin: 0;">${phase.title || ('Milestone ' + (pIdx + 1))}</h4>
                                 </label>
                             </div>
                             <span class="badge badge-info" style="font-weight: 600;">${phase.duration || '2-3 Weeks'}</span>
@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${skillsHtml ? `<div style="margin-bottom: 1rem;">${skillsHtml}</div>` : ''}
                         ${milestone ? `
                             <div style="background-color: rgba(252, 242, 229, 0.6); border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 0.65rem 0.85rem; font-size: 0.85rem; color: var(--dark);">
-                                <strong>🎯 Phase Milestone:</strong> ${milestone}
+                                <strong>🎯 Milestone:</strong> ${milestone}
                             </div>
                         ` : ''}
                     `;
