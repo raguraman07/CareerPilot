@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (currentChatTitle) currentChatTitle.textContent = chat.title || 'Conversation';
                     
                     try {
-                        const chatRes = await fetch(`${API_BASE_URL}/api/career-assistant/chat/${chat.id}`, {
+                        const chatRes = await fetch(`${API_BASE_URL}/api/career-assistant/chats/${chat.id}`, {
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
                         if (chatRes.ok) {
@@ -176,7 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.chat_id) activeChatId = data.chat_id;
 
             if (statusMsg) statusMsg.style.display = 'none';
-            appendMessage('assistant', data.response, data.sources_used || []);
+            const botText = data.reply || data.response || '';
+            appendMessage('assistant', botText, data.sources_used || []);
             loadChatHistory();
 
         } catch (err) {

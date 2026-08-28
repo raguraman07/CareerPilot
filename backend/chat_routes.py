@@ -114,6 +114,7 @@ def _run_chat_handler():
         "success": True,
         "chat_id": chat_id,
         "reply": bot_reply,
+        "response": bot_reply,
         "sources_used": sources_used,
         "messages": new_messages
     }), 200

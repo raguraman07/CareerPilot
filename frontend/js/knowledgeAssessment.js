@@ -166,19 +166,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     let timerInterval = null;
     let secondsRemaining = 15 * 60;
 
-    const showAlert = (message, type = 'danger') => {
+    const showAlert = (message, type = 'danger', showRetry = false, onRetry = null) => {
         if (!alertBox) return;
-        alertBox.style.display = 'block';
+        alertBox.style.display = 'flex';
+        alertBox.style.justifyContent = 'space-between';
+        alertBox.style.alignItems = 'center';
+        alertBox.style.flexWrap = 'wrap';
+        alertBox.style.gap = '0.75rem';
         if (type === 'danger') {
             alertBox.style.background = 'rgba(236, 91, 56, 0.12)';
             alertBox.style.color = '#EC5B38';
             alertBox.style.border = '1px solid rgba(236, 91, 56, 0.3)';
+        } else if (type === 'info') {
+            alertBox.style.background = 'rgba(82, 70, 70, 0.08)';
+            alertBox.style.color = 'var(--text-primary)';
+            alertBox.style.border = '1px solid var(--border)';
         } else if (type === 'success') {
             alertBox.style.background = 'rgba(46, 125, 50, 0.12)';
             alertBox.style.color = '#2e7d32';
             alertBox.style.border = '1px solid rgba(46, 125, 50, 0.3)';
         }
-        alertBox.textContent = message;
+
+        alertBox.innerHTML = `<span>${message}</span>`;
+        if (showRetry && onRetry) {
+            const retryBtn = document.createElement('button');
+            retryBtn.className = 'btn btn-primary btn-sm';
+            retryBtn.style.padding = '0.4rem 1rem';
+            retryBtn.style.fontSize = '0.82rem';
+            retryBtn.textContent = 'Retry Now ➔';
+            retryBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                onRetry();
+            });
+            alertBox.appendChild(retryBtn);
+        }
+    };
+
+    const hideAlert = () => {
+        if (alertBox) alertBox.style.display = 'none';
     };
 
     const startTimer = (minutes) => {
@@ -345,34 +370,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    // Initialize Assessment Session
-    try {
-        let sessionData = null;
-        if (existingAssessId) {
-            sessionData = await getAssessmentSession(existingAssessId);
-        } else if (skillId || skillName) {
-            sessionData = await generateSkillAssessment(skillId, skillName);
+    // Initialize Assessment Session with Auto-Retry
+    const loadAssessmentSession = async (attempt = 1) => {
+        hideAlert();
+        if (qTitleEl) qTitleEl.textContent = "Connecting to CareerPilot AI and preparing your assessment questions...";
+
+        try {
+            let sessionData = null;
+            if (existingAssessId) {
+                sessionData = await getAssessmentSession(existingAssessId);
+            } else if (skillId || skillName) {
+                sessionData = await generateSkillAssessment(skillId, skillName);
+            }
+
+            if (!sessionData || !sessionData.questions || sessionData.questions.length === 0) {
+                showAlert("Could not generate assessment questions. Please try again.", "danger", true, () => loadAssessmentSession(1));
+                if (qTitleEl) qTitleEl.textContent = "Assessment generation incomplete.";
+                return;
+            }
+
+            currentAssessment = sessionData;
+            questions = sessionData.questions;
+
+            if (skillNameEl) skillNameEl.textContent = sessionData.skill_name || skillName;
+            if (roleContextEl) roleContextEl.textContent = `${sessionData.target_role || 'Target Role'} at ${sessionData.target_company || 'Company'}`;
+            if (difficultyBadgeEl) difficultyBadgeEl.textContent = sessionData.difficulty || 'MEDIUM';
+
+            startTimer(sessionData.time_limit_minutes || 15);
+            renderCurrentQuestion();
+
+        } catch (loadErr) {
+            console.error(`Assessment load error (attempt ${attempt}):`, loadErr);
+            if (attempt < 3 && (loadErr.message.includes('waking up') || loadErr.message.includes('fetch') || loadErr.message.includes('connect'))) {
+                showAlert(`Connecting to AI backend... (Attempt ${attempt}/3)`, "info");
+                setTimeout(() => loadAssessmentSession(attempt + 1), 3000);
+            } else {
+                showAlert(loadErr.message || "Failed to initialize assessment.", "danger", true, () => loadAssessmentSession(1));
+                if (qTitleEl) qTitleEl.textContent = "Could not load question. Please click Retry Now above.";
+            }
         }
+    };
 
-        if (!sessionData || !sessionData.questions) {
-            showAlert("Could not load knowledge assessment. Ensure your learning plan contains this skill.", "danger");
-            return;
-        }
-
-        currentAssessment = sessionData;
-        questions = sessionData.questions;
-
-        if (skillNameEl) skillNameEl.textContent = sessionData.skill_name || skillName;
-        if (roleContextEl) roleContextEl.textContent = `${sessionData.target_role || 'Target Role'} at ${sessionData.target_company || 'Company'}`;
-        if (difficultyBadgeEl) difficultyBadgeEl.textContent = sessionData.difficulty || 'MEDIUM';
-
-        startTimer(sessionData.time_limit_minutes || 15);
-        renderCurrentQuestion();
-
-    } catch (loadErr) {
-        console.error("Error launching assessment session:", loadErr);
-        showAlert(loadErr.message || "Failed to initialize assessment.", "danger");
-    }
+    loadAssessmentSession(1);
 
     if (btnPrev) {
         btnPrev.addEventListener('click', () => {
