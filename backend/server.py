@@ -64,6 +64,8 @@ app.register_blueprint(resume_builder_bp)
 app.register_blueprint(jobs_bp)
 
 # Custom CORS Handlers
+ALLOWED_ORIGINS = [o.strip() for o in os.getenv("FRONTEND_ORIGIN", "").split(",") if o.strip()]
+
 @app.before_request
 def before_request():
     if request.method == "OPTIONS":
@@ -71,7 +73,16 @@ def before_request():
 
 @app.after_request
 def after_request(response):
-    response.headers.add("Access-Control-Allow-Origin", "*")
+    origin = request.headers.get("Origin")
+    if origin:
+        if not ALLOWED_ORIGINS or "*" in ALLOWED_ORIGINS or origin in ALLOWED_ORIGINS or origin.startswith("http://localhost:") or origin.startswith("http://127.0.0.1:") or ".vercel.app" in origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+        else:
+            response.headers["Access-Control-Allow-Origin"] = origin
+    else:
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        
     response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
     response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
     return response
@@ -98,10 +109,20 @@ def favicon():
 
 @app.route('/api/health', methods=['GET'])
 def health():
+    try:
+        from firebase_client import is_firebase_configured
+    except Exception:
+        is_firebase_configured = False
+    
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+    gemini_configured = bool(gemini_key and not gemini_key.startswith("YOUR_"))
+
     return jsonify({
         "success": True,
         "service": "CareerPilot AI Backend",
-        "status": "healthy"
+        "status": "healthy",
+        "firebase_configured": is_firebase_configured,
+        "gemini_configured": gemini_configured
     }), 200
 
 @app.route('/<path:path>', methods=['GET'])
